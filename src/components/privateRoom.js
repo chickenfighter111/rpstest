@@ -40,7 +40,7 @@ import winnerSound from './media/results/winner.mp3';
 import loser from './media/results/loser.mp3'; 
 import tie from './media/results/tie.mp3'; 
 import winAnimation from './media/results/gif.gif'
-
+import Buffer from 'buffer'
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 

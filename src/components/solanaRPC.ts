@@ -1,6 +1,7 @@
 import { Connection, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { CustomChainConfig, SafeEventEmitterProvider } from "@web3auth/base";
 import { SolanaWallet } from "@web3auth/solana-provider";
+import Buffer from 'buffer'
 
 export default class SolanaRpc {
   private provider: SafeEventEmitterProvider;

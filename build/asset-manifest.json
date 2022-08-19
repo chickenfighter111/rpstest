@@ -1,0 +1,40 @@
+{
+  "files": {
+    "main.css": "/static/css/main.e130bbe3.css",
+    "main.js": "/static/js/main.fbf9ddd7.js",
+    "static/js/978.05a22259.chunk.js": "/static/js/978.05a22259.chunk.js",
+    "static/js/961.a8662492.chunk.js": "/static/js/961.a8662492.chunk.js",
+    "static/js/510.b6bd0e11.chunk.js": "/static/js/510.b6bd0e11.chunk.js",
+    "static/js/980.e747bb56.chunk.js": "/static/js/980.e747bb56.chunk.js",
+    "static/js/651.d05f9fa2.chunk.js": "/static/js/651.d05f9fa2.chunk.js",
+    "static/js/316.35812745.chunk.js": "/static/js/316.35812745.chunk.js",
+    "static/js/7.f4c25dcd.chunk.js": "/static/js/7.f4c25dcd.chunk.js",
+    "static/js/261.2cddc912.chunk.js": "/static/js/261.2cddc912.chunk.js",
+    "static/js/227.c1bec227.chunk.js": "/static/js/227.c1bec227.chunk.js",
+    "static/js/757.aa49a0a6.chunk.js": "/static/js/757.aa49a0a6.chunk.js",
+    "static/js/907.eb088aa7.chunk.js": "/static/js/907.eb088aa7.chunk.js",
+    "static/js/640.d4067416.chunk.js": "/static/js/640.d4067416.chunk.js",
+    "static/js/371.98744561.chunk.js": "/static/js/371.98744561.chunk.js",
+    "static/js/475.53899738.chunk.js": "/static/js/475.53899738.chunk.js",
+    "static/js/458.f47c9f8a.chunk.js": "/static/js/458.f47c9f8a.chunk.js",
+    "static/js/652.90fbc5b1.chunk.js": "/static/js/652.90fbc5b1.chunk.js",
+    "static/js/38.465153ef.chunk.js": "/static/js/38.465153ef.chunk.js",
+    "static/js/993.97116a6c.chunk.js": "/static/js/993.97116a6c.chunk.js",
+    "static/js/834.6a1d1e2d.chunk.js": "/static/js/834.6a1d1e2d.chunk.js",
+    "static/js/562.54be110d.chunk.js": "/static/js/562.54be110d.chunk.js",
+    "static/js/918.12e973e1.chunk.js": "/static/js/918.12e973e1.chunk.js",
+    "static/media/gif.gif": "/static/media/gif.1ec06311f4ff6ac7d668.gif",
+    "static/media/loser.mp3": "/static/media/loser.349303979890924ead1a.mp3",
+    "static/media/unkown.PNG": "/static/media/unkown.0f797f233e7dc012263c.PNG",
+    "static/media/VK.ttf": "/static/media/VK.5bd05a70bee32fe007d3.ttf",
+    "static/media/tie.mp3": "/static/media/tie.76b726ddd62e2ad278a5.mp3",
+    "static/media/winner.mp3": "/static/media/winner.bf314f98ccf01ce2825f.mp3",
+    "static/media/logg2.png": "/static/media/logg2.0ebcdb8365cf8ba6926a.png",
+    "static/media/paper.png": "/static/media/paper.919359262c96a269b6a6.png",
+    "index.html": "/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.e130bbe3.css",
+    "static/js/main.fbf9ddd7.js"
+  ]
+}

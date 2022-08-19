@@ -109,7 +109,6 @@ const MyNavbar = (props) => {
           setProvider(web3auth.provider);
         }
       } catch (error) {
-        console.error(error);
       }
     };
 

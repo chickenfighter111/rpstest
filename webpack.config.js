@@ -8,7 +8,7 @@ module.exports = {
           process: "process/browser.js",
         }),
         new NodePolyfillPlugin({
-          excludeAliases: ['console'],
+          excludeAliases: ['console', 'buffer'],
         }),
       ],
     },

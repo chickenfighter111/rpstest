@@ -1,10 +1,18 @@
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
-    // Other rules...
-    plugins: [
+    plugins: {
+      add: [
+        new webpack.ProvidePlugin({
+          process: "process/browser.js",
+        }),
         new NodePolyfillPlugin({
-            excludeAliases: ["console"]
-        })
-    ]
-}
+          excludeAliases: ['console'],
+        }),
+      ],
+    },
+    node: {
+      fs: "empty",
+    },
+  };

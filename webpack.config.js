@@ -6,9 +6,10 @@ module.exports = {
       add: [
         new webpack.ProvidePlugin({
           process: "process/browser.js",
+          Buffer: ['buffer', 'Buffer']
         }),
         new NodePolyfillPlugin({
-          excludeAliases: ['console', 'buffer'],
+          excludeAliases: ['console'],
         }),
       ],
     },

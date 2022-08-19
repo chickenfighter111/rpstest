@@ -261,9 +261,6 @@ const MyNavbar = (props) => {
           <h1>  <img src={logo} width={60} height={50} /> Asaka Games </h1>
        
         </Navbar.Brand>
-        <Button onClick={(async() => connectPhantomWallet())}>
-                      aaaa
-                    </Button>
         {connected && isAuthenticated ? (
           <Row >
             <Col>

@@ -3,8 +3,8 @@ import "./App.css";
 import { useMoralis } from "react-moralis";
 import Moralis from "moralis";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { Loading, Table } from "@web3uikit/core";
-import { Container, Row, Col, Button, Form, Modal } from "react-bootstrap";
+import { Loading } from "@web3uikit/core";
+import { Container, Row, Col, Button, Form, Modal, Table as RTable } from "react-bootstrap";
 import {utils, web3} from "@project-serum/anchor";
 import WidgetBot from "@widgetbot/react-embed";
 import {  Routes, Route, useParams, useNavigate } from "react-router-dom";
@@ -12,9 +12,8 @@ import {  Routes, Route, useParams, useNavigate } from "react-router-dom";
 import RoomAmount from "./components/createRoom";
 import PrivateRoom from "./components/privateRoom"
 import { FiRefreshCcw } from "react-icons/fi";
-
+import styled from 'styled-components'
 import MyNavbar from './components/web3signin';
-
 
 const App = () => {
   const [username, setUser] = useState("");
@@ -85,6 +84,7 @@ const App = () => {
     const [rooms, setRooms] = useState([]);
 
     const fetchRooms = async () => {
+      console.log("hello")
       const rooms = await Moralis.Cloud.run("getRooms", {});
       if (rooms) {
         setRooms(rooms);
@@ -170,55 +170,50 @@ const App = () => {
             <h5></h5>
           </Col>
           <Container>
-          <Table
-            columnsConfig="40px 3fr 2fr 2fr 80px"
-            data={
-              rooms != null
-                ? [
+            <RTable responsive borderless className="myTable">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th colSpan={2}><h5>Host</h5></th>
+                  <th ><h5>Bet</h5></th>
+                  <th  colSpan={2}><h5>Challenger</h5></th>
+                  <th >
+                    <Button onClick={fetchRooms}>
+                      <FiRefreshCcw />
+                    </Button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody> 
+                  {
                     rooms.flatMap((room) => {
-                      const playing = room.get("playing");
-                      const chall = room.get("challenger");
-                      const roomId = room.id;
-                      const status = () => {
-                        if (playing && chall !== "null") return chall;
-                        else return "Waiting";
-                      };
-                      const joinStatus = () => {
-                        if (playing && chall !== "null") return <Button disabled id={roomId} onClick={joinRoom}>
-                        Join
-                      </Button>;
-                        else return <Button id={roomId} onClick={joinRoom}>
-                        Join
-                      </Button>;
-                      };
-                      return [
-                        null,
-                        room.get("owner"),
-                        room.get("bet_amount"),
-                        status(),
-                        joinStatus(),
-                      ];
-                    }),
-                  ]
-                : []
-            }
-            header={[
-              "",
-              <span><h5>Host</h5></span>,
-              <span><h5>Bet</h5></span>,
-              <span><h5>Challenger</h5></span>,
-              <span>
-                <Button onClick={fetchRooms}>
-                  <FiRefreshCcw />
-                </Button>
-              </span>,
-            ]}
-            isColumnSortable={[false, true, false, false, false]}
-            maxPages={3}
-            onPageNumberChanged={function noRefCheck() {}}
-            onRowClick={function noRefCheck() {}}
-            pageSize={5}
-          />
+                                  const playing = room.get("playing");
+                                  const chall = room.get("challenger");
+                                  const roomId = room.id;
+                                  const status = () => {
+                                    if (playing && chall !== "null") return chall.substring(0,15);
+                                    else return "Waiting";
+                                  };
+                                  const joinStatus = () => {
+                                    if (playing && chall !== "null") return <Button disabled id={roomId} onClick={joinRoom}>
+                                    Join
+                                  </Button>;
+                                    else return <Button id={roomId} onClick={joinRoom}>
+                                    Join
+                                  </Button>;
+                                  };
+                                  return (
+                                    <tr>
+                                    <td>{null}</td>
+                                    <td colSpan={2}>{room.get("owner")}</td>
+                                    <td>{room.get("bet_amount")}</td>
+                                    <td>{status()}</td>
+                                    <td colSpan={2}>{joinStatus()}</td>
+                                    </tr>
+                                  )})
+                  }
+              </tbody>
+            </RTable>
           </Container>
           
         </Row>
@@ -245,26 +240,7 @@ const App = () => {
           <Col className="leaderboard">
             <h3>Leaderboard</h3>
             <Container>
-              <Table
-                columnsConfig="100px 3fr 1fr 10px"
-                data={[
-                  [1, "Sengo", 30],
-                  [2, "Zmk.SOL", 20],
-                  [3, "Snghbeer", 15],
-                ]}
-                header={[
-                  <span>Rank</span>,
-                  <span>Player</span>,
-                  <span>Wins</span>,
-                  "",
-                ]}
-                isColumnSortable={[false, false, true]}
-                noPagination
-                //isLoading
-                onPageNumberChanged={function noRefCheck() {}}
-                onRowClick={function noRefCheck() {}}
-                pageSize={10}
-              />
+              <Atable/>
             </Container>
           </Col>
         </Row>
@@ -309,3 +285,30 @@ const App = () => {
 };
 
 export default App;
+
+
+const Atable = () => {
+  return (
+    <RTable responsive borderless className="myTable">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th colSpan={2}>Username</th>
+        <th>Wins</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td colSpan={2}>Snghbeer</td>
+        <td>30</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td colSpan={2}>Zmk.SOL</td>
+        <td>15</td>
+      </tr>
+    </tbody>
+  </RTable>
+  )
+}

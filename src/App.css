@@ -238,3 +238,10 @@ button:hover{
 .aselectedCard{
   padding-top: 30px !important;
 }
+
+.myTable{
+  background-color: #FBE5D6 !important;
+  border-radius: 20px;
+  border-style: none !important;
+}
+

@@ -84,7 +84,6 @@ const App = () => {
     const [rooms, setRooms] = useState([]);
 
     const fetchRooms = async () => {
-      console.log("hello")
       const rooms = await Moralis.Cloud.run("getRooms", {});
       if (rooms) {
         setRooms(rooms);

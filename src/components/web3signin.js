@@ -21,11 +21,24 @@ import PlayerWalletManager from "./instructions/managePlayerWallet";
 import * as anchor from "@project-serum/anchor";
 import {AnchorProvider, web3, utils, Program,} from "@project-serum/anchor";
 import {AiFillSound, AiOutlineSound} from "react-icons/ai"
+import styled from 'styled-components'
 
 import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
 
 import {Cog} from '@web3uikit/icons'
 import logo from "./media/logg2.png"
+
+const NewStyledButton = styled(WalletDisconnectButton)`
+  max-height: 40px !important;
+  height: 100% !important;
+  background-image: linear-gradient(
+    to bottom,
+    #FFD966 0,
+    #FFD966 100%
+  ) !important;
+  color: #000000 !important;
+  border: 1px solid #000000;
+`
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 const idl = require("../rps_project.json");
@@ -180,11 +193,11 @@ const MyNavbar = (props) => {
           loginProvider: 'discord',
         },
       )
-      console.log(await getUserInfo())
+      //console.log(await getUserInfo())
       setRegister(true)
       setProvider(web3authProvider)
     } catch (err) {
-      console.log(err)
+      //console.log(err)
     }
   };
 
@@ -282,35 +295,24 @@ const MyNavbar = (props) => {
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu>
-                  <Dropdown.Item>
-                    <Container>
-                    <Button 
-                      onClick={() => {
+                  <Dropdown.Item onClick={() => {
                         setModalShow(true);
-                      }}
-                    >
+                      }}>
+                  
                       Settings
-                    </Button>
-                    </Container>
                   </Dropdown.Item>
-                  <Dropdown.Item>
+                  <Dropdown.Item className="walletmanager">
                     
                     <PlayerWalletManager />
                   </Dropdown.Item>
-                  <Dropdown.Item>
-                    <Container>
-                    <Button onClick={() => setplayerModal(true)}>
-                      PlayerWallet
-                    </Button>
-                    </Container>
+                  <Dropdown.Item onClick={() => setplayerModal(true)}>
+                      Player Wallet
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={web3logout}>
+                    Log Out
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
-            </Col>
-            <Col md="auto">
-              <WalletDisconnectButton className="navBtn" onClick={web3logout}>
-                Log Out
-              </WalletDisconnectButton>
             </Col>
             <CreatePlayerModal
               show={playerModalShow}

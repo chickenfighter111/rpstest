@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
-import { Button, Modal, Form, Container } from "react-bootstrap";
+import { Button, Modal, Form, Container, Dropdown } from "react-bootstrap";
 
 
 const network = "https://devnet.genesysgo.net/"; //devnet
@@ -170,10 +170,10 @@ function WalletManager() {
   }
 
   return (
-    <Container>
-      <Button style={{width: '180px'}} onClick={() => setModalShow(true)}>Deposit/Withdraw</Button> 
+    <div>
+      <Dropdown.Item onClick={() => setModalShow(true)}>Wallet Manager</Dropdown.Item> 
       <DepositModal show={modalShow} onHide={() => setModalShow(false)} />
-    </Container>
+    </div>
   );
 }
 

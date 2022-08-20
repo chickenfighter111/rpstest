@@ -6,6 +6,7 @@ import {
   DropdownButton,
   Dropdown,
   Modal,
+  Table as RTable
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -104,6 +105,12 @@ const Rooms = (props) => {
   const [loseSound] = useSound(loser);
   const [tieSound] = useSound(tie);
   const [ended, setEnded] = useState(false)
+  const [announcements, setAnnouncements] = useState([
+    `Sengo slapped ZMK and won ${amount} SOL`,
+    `It's a tie!`,
+    `ZMK slapped Sengo and won ${amount} SOL`
+  ])
+
 
 
   const idl = require("../rps_project.json");
@@ -419,18 +426,28 @@ const Rooms = (props) => {
     );
   }
 
+  const addWinnerAnnouncement = (winner, loser) => {
+    announcements.push(`${winner} slapped ${loser} and won ${amount} SOL`)
+  }
+
+  const addDrawAnnouncement = () => {
+    announcements.push(`It's a tie!`)
+  }
 
   const WinPopper = () => {
     const current_player = Moralis.User.current().id;
     if (winner === current_player) {
       winSound()
+      addWinnerAnnouncement(user, opponent)
       //payWinner(Moralis.Moralis.User.current().get("solAddress"))
       return <span>You win!</span>
     } else if (winner === "draw") {
       tieSound()
+      addDrawAnnouncement()
       return <span>Draw!</span>;
     } else {
       loseSound()
+      addWinnerAnnouncement(opponent, user)
       return <span>You lose!</span>;
     }
   };
@@ -926,7 +943,7 @@ const Rooms = (props) => {
 
   if (isAuthenticated && roomId) {
     return (
-      <Container>
+      <div className="roomContainer">
         {isWinner ? (<img src={winAnimation} width="100%" alt="loading..." />) : (<div></div>)}
         <h2 className="room_name">{roomName}</h2>
         <Row>
@@ -1070,26 +1087,26 @@ const Rooms = (props) => {
           </Col>
           <Col>
             <Container>
-              <Table
-                className="recentMoves"
-                columnsConfig="10px 1fr 10px"
-                data={[
-                  [null, "Sengo slapped ZMK", null],
-                  [null, "Zmk slapped Chixx", null],
-                  [null, "Chixx slapped Sengo", null],
-                ]}
-                header={[<span>Announcements</span>]}
-                isColumnSortable={[false, false, false]}
-                noPagination
-                //isLoading
-                onPageNumberChanged={function noRefCheck() {}}
-                onRowClick={function noRefCheck() {}}
-                pageSize={5}
-              />
+                  <RTable responsive borderless>
+                    <thead>
+                      <tr>
+                        <th colSpan={4}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {announcements.map((announcement) =>{
+                        return(
+                        <tr>
+                          <td colSpan={4}>{announcement}</td>
+                        </tr>
+                        )
+                      })}
+                    </tbody>
+                  </RTable>
             </Container>
           </Col>
         </Row>
-      </Container>
+      </div>
     );
   } else
     return (

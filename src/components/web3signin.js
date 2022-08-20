@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Web3Auth } from "@web3auth/web3auth";
+import { Web3AuthCore } from "@web3auth/core";
+import { PhantomAdapter } from "@web3auth/phantom-adapter";
 import {
   CHAIN_NAMESPACES,
   SafeEventEmitterProvider,
@@ -9,7 +10,6 @@ import {
 import "../App.css";
 import { useMoralis } from "react-moralis";
 import Moralis from "moralis";
-import { PhantomAdapter } from "@web3auth/phantom-adapter";
 import { useWallet } from "@solana/wallet-adapter-react";
 import {Navbar,Button,Dropdown,Nav,Container,Row,Col, Modal} from "react-bootstrap";
 import {WalletDisconnectButton,WalletMultiButton} from "@solana/wallet-adapter-react-ui";
@@ -22,6 +22,8 @@ import * as anchor from "@project-serum/anchor";
 import {AnchorProvider, web3, utils, Program,} from "@project-serum/anchor";
 import {AiFillSound, AiOutlineSound} from "react-icons/ai"
 
+import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
+
 import {Cog} from '@web3uikit/icons'
 import logo from "./media/logg2.png"
 
@@ -29,7 +31,8 @@ const network = "https://devnet.genesysgo.net/"; //devnet
 const idl = require("../rps_project.json");
 const one_sol = 1_000_000_000;
 
-const clientId = process.env.REACT_APP_WEB3_CLIENT_ID; // get from https://dashboard.web3auth.io.
+//const clientId = 'BBP_6GOu3EJGGws9yd8wY_xFT0jZIWmiLMpqrEMx36jlM61K9XRnNLnnvEtGpF-RhXJDGMJjL-I-wTi13RcBBOo'
+const clientId =  process.env.REACT_APP_WEB3_CLIENT_ID | "BGUYFB-xTJdSGPtMI92VdT-tFwmijpKvTGnDd-398H37Dy4alqnvb9QPR5PunNT5vBShifRYYz8cAFHSjhKltnI"; // get from https://dashboard.web3auth.io.
 
 const MyNavbar = (props) => {
   const [balance, setBalance] = useState(null);
@@ -42,6 +45,7 @@ const MyNavbar = (props) => {
   const [registered, setRegister] = useState(false);
   const [web3auth, setWeb3auth] = useState(null);
   const [provider, setProvider] = useState(null);
+  const [adapter, setAdapter] = useState(null);
   const [soundState, setSoundState] = useState(false);
 
 
@@ -87,29 +91,41 @@ const MyNavbar = (props) => {
   useEffect(() => {
     const init = async () => {
       try {
-        const web3auth = new Web3Auth({
-          clientId,
+
+        const web3auth2 = new Web3AuthCore({
           chainConfig: {
             chainNamespace: CHAIN_NAMESPACES.SOLANA,
-            chainId: "0x1", // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
-            rpcTarget: "https://rpc.ankr.com/solana", // This is the public RPC we have added, please pass on your own endpoint while creating an app
-          },
-          uiConfig: {
-            theme: "dark",
-            loginMethodsOrder: ["discord", "twitter", "google", "reddit"],
+            chainId: "0x3", // Please use 0x1 for Mainnet, 0x2 for Testnet, 0x3 for Devnet
+            rpcTarget: network, // This is the public RPC we have added, please pass on your own endpoint while creating an app
           },
         });
 
-        setWeb3auth(web3auth);
-        const phantomAdapter = new PhantomAdapter();
-        web3auth.configureAdapter(phantomAdapter);
+        const openloginAdapter2 = new OpenloginAdapter({
+          adapterSettings: {
+            clientId: "BGUYFB-xTJdSGPtMI92VdT-tFwmijpKvTGnDd-398H37Dy4alqnvb9QPR5PunNT5vBShifRYYz8cAFHSjhKltnI",
+            network: 'testnet',
+            uxMode: 'popup',
+            loginConfig: {
+              discord: {
+                name: 'RpsAuth',
+                verifier: 'discord-verif',
+                typeOfLogin: 'discord',
+                clientId: '1010130538662744114', //use your app client id you got from discord
+              },
+            },
+          },
+        })
 
-        await web3auth.initModal();
-        if (web3auth.provider) {
-          setProvider(web3auth.provider);
+        web3auth2.configureAdapter(openloginAdapter2);
+        setWeb3auth(web3auth2);
+        setAdapter(openloginAdapter2)
+
+        await web3auth2.init();
+        if (web3auth2.provider) {
+          setProvider(web3auth2.provider);
         }
       } catch (error) {
-      }
+        }
     };
 
     init();
@@ -137,12 +153,10 @@ const MyNavbar = (props) => {
       }
     };
 
-    if (registered && isAuthenticated && !connected) {
-      const sk = getPrivateKey();
-      alert(`Save that secret key somewhere! Don't share with anyone! ${sk}`);
-      registerUser(); //register the web3atuh user to Moralis DB
+    if (isAuthenticated){
+      //registerUser(); //register the web3atuh user to Moralis DB
     }
-  }, [isAuthenticated, registered, connected]);
+  }, [isAuthenticated, web3auth]);
 
   const getAccounts = async () => {
     if (!provider) {
@@ -160,10 +174,18 @@ const MyNavbar = (props) => {
       return;
     }
     try {
-      const web3authProvider = await web3auth.connect();
-      setProvider(web3authProvider);
-      setRegister(true);
-    } catch (err) {}
+      const web3authProvider = await web3auth.connectTo(
+        WALLET_ADAPTERS.OPENLOGIN,
+        {
+          loginProvider: 'discord',
+        },
+      )
+      console.log(await getUserInfo())
+      setRegister(true)
+      setProvider(web3authProvider)
+    } catch (err) {
+      console.log(err)
+    }
   };
 
   const getUserInfo = async () => {
@@ -184,28 +206,13 @@ const MyNavbar = (props) => {
     await logout();
   };
 
-  const getPrivateKey = async () => {
-    if (!provider) {
-      return;
-    }
-   // const rpc = new RPC(provider);
-   // const privateKey = await rpc.getPrivateKey();
-  //  return privateKey;
-  };
-
-  useEffect(() => {
-    props.setSound(soundState);
-  }, [props.setSound, soundState]);
-
   useEffect(() => {
     if (!isAuthenticated && connected) connectPhantomWallet();
   }, [connected]);
 
   useEffect(() => {
-    if (registered) {
-      connectPhantomWallet(); //connect to DB once registered
-    }
-  }, [registered]);
+    props.setSound(soundState);
+  }, [props.setSound, soundState]);
 
   function MyVerticallyCenteredModal(props) {
     return (
@@ -320,7 +327,7 @@ const MyNavbar = (props) => {
               <WalletMultiButton className="navBtn"/>
             </Col>
             <Col>
-              <Button onClick={login}>Sign-in</Button>
+              <Button disabled={true} onClick={login}>Sign-in</Button>
             </Col>
           </Row>
         )}

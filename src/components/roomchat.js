@@ -38,8 +38,8 @@ function Chat(props) {
   const onMessageSubmit = async (event) => {
     event.preventDefault();
     if (message) {
-      pushMessage(sender, message);
       newMessage(message);
+      pushMessage(sender, message)
       setMessage("");
     }
   };
@@ -106,7 +106,8 @@ function Chat(props) {
       query.equalTo("chatRoomId", chatId);
       let subscription = await query.subscribe();
       subscription.on("create", (object) => {
-        receivedmsg(object.get("sender"), object.get("message"));
+        console.log("new msg")
+        if (sender !== object.get("sender")) receivedmsg(object.get("sender"), object.get("message"));
       });
     };
 

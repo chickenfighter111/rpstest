@@ -142,9 +142,6 @@ const App = () => {
       <Col className="roomList" xs={6}>
       <Container>
         <Row>
-          <Container>
-            <Button onClick={() => setModalShow(true)}>Create Room</Button>
-          </Container>
           <CreateRoomModal
             show={modalShow}
             onHide={() => setModalShow(false)}
@@ -168,18 +165,20 @@ const App = () => {
           <Col>
             <h5></h5>
           </Col>
-          <Container>
-            <RTable responsive borderless className="myTable">
+          <Container className="myTable">
+            <RTable responsive borderless >
               <thead>
                 <tr>
-                  <th></th>
+                  <th><Button onClick={fetchRooms}>
+                      <FiRefreshCcw />
+                    </Button></th>
                   <th colSpan={2}><h5>Host</h5></th>
                   <th ><h5>Bet</h5></th>
                   <th  colSpan={2}><h5>Challenger</h5></th>
                   <th >
-                    <Button onClick={fetchRooms}>
-                      <FiRefreshCcw />
-                    </Button>
+                  <Container>
+                    <Button onClick={() => setModalShow(true)}>Create Room</Button>
+                  </Container>
                   </th>
                 </tr>
               </thead>
@@ -190,7 +189,7 @@ const App = () => {
                                   const chall = room.get("challenger");
                                   const roomId = room.id;
                                   const status = () => {
-                                    if (playing && chall !== "null") return chall.substring(0,15);
+                                    if (chall !== "null") return (chall.substring(0,15));
                                     else return "Waiting";
                                   };
                                   const joinStatus = () => {
@@ -204,7 +203,7 @@ const App = () => {
                                   return (
                                     <tr>
                                     <td>{null}</td>
-                                    <td colSpan={2}>{room.get("owner")}</td>
+                                    <td colSpan={2}>{room.get("owner").substring(0,15)}</td>
                                     <td>{room.get("bet_amount")}</td>
                                     <td>{status()}</td>
                                     <td colSpan={2}>{joinStatus()}</td>
@@ -237,8 +236,8 @@ const App = () => {
           <DiscordChat/>
           <MainContainer/>
           <Col className="leaderboard">
-            <h3>Leaderboard</h3>
-            <Container>
+            <h3>Season ranking</h3>
+            <Container >
               <Atable/>
             </Container>
           </Col>
@@ -288,7 +287,7 @@ export default App;
 
 const Atable = () => {
   return (
-    <RTable responsive borderless className="myTable">
+    <RTable responsive borderless>
     <thead>
       <tr>
         <th>Rank</th>

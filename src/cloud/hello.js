@@ -8,6 +8,17 @@ Moralis.Cloud.define("getRooms", async (request) => {
   return rooms;
 });
 
+Moralis.Cloud.define("getLeaderBoard", async (request) => {
+  const qry = new Moralis.Query(Moralis.User);
+  const pipeline = [
+    { sort: {wins: -1}},
+    { limit: 5},
+    { project: { username: 1, wins: 1 } }
+  ]
+  //const users = qry.find();
+  return await qry.aggregate(pipeline);
+});
+
 Moralis.Cloud.define("getRoomData", async (request) => {
   const qry = new Moralis.Query("Room");
   qry.equalTo("objectId", request.params.roomId);

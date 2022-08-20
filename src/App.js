@@ -12,8 +12,10 @@ import {  Routes, Route, useParams, useNavigate } from "react-router-dom";
 import RoomAmount from "./components/createRoom";
 import PrivateRoom from "./components/privateRoom"
 import { FiRefreshCcw } from "react-icons/fi";
-import styled from 'styled-components'
-import MyNavbar from './components/web3signin';
+
+import me from "./components/media/ME.png";
+import twt from "./components/media/twitter.png";
+import dsc from "./components/media/discord.png";
 
 const App = () => {
   const [username, setUser] = useState("");
@@ -76,12 +78,20 @@ const App = () => {
   const MainContainer = () => {
     const [modalShow, setModalShow] = useState(false);
     const [rooms, setRooms] = useState([]);
+    const [users, setUsers] = useState([]);
     const [searchRoom, setSetSearchRoom] = useState("");
 
     const fetchRooms = async () => {
       const rooms = await Moralis.Cloud.run("getRooms", {});
       if (rooms) {
         setRooms(rooms);
+      }
+    };
+
+    const userLeaderBoard = async () => {
+      const topPlayers = await Moralis.Cloud.run("getLeaderBoard", {});
+      if (topPlayers) {
+        setUsers(topPlayers);
       }
     };
 
@@ -135,6 +145,7 @@ const App = () => {
       if (isAuthenticated) {
         fetchCurrentUser();
         fetchRooms();
+        userLeaderBoard();
       }
     }, [isAuthenticated]);
   
@@ -233,6 +244,52 @@ const App = () => {
     )
   }
 
+  const LeaderBoardContainer = () => {
+    const [users, setUsers] = useState([]);
+
+
+    const userLeaderBoard = async () => {
+      const topPlayers = await Moralis.Cloud.run("getLeaderBoard", {});
+      if (topPlayers) {
+        setUsers(topPlayers);
+      }
+    };
+
+
+    useEffect(() => {
+      if (isAuthenticated) {
+        userLeaderBoard();
+      }
+    }, [isAuthenticated]);
+
+    return (
+      <RTable responsive borderless>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th colSpan={2}>Username</th>
+          <th>Wins</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users ? (
+          users.map((aUser, index) => {
+            return(
+              <tr>
+                <td>{index + 1}</td>
+                <td colSpan={2}>{aUser.username.substring(0,15)}</td>
+                <td>{aUser.wins}</td>
+              </tr>
+            )
+          })
+        ) : 
+        (<Loading spinnerColor="#2E7DAF" text="Fetching Data..." />)
+      }
+      </tbody>
+    </RTable>
+    )
+  }
+
   useEffect(() => {
     if (isAuthenticated) {
      // enterRoomPing();
@@ -251,7 +308,22 @@ const App = () => {
           <Col className="leaderboard">
             <h3>Season ranking</h3>
             <Container >
-              <Atable/>
+              <Row>
+                <div className="announcementsContainer">
+                  <LeaderBoardContainer/>
+                </div>
+              </Row>
+              <Row>
+                <Col>
+                  <a><img width={50} height={50} src={dsc}></img></a>
+                </Col>
+                <Col>
+                  <a><img width={50} height={50} src={me}></img></a>
+                </Col>
+                <Col>
+                  <a><img width={50} height={50} src={twt}></img></a>
+                </Col>
+            </Row>
             </Container>
           </Col>
         </Row>
@@ -284,37 +356,10 @@ const App = () => {
         <Container>
         <h1 className="room_name">Welcome to Asaka Games</h1>
         <h3>Please log-in to continue</h3>
-    </Container>
+       </Container>
       </div>
     )
   }
 };
 
 export default App;
-
-
-const Atable = () => {
-  return (
-    <RTable responsive borderless>
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th colSpan={2}>Username</th>
-        <th>Wins</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>1</td>
-        <td colSpan={2}>Snghbeer</td>
-        <td>30</td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td colSpan={2}>Zmk.SOL</td>
-        <td>15</td>
-      </tr>
-    </tbody>
-  </RTable>
-  )
-}

@@ -24,8 +24,12 @@ import scissor from "./media/cards/scissor.png";
 import none from "./media/cards/unkown.PNG";
 import sol from "./media/sol.png";
 import logo from "./media/cards/card2.png";
+import me from "./media/ME.png";
+import twt from "./media/twitter.png";
+import dsc from "./media/discord.png";
 
 import {AiFillEye, AiFillSound, AiOutlineSound} from 'react-icons/ai'
+import {FaDiscord} from 'react-icons/fa'
 import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import {
   AnchorProvider,
@@ -950,10 +954,14 @@ const Rooms = (props) => {
   if (isAuthenticated && roomId) {
     return (
       <Container fluid="xxl" className="roomContainer">
-        <h2 className="room_name">{roomName}</h2>
+        <h2 className="room_name">Room: {roomName}</h2>
         <Row>
           <Col>
-          <br/> <div><Button onClick={() => leaveRoom(params.userId)}>Leave</Button></div><br/>
+            <br />{" "}
+            <div>
+              <Button onClick={() => leaveRoom(params.userId)}>Leave</Button>
+            </div>
+            <br />
             <Container>
               {chatId != null ? (
                 <Chat id={chatId} sender={user} />
@@ -963,10 +971,6 @@ const Rooms = (props) => {
             </Container>
           </Col>
           <Col xs={7}>
-            <h5>Opponent: {opponent}</h5>
-            <p>
-              Bet: {amount} <img src={sol} />
-            </p>
             <Container>
               <Row className="justify-content-md-center">
                 <OppenentOptions />
@@ -974,11 +978,15 @@ const Rooms = (props) => {
               <Row className="justify-content-md-center">
                 <Col>
                   <Container>
-                    {owner? 
-                    (<Row>
-                      <Button disabled={!readyState} onClick={startRound}>Start</Button>
-                    </Row>) : 
-                    (<div></div>)}
+                    {owner ? (
+                      <Row>
+                        <Button disabled={!readyState} onClick={startRound}>
+                          Start
+                        </Button>
+                      </Row>
+                    ) : (
+                      <div></div>
+                    )}
                     <br />
                     <Row>
                       <Button onClick={resetRoom}>Reset</Button>
@@ -991,31 +999,46 @@ const Rooms = (props) => {
                   </Container>
                 </Col>
                 <Col xs={7}>
-                  {duelEnded && opChosenOnes? (
+                  {duelEnded && opChosenOnes ? (
                     <Container>
-                      <Countdown date={Date.now() + 5000} renderer={renderer}/>
+                      <Countdown date={Date.now() + 5000} renderer={renderer} />
                     </Container>
-
                   ) : (
                     //winner should be shown here
-                   <Container>
-                     <Row>
-                      <Col >{owner ? ( <span> Waiting for challenger to be ready </span>)
-                    : ( <span> Click on ready </span>) 
-                    }</Col>
-                    <Col xs lg="2">{soundState ? 
-                    (<Button onClick={(() => setSoundState(false))}><AiFillSound/></Button>) : 
-                    (<Button onClick={(() => setSoundState(true))}><AiOutlineSound/></Button>)
-                  }</Col>
-                     </Row>
-                                        
-
-                   </Container>
+                    <Container>
+                      <Row>
+                        <Col>
+                          {owner ? (
+                            <span> Waiting for challenger to be ready </span>
+                          ) : (
+                            <div>
+                              <span> Click on ready </span>
+                              <h5>Opponent: {opponent}</h5>
+                              <p>
+                                Bet: {amount} <img src={sol} />
+                              </p>
+                            </div>
+                          )}
+                        </Col>
+                        <Col xs lg="2">
+                          {soundState ? (
+                            <Button onClick={() => setSoundState(false)}>
+                              <AiFillSound />
+                            </Button>
+                          ) : (
+                            <Button onClick={() => setSoundState(true)}>
+                              <AiOutlineSound />
+                            </Button>
+                          )}
+                        </Col>
+                      </Row>
+                    </Container>
                   )}
-                  {generatedhands? (
-                    <CustomCountDown seconds={5} check={checkSelected}/>
-                  ) : 
-                  (<div></div> )}
+                  {generatedhands ? (
+                    <CustomCountDown seconds={5} check={checkSelected} />
+                  ) : (
+                    <div></div>
+                  )}
                 </Col>
                 <Col>
                   <Container>
@@ -1023,34 +1046,22 @@ const Rooms = (props) => {
                     <div>
                       {!owner ? (
                         <Row>
-                          {
-                            !readyState ? (
-                            <Button onClick={getReady}>
-                              Ready
-                            </Button>)
-                            :
-                            (<Button onClick={getReady}>
-                              Unready
-                            </Button>)
-                          }
+                          {!readyState ? (
+                            <Button onClick={getReady}>Ready</Button>
+                          ) : (
+                            <Button onClick={getReady}>Unready</Button>
+                          )}
                         </Row>
-                        ) : 
-                        (
-                          <div></div>
-                        )
-
-                      }
+                      ) : (
+                        <div></div>
+                      )}
                     </div>
                     <br />
                     <Row>
-                      <Button
-                        onClick={payo}>
-                        Claim
-                      </Button>
+                      <Button onClick={payo}>Claim</Button>
                     </Row>
-                    <br/>
-                    <Row>
-                    </Row>
+                    <br />
+                    <Row></Row>
                   </Container>
                 </Col>
               </Row>
@@ -1059,26 +1070,50 @@ const Rooms = (props) => {
                   <OptionDropDown id={"1"} />
                 ) : (
                   <Container>
-                    {readyState ? 
-                    (<div>
-                      {generatedhands ? (
-                    <Row>
-                      {generatedhands.map((aHand, index) => {
-                        const handIdx = Number(aHand)
-                          return(<Col className={`${chosenCards.has(index) ? "aselectedCard" : ""}`}> 
-                          <Button onMouseOver={(e) => handleChoiceButton(e, index)} onClick={selectCard} 
-                            className="aCardRev" disabled={choiceConfirmed} >
-                            {chosenCards.has(index) ? (<AiFillEye className="selectedCard"/>) : (<div></div>)}
-                            <img className="handImg" width={60} height={60} src={imgs[handIdx]} alt="nah" />
-                          </Button>
-                            </Col>)
-                      })}
-                    </Row>
-                    ) : 
-                    (<div> </div>)}
-                    </div>
-                    )
-                    :  (
+                    {readyState ? (
+                      <div>
+                        {generatedhands ? (
+                          <Row>
+                            {generatedhands.map((aHand, index) => {
+                              const handIdx = Number(aHand);
+                              return (
+                                <Col
+                                  className={`${
+                                    chosenCards.has(index)
+                                      ? "aselectedCard"
+                                      : ""
+                                  }`}
+                                >
+                                  <Button
+                                    onMouseOver={(e) =>
+                                      handleChoiceButton(e, index)
+                                    }
+                                    onClick={selectCard}
+                                    className="aCardRev"
+                                    disabled={choiceConfirmed}
+                                  >
+                                    {chosenCards.has(index) ? (
+                                      <AiFillEye className="selectedCard" />
+                                    ) : (
+                                      <div></div>
+                                    )}
+                                    <img
+                                      className="handImg"
+                                      width={60}
+                                      height={60}
+                                      src={imgs[handIdx]}
+                                      alt="nah"
+                                    />
+                                  </Button>
+                                </Col>
+                              );
+                            })}
+                          </Row>
+                        ) : (
+                          <div> </div>
+                        )}
+                      </div>
+                    ) : (
                       <Row className="choiceRow">
                         {cards.map((card, idx) => {
                           return (
@@ -1090,33 +1125,44 @@ const Rooms = (props) => {
                           );
                         })}
                       </Row>
-                    ) 
-                    }
-  
+                    )}
                   </Container>
                 )}
               </Row>
             </Container>
           </Col>
           <Col>
-            <Container>
-                  <RTable responsive borderless>
-                    <thead>
+            <Row>
+            <Container className="announcementsContainer">
+              <RTable responsive borderless>
+                <thead>
+                  <tr>
+                    <th colSpan={4}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {announcements.map((announcement) => {
+                    return (
                       <tr>
-                        <th colSpan={4}></th>
+                        <td colSpan={4}>{announcement}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {announcements.map((announcement) =>{
-                        return(
-                        <tr>
-                          <td colSpan={4}>{announcement}</td>
-                        </tr>
-                        )
-                      })}
-                    </tbody>
-                  </RTable>
+                    );
+                  })}
+                </tbody>
+              </RTable>
             </Container>
+            </Row>
+            <Row>
+                <Col>
+                  <a><img width={50} height={50} src={dsc}></img></a>
+                </Col>
+                <Col>
+                  <a><img width={50} height={50} src={me}></img></a>
+                </Col>
+                <Col>
+                  <a><img width={50} height={50} src={twt}></img></a>
+                </Col>
+            </Row>
           </Col>
         </Row>
       </Container>

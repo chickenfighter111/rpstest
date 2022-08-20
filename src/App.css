@@ -256,3 +256,8 @@ button:hover{
   padding-left: 0px !important;
 }
 
+.announcementsContainer{
+  max-height: 400px !important;
+  height: 400px;
+}
+

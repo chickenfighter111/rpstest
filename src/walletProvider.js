@@ -25,6 +25,7 @@ const Dashboard = () => {
     <ConnectionProvider endpoint={customRPC}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
+          <MyNavbar />
           {<App />}
         </WalletModalProvider>
       </WalletProvider>

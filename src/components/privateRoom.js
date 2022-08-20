@@ -25,7 +25,7 @@ import none from "./media/cards/unkown.PNG";
 import sol from "./media/sol.png";
 import logo from "./media/cards/card2.png";
 
-import {AiFillEye} from 'react-icons/ai'
+import {AiFillEye, AiFillSound, AiOutlineSound} from 'react-icons/ai'
 import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import {
   AnchorProvider,
@@ -437,16 +437,16 @@ const Rooms = (props) => {
   const WinPopper = () => {
     const current_player = Moralis.User.current().id;
     if (winner === current_player) {
-      winSound()
+      if(soundState)winSound()
       addWinnerAnnouncement(user, opponent)
       //payWinner(Moralis.Moralis.User.current().get("solAddress"))
       return <span>You win!</span>
     } else if (winner === "draw") {
-      tieSound()
+      if(soundState)tieSound()
       addDrawAnnouncement()
       return <span>Draw!</span>;
     } else {
-      loseSound()
+      if(soundState)loseSound()
       addWinnerAnnouncement(opponent, user)
       return <span>You lose!</span>;
     }
@@ -568,14 +568,17 @@ const Rooms = (props) => {
 
   const OppenentOptions = () => {
     return (
-      <Col>
-        <img
-          width={80}
-          height={80}
-          src={opponentChoice}
-          className="selectHandBtn"
-        />
-      </Col>
+      <Row className="choiceRow">
+      {cards.map((card, idx) => {
+        return (
+          <OptionDropDown
+            key={idx.toString()}
+            id={idx.toString()}
+            img={card}
+          />
+        );
+      })}
+      </Row>
     );
   };
 
@@ -912,8 +915,6 @@ const Rooms = (props) => {
       gameEndedPing();
     }
 
- 
-
     if (totalSelected === 3 || chosenCards.size === 3) {
       setConfirmed(true);
     }
@@ -941,14 +942,18 @@ const Rooms = (props) => {
 
   }, [isAuthenticated, mode]);
 
+  useEffect(() => {
+    setSoundState(props.sound)
+  }, [])
+  
+
   if (isAuthenticated && roomId) {
     return (
-      <div className="roomContainer">
-        {isWinner ? (<img src={winAnimation} width="100%" alt="loading..." />) : (<div></div>)}
+      <Container fluid="xxl" className="roomContainer">
         <h2 className="room_name">{roomName}</h2>
         <Row>
           <Col>
-            <Button onClick={() => leaveRoom(params.userId)}>Leave</Button>
+          <br/> <div><Button onClick={() => leaveRoom(params.userId)}>Leave</Button></div><br/>
             <Container>
               {chatId != null ? (
                 <Chat id={chatId} sender={user} />
@@ -994,9 +999,17 @@ const Rooms = (props) => {
                   ) : (
                     //winner should be shown here
                    <Container>
-                     {owner ? ( <span> Waiting for challenger to be ready </span>)
+                     <Row>
+                      <Col >{owner ? ( <span> Waiting for challenger to be ready </span>)
                     : ( <span> Click on ready </span>) 
-                    }
+                    }</Col>
+                    <Col xs lg="2">{soundState ? 
+                    (<Button onClick={(() => setSoundState(false))}><AiFillSound/></Button>) : 
+                    (<Button onClick={(() => setSoundState(true))}><AiOutlineSound/></Button>)
+                  }</Col>
+                     </Row>
+                                        
+
                    </Container>
                   )}
                   {generatedhands? (
@@ -1106,7 +1119,7 @@ const Rooms = (props) => {
             </Container>
           </Col>
         </Row>
-      </div>
+      </Container>
     );
   } else
     return (

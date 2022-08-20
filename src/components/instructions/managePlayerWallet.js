@@ -18,7 +18,7 @@ const idl = require("../../rps_project.json");
 const utf8 = utils.bytes.utf8;
 const one_sol = 1_000_000_000;
 
-function WalletManager() {
+function WalletManager(props) {
   const [balance, setBalance] = useState(null);
 
   const [modalShow, setModalShow] = useState(false);
@@ -56,15 +56,7 @@ function WalletManager() {
           program.programId
         );
         try {
-          /*const dtx = await program.methods
-            .depositToEscrow(new BN(amount * one_sol))
-            .accounts({pda: escrowPda,
-              owner: publicKey,
-              dataAccount: aPlayerPDA, //contains data of player
-              systemProgram: anchor.web3.SystemProgram.programId,
-            }).rpc(); */
-
-          const adtx = await program.methods.depow(new BN(amount*one_sol))
+          await program.methods.depow(new BN(amount*one_sol))
             .accounts({
               lockAccount: escrowPda,
               owner: publicKey
@@ -134,7 +126,7 @@ function WalletManager() {
       );
       try {
         let balance = await provider.connection.getBalance(escrowPda); //player escrow
-        setBalance(Math.round((balance / one_sol)  * 100) / 100);
+        props.setBal(Math.round((balance / one_sol)  * 100) / 100);
       } catch (err) {
       }
     }
@@ -142,6 +134,7 @@ function WalletManager() {
 
   useEffect(() => {
     if (connected && isAuthenticated) {
+      //props.setBal(balance)
       getBalance();
     }
   }, [connected, isAuthenticated]);

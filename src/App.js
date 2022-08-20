@@ -19,14 +19,9 @@ const App = () => {
   const [username, setUser] = useState("");
   const { isAuthenticated, authenticate, isAuthenticating } = useMoralis();
   const { connected, publicKey } = useWallet();
-  const [sound, setSound] = useState(true);
   const navigate = useNavigate();
 
 
-  const wrapperSetParentState = useCallback(val => {
-    setSound(val);
-  }, [setSound]);
-  
 
   function CreateRoomModal(props) {
     return (
@@ -59,7 +54,6 @@ const App = () => {
   };
 
 
-
   const getHelloFromCloud = async () => {
     const params = { text: "from belgium!" };
     const hello = await Moralis.Cloud.run("helloword", params); //runs a function on the cloud
@@ -82,12 +76,31 @@ const App = () => {
   const MainContainer = () => {
     const [modalShow, setModalShow] = useState(false);
     const [rooms, setRooms] = useState([]);
+    const [searchRoom, setSetSearchRoom] = useState("");
 
     const fetchRooms = async () => {
       const rooms = await Moralis.Cloud.run("getRooms", {});
       if (rooms) {
         setRooms(rooms);
       }
+    };
+
+    const onSearchHandle = async(astring) =>{
+      const itContains = (a_string, some_string) =>{
+        return (a_string.toLowerCase().startsWith(some_string.toLowerCase()))
+      }
+
+      if (astring === "") fetchRooms()
+      else {
+        setRooms(rooms.filter(aRoom => {
+          itContains( aRoom.get("owner"), astring)
+        }))
+      }
+    }
+
+    const handleInput = async (event) => {
+      setSetSearchRoom(event.target.value);
+      onSearchHandle( event.target.value)
     };
   
     const joinRoom = async (event) => {
@@ -155,7 +168,7 @@ const App = () => {
                 className="mb-3"
                 controlId="exampleForm.ControlInput1"
               >
-                <Form.Control type="text" placeholder="Search..." />
+                <Form.Control type="text" placeholder="Search..." value={searchRoom} onChange={handleInput}/>
               </Form.Group>
             </Form>
           </Col>
@@ -249,20 +262,16 @@ const App = () => {
   if (isAuthenticated && connected) {
 
     return (
-    
         <div>
-          <MyNavbar sound={sound} setSound={wrapperSetParentState}/>
           <Routes>
           <Route path="/" index element={<Home />}/>
-          <Route path="/rooms/:userId" element={<PrivateRoom soundState={sound}/>} />
-
+          <Route path="/rooms/:userId" element={<PrivateRoom/>} />
         </Routes>
         </div>
     );
   } else if (isAuthenticating) {
     return (
       <div>
-          <MyNavbar sound={sound} setSound={wrapperSetParentState}/>
         <Container>
         <Loading spinnerColor="#2E7DAF" text="Fetching Data..." />
       </Container>
@@ -272,7 +281,6 @@ const App = () => {
   else{
     return(
       <div>
-         <MyNavbar sound={sound} setSound={wrapperSetParentState}/>
         <Container>
         <h1 className="room_name">Welcome to Asaka Games</h1>
         <h3>Please log-in to continue</h3>

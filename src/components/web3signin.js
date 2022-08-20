@@ -20,25 +20,12 @@ import PlayerWalletManager from "./instructions/managePlayerWallet";
 
 import * as anchor from "@project-serum/anchor";
 import {AnchorProvider, web3, utils, Program,} from "@project-serum/anchor";
-import {AiFillSound, AiOutlineSound} from "react-icons/ai"
 import styled from 'styled-components'
 
 import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
 
 import {Cog} from '@web3uikit/icons'
 import logo from "./media/logg2.png"
-
-const NewStyledButton = styled(WalletDisconnectButton)`
-  max-height: 40px !important;
-  height: 100% !important;
-  background-image: linear-gradient(
-    to bottom,
-    #FFD966 0,
-    #FFD966 100%
-  ) !important;
-  color: #000000 !important;
-  border: 1px solid #000000;
-`
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 const idl = require("../rps_project.json");
@@ -59,7 +46,6 @@ const MyNavbar = (props) => {
   const [web3auth, setWeb3auth] = useState(null);
   const [provider, setProvider] = useState(null);
   const [adapter, setAdapter] = useState(null);
-  const [soundState, setSoundState] = useState(false);
 
 
   //Moralis
@@ -223,10 +209,6 @@ const MyNavbar = (props) => {
     if (!isAuthenticated && connected) connectPhantomWallet();
   }, [connected]);
 
-  useEffect(() => {
-    props.setSound(soundState);
-  }, [props.setSound, soundState]);
-
   function MyVerticallyCenteredModal(props) {
     return (
       <Modal
@@ -284,11 +266,6 @@ const MyNavbar = (props) => {
         {connected && isAuthenticated ? (
           <Row >
             <Col>
-              {soundState ? 
-              (<Button onClick={(() => setSoundState(false))}><AiFillSound/></Button>) : 
-              (<Button onClick={(() => setSoundState(true))}><AiOutlineSound/></Button>)}
-            </Col>
-            <Col>
               <Dropdown>
                 <Dropdown.Toggle className="navBtn" >
                   Wallet: {balance} SOL <Cog fontSize='15px'/>
@@ -303,7 +280,7 @@ const MyNavbar = (props) => {
                   </Dropdown.Item>
                   <Dropdown.Item className="walletmanager">
                     
-                    <PlayerWalletManager />
+                    <PlayerWalletManager balance={balance} setBal={setBalance}/>
                   </Dropdown.Item>
                   <Dropdown.Item onClick={() => setplayerModal(true)}>
                       Player Wallet

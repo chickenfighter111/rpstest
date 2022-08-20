@@ -106,7 +106,6 @@ function Chat(props) {
       query.equalTo("chatRoomId", chatId);
       let subscription = await query.subscribe();
       subscription.on("create", (object) => {
-        console.log("new msg")
         if (sender !== object.get("sender")) receivedmsg(object.get("sender"), object.get("message"));
       });
     };

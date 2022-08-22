@@ -24,12 +24,18 @@ import scissor from "./media/cards/scissor.png";
 import none from "./media/cards/unkown.PNG";
 import sol from "./media/sol.png";
 import logo from "./media/cards/card2.png";
+import deck from "./media/cards/acardd3.png";
 import me from "./media/ME.png";
 import twt from "./media/twitter.png";
 import dsc from "./media/discord.png";
 
+import r1 from "./media/results/r1.png";
+import r2 from "./media/results/r2.png";
+import r3 from "./media/results/r3.png";
+import r4 from "./media/results/r4.jpg";
+
+
 import {AiFillEye, AiFillSound, AiOutlineSound} from 'react-icons/ai'
-import {FaDiscord} from 'react-icons/fa'
 import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import {
   AnchorProvider,
@@ -44,8 +50,18 @@ import useSound from 'use-sound';
 import winnerSound from './media/results/winner.mp3'; 
 import loser from './media/results/loser.mp3'; 
 import tie from './media/results/tie.mp3'; 
-import winAnimation from './media/results/gif.gif'
+import hg from './media/hourglass.gif'
 import Buffer from 'buffer'
+import styled from "styled-components"
+
+const StyledModal = styled(Modal)`
+ div{
+  div{
+    background-color: #FFD966;
+    border-radius: 15px;
+  }
+ }
+`
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 
@@ -68,8 +84,9 @@ const Rooms = (props) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useMoralis();
 
-  const [roomName, setRoomName] = useState("");
+  const [smShow, setSmShow] = useState(true);
 
+  const [roomName, setRoomName] = useState("");
   const [mode, setMode] = useState(false);
   const [selectedBox, setBox] = useState(null);
 
@@ -103,12 +120,14 @@ const Rooms = (props) => {
 
   const [chosenOnes, setChoseOnes] = useState([]);
   const [opChosenOnes, setOpChoseOnes] = useState([]);
+  const [opChosenCards, setOpChoseCards] = useState(null);
+
 
   const [soundState, setSoundState] = useState(false)
   const [winSound] = useSound(winnerSound);
   const [loseSound] = useSound(loser);
   const [tieSound] = useSound(tie);
-  const [ended, setEnded] = useState(false)
+  const [showHg, setShowHg] = useState(false)
   const [announcements, setAnnouncements] = useState([
     `Sengo slapped ZMK and won ${amount} SOL`,
     `It's a tie!`,
@@ -172,8 +191,8 @@ const Rooms = (props) => {
     setAmount(roomData.get("bet_amount"));
     if (roomData.get("challenger") !== "null") {
       if (username === roomData.get("owner"))
-        setOpponent(roomData.get("challenger"));
-      else setOpponent(roomData.get("owner"));
+        setOpponent(roomData.get("challenger").substring(0,15));
+      else setOpponent(roomData.get("owner").substring(0,15));
     }
   };
 
@@ -270,7 +289,7 @@ const Rooms = (props) => {
       } else {
         const challenger = Moralis.User.current().id;
         const roomID = roomId;
-        const playerData = { player: challenger, choice: chosenOnes };
+        const playerData = { player: challenger, choice: chosenOnes, choiceIndexes: Array.from(chosenCards) };
         const params = { room: roomID, playerData: playerData };
         await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
       }
@@ -367,8 +386,12 @@ const Rooms = (props) => {
 
   function ShowResultsModal(props) {
     let res;
+    let p1_score = 0;
+    let p2_score = 0;
     if (opChosenOnes){
       res = evaluateWinnerInUI();
+     // p1_score = res.filter(aDuel => aDuel[0] === 1).length;
+     // p2_score = res.filter(aDuel => aDuel[1] === 1).length;
     }
 
     return (  
@@ -378,9 +401,6 @@ const Rooms = (props) => {
         aria-labelledby="contained-modal-title-vcenter"
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title className="ms-auto">{WinPopper()}</Modal.Title>
-          </Modal.Header>
         <Modal.Body>
           <Container>
             <Row className="justify-content-md-center resultCol">
@@ -389,7 +409,7 @@ const Rooms = (props) => {
                 if(res[idx][1] === res[idx][0]) return (<Col key={idx}><p className="drawBorder"><img className="handImg" width={80} height={80} src={imgs[choiceIdx]} alt="nah" /></p></Col>)
                 else if (res[idx][1] === 1) return (<Col key={idx}><p className="winBorder"><img className="handImg" width={80} height={80} src={imgs[choiceIdx]} alt="nah" /></p></Col>)
                 else return (<Col key={idx}><p className="lossBorder"><img className="handImg" width={80} height={80} src={imgs[choiceIdx]} alt="nah" /></p></Col>)
-              })} 
+              })}
             </Row>
           </Container>
           <Container>
@@ -466,7 +486,7 @@ const Rooms = (props) => {
       }}/>)
     } else {
       // Render a countdown
-      return <span>{seconds}</span>;
+      return <h3>Showing results in {seconds} <img src={hg} width={60} height={60} /></h3>;
     }
   };
 
@@ -587,8 +607,8 @@ const Rooms = (props) => {
   };
 
   const resetRoom = async () => {
-     await Moralis.Cloud.run("rematch", {roomId: roomId,});
-   // if (duelEnded && reset) {
+    await Moralis.Cloud.run("rematch", {roomId: roomId,});
+    //if (winner) {
       setReadtState(false)
       setStarted(false);
       setConfirmed(false);
@@ -600,7 +620,9 @@ const Rooms = (props) => {
       setCards([logo, logo, logo, logo, logo])
       setGenHands(null)
       setchosenCards(new Set())
-   // }
+      setOpChoseCards(null)
+      opChosenCards([])
+    //}
   };
 
   const transferToEscrow = async () => {
@@ -745,6 +767,8 @@ const Rooms = (props) => {
   const getReady = async () =>{
     const params = { roomId: roomId };
     await Moralis.Cloud.run("getReady", params); //runs a function on the cloud
+    if (readyState) setReadtState(false)
+    else setReadtState(true)
   }
 
   
@@ -772,24 +796,30 @@ const Rooms = (props) => {
     };
 
     const enterRoomPing = async () => {
-      let query = new Moralis.Query("Room");
-      query.get(roomId);
-      query.equalTo("challenger", "null");
-      let subscription = await query.subscribe();
-      subscription.on("leave", (object) => {
-        getRoomData(params.userId);
-      });
+        let query = new Moralis.Query("Room");
+        query.get(roomId);
+        query.equalTo("challenger", "null");
+        let subscription = await query.subscribe();
+        subscription.on("leave", (object) => {
+          getRoomData(roomId);
+        });
+        subscription.on("enter", (object) => {
+          getRoomData(roomId);
+          setOpponent(null);
+        });
     };
 
     const leaveRoomPing = async () => {
-      let query = new Moralis.Query("Room");
-      query.get(roomId);
-      query.equalTo("challenger", "null");
-      let subscription = await query.subscribe();
-      subscription.on("enter", (object) => {
-        getRoomData(params.userId);
-        setOpponent(null);
-      });
+      if (roomId){
+        let query = new Moralis.Query("Room");
+        query.get(roomId);
+        query.equalTo("challenger", "null");
+        let subscription = await query.subscribe();
+        subscription.on("enter", (object) => {
+          getRoomData(roomId);
+          setOpponent(null);
+        });
+      }
     };
 
     //get player 2's key to find PDA
@@ -821,20 +851,13 @@ const Rooms = (props) => {
       query.get(roomId);
       query.equalTo("ready", true);
       let subscription = await query.subscribe();
-      subscription.on("leave", async () => {
-        subscription.unsubscribe()
-        setReadtState(true)
-      });
-    };
-
-    const unReadyPing = async () => {
-      let query = new Moralis.Query("Room");
-      query.get(roomId);
-      query.equalTo("ready", false);
-      let subscription = await query.subscribe();
       subscription.on("enter", async () => {
-        subscription.unsubscribe()
+        setReadtState(true)
+        subscription.unsubscribe();
+      });
+      subscription.on("leave", async () => {
         setReadtState(false)
+        subscription.unsubscribe();
       });
     };
 
@@ -852,8 +875,12 @@ const Rooms = (props) => {
         else{
           if (curr_user_id === player_one.player) {
             setOpChoseOnes(player_two.choice);
+           // setOpChoseCards(new Set(player_two.choiceIndexes))
           } 
-          else setOpChoseOnes(player_one.choice);
+          else {
+            setOpChoseOnes(player_one.choice);
+            //setOpChoseCards(new Set(player_one.choiceIndexes))
+          }
         }
     };
 
@@ -874,7 +901,7 @@ const Rooms = (props) => {
       query.equalTo("room", roomId);
       query.equalTo("ready", true);
       let subscription = await query.subscribe();
-      subscription.on("enter", async () => {
+      subscription.on("enter", async (object) => {
         start()
         subscription.unsubscribe();
       });
@@ -897,22 +924,23 @@ const Rooms = (props) => {
         subscription.unsubscribe();
       });
     };
-
-    if (isAuthenticated && roomId) {
+    if (roomId) {
       setUser(Moralis.User.current().getUsername());
       isOwner()
-
       enterRoomPing();
-      leaveRoomPing();
+     // leaveRoomPing();  
+
       //readyPdaPing();
-      readyPing()
-      unReadyPing()
       gameStartPing(); //to check if servers got both choices of players
       gamePlayingPing()
     }
 
     if(choiceConfirmed && gameStarted){
       sendSelectedHand()
+    }
+
+    if (roomId && owner && opponent){
+      readyPing()
     }
 
     if (gameStarted && roomId) {
@@ -922,7 +950,6 @@ const Rooms = (props) => {
     if (totalSelected === 3 || chosenCards.size === 3) {
       setConfirmed(true);
     }
-  
     
   }, [
     isAuthenticated,
@@ -935,7 +962,8 @@ const Rooms = (props) => {
     opponent,
     totalSelected,
     chosenCards,
-    choiceConfirmed
+    choiceConfirmed,
+    owner
   ]);
 
   useEffect(() => {
@@ -945,19 +973,32 @@ const Rooms = (props) => {
     }
 
   }, [isAuthenticated, mode]);
-
-  useEffect(() => {
-    setSoundState(props.sound)
-  }, [])
   
 
   if (isAuthenticated && roomId) {
     return (
       <Container fluid="xxl" className="roomContainer">
-        <h2 className="room_name">Room: {roomName}</h2>
         <Row>
+
+        <StyledModal
+          size="sm"
+          show={smShow}
+          onHide={() => setSmShow(false)}
+          aria-labelledby="contained-modal-title-vcenter"
+          centered
+        >
+          <Modal.Header>  <Modal.Title> <h2>Winning Msg</h2> </Modal.Title> </Modal.Header>
+          <Modal.Body className="modalBody">
+            <Container>
+            <img className="winningImg" width={60} height={60}  src={r1} alt=""/>
+            <Button className="winningImg" onClick={resetRoom}><h3>Rematch</h3></Button>
+            <p style={{textAlign: "center"}}>with x Sol</p>
+            <Button className="winningImg" onClick={() => leaveRoom(params.userId)}>Leave</Button>
+            </Container>
+          </Modal.Body>
+        </StyledModal>
           <Col>
-            <br />{" "}
+            <br />
             <div>
               <Button onClick={() => leaveRoom(params.userId)}>Leave</Button>
             </div>
@@ -973,7 +1014,34 @@ const Rooms = (props) => {
           <Col xs={7}>
             <Container>
               <Row className="justify-content-md-center">
-                <OppenentOptions />
+                {opChosenOnes && opChosenCards && duelEnded? 
+                (<Row className="choiceRow">
+                  {cards.map((aHand, index) => {
+                    const handIdx = Number(opChosenOnes.shift());
+                    if (opChosenCards.has(index)){
+                      return(
+                        <Col className="aselectedCard">
+                        <Button className="aCard">
+                          <AiFillEye className="selectedCard" />
+                          <img
+                            className="handImg"
+                            width={60}
+                            height={60}
+                            src={imgs[handIdx]}
+                          />
+                        </Button>
+                      </Col>
+                      )
+                    }
+                    else return(
+                      <Col id={props.id}>
+                        <Button className="aCard"/>
+                      </Col>
+                    )
+                  })}
+                </Row>) : 
+                (<OppenentOptions />)
+              }
               </Row>
               <Row className="justify-content-md-center">
                 <Col>
@@ -1009,9 +1077,17 @@ const Rooms = (props) => {
                       <Row>
                         <Col>
                           {owner ? (
-                            <span> Waiting for challenger to be ready </span>
+                            <div>
+                              <h3 className="room_name">Room {roomName}</h3>
+                              <span> Waiting for challenger to be ready </span>
+                              <h5>Challenger: {opponent}</h5>
+                              <p>
+                                Bet: {amount} <img src={sol} />
+                              </p>
+                            </div>
                           ) : (
                             <div>
+                               <h3 className="room_name">Room {roomName}</h3>
                               <span> Click on ready </span>
                               <h5>Opponent: {opponent}</h5>
                               <p>
@@ -1020,7 +1096,8 @@ const Rooms = (props) => {
                             </div>
                           )}
                         </Col>
-                        <Col xs lg="2">
+                        <Col xs lg="1">
+                          <Row>
                           {soundState ? (
                             <Button onClick={() => setSoundState(false)}>
                               <AiFillSound />
@@ -1030,12 +1107,15 @@ const Rooms = (props) => {
                               <AiOutlineSound />
                             </Button>
                           )}
+                          </Row>
                         </Col>
                       </Row>
                     </Container>
                   )}
                   {generatedhands ? (
-                    <CustomCountDown seconds={5} check={checkSelected} />
+                    <div>
+                        <CustomCountDown seconds={10} check={checkSelected} />
+                    </div>
                   ) : (
                     <div></div>
                   )}
@@ -1046,11 +1126,7 @@ const Rooms = (props) => {
                     <div>
                       {!owner ? (
                         <Row>
-                          {!readyState ? (
-                            <Button onClick={getReady}>Ready</Button>
-                          ) : (
-                            <Button onClick={getReady}>Unready</Button>
-                          )}
+                          <Button disabled={readyState} onClick={getReady}>Ready</Button>
                         </Row>
                       ) : (
                         <div></div>
@@ -1060,6 +1136,9 @@ const Rooms = (props) => {
                     <Row>
                       <Button onClick={payo}>Claim</Button>
                     </Row>
+                    <Row className="deckRow">
+                        <img src={deck} />
+                     </Row>
                     <br />
                     <Row></Row>
                   </Container>
@@ -1073,14 +1152,14 @@ const Rooms = (props) => {
                     {readyState ? (
                       <div>
                         {generatedhands ? (
-                          <Row>
+                          <Row className="choiceRow">
                             {generatedhands.map((aHand, index) => {
                               const handIdx = Number(aHand);
                               return (
                                 <Col
                                   className={`${
                                     chosenCards.has(index)
-                                      ? "aselectedCard"
+                                      ? "bselectedCard"
                                       : ""
                                   }`}
                                 >
@@ -1131,37 +1210,43 @@ const Rooms = (props) => {
               </Row>
             </Container>
           </Col>
-          <Col>
+          <Col className="annns">
             <Row>
-            <Container className="announcementsContainer">
-              <RTable responsive borderless>
-                <thead>
-                  <tr>
-                    <th colSpan={4}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {announcements.map((announcement) => {
-                    return (
-                      <tr>
-                        <td colSpan={4}>{announcement}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </RTable>
-            </Container>
+              <Container className="announcementsContainer">
+                <RTable responsive borderless>
+                  <thead>
+                    <tr>
+                      <th colSpan={4}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {announcements.map((announcement) => {
+                      return (
+                        <tr>
+                          <td colSpan={4}>{announcement}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </RTable>
+              </Container>
             </Row>
             <Row>
-                <Col>
-                  <a><img width={50} height={50} src={dsc}></img></a>
-                </Col>
-                <Col>
-                  <a><img width={50} height={50} src={me}></img></a>
-                </Col>
-                <Col>
-                  <a><img width={50} height={50} src={twt}></img></a>
-                </Col>
+              <Col>
+                <a href="https://discord.gg/VufJp2EY">
+                  <img width={50} height={50} src={dsc}></img>
+                </a>
+              </Col>
+              <Col>
+                <a>
+                  <img width={50} height={50} src={me}></img>
+                </a>
+              </Col>
+              <Col>
+                <a href="https://twitter.com/AsakaLabs">
+                  <img width={50} height={50} src={twt}></img>
+                </a>
+              </Col>
             </Row>
           </Col>
         </Row>
@@ -1206,8 +1291,18 @@ class CustomCountDown extends React.Component {
   }
 
   render(){
-    return <div style={{width: "100%", textAlign: "center"}}>
-      <h1>{this.state.seconds}</h1>
-    </div>
+    if (!this.state.ended){
+      return (
+        <div style={{ width: "100%", textAlign: "center" }}>
+          <p>
+          <h3> Time remaining </h3>
+          <h1>{this.state.seconds} <img src={hg} width={60} height={60} /></h1>
+          </p>
+        </div>
+      );
+    }
+    else return(
+      <div></div>
+    )
   }
 }

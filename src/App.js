@@ -66,8 +66,8 @@ const App = () => {
       <Col className="discordChat">
         <Container className="discord_chat_container">
           <WidgetBot
-            server="728233239998627842"
-            channel="728250903689166909"
+            server="1002944553050968215"
+            channel="1002949643077963857"
             height={500}
           />
         </Container>
@@ -315,13 +315,13 @@ const App = () => {
               </Row>
               <Row>
                 <Col>
-                  <a><img width={50} height={50} src={dsc}></img></a>
+                  <a href="https://discord.gg/VufJp2EY"><img width={50} height={50} src={dsc}></img></a>
                 </Col>
                 <Col>
                   <a><img width={50} height={50} src={me}></img></a>
                 </Col>
                 <Col>
-                  <a><img width={50} height={50} src={twt}></img></a>
+                  <a href="https://twitter.com/AsakaLabs"><img width={50} height={50} src={twt}></img></a>
                 </Col>
             </Row>
             </Container>

@@ -97,20 +97,20 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
     } else if (whoIsLeaving === results.get("owner")) { //owner is leaving
       results.set("owner", aPlayer);
       results.set("challenger", "null");
-      results.save();
+      await results.save();
 
       const ownerSolAddress = aPda.get("players")[0];
-      aPda.remove("players", ownerSolAddress);
-      aPda.set("ready", false)
-      aPda.save()
+      //aPda.remove("players", ownerSolAddress);
+      //aPda.set("ready", false)
+      //aPda.save()
       return true; //you can leave now
     } else { //challenger is leaving
       results.set("challenger", "null");
-      results.save();
+      await results.save();
       const challengerSolAddress = aPda.get("players")[1];
-      aPda.remove("players", challengerSolAddress);
-      aPda.set("ready", false);
-      aPda.save()
+     // aPda.remove("players", challengerSolAddress);
+      //aPda.set("ready", false);
+      //aPda.save()
 
       return true; //you can leave now
     }
@@ -193,6 +193,7 @@ Moralis.Cloud.define("ready", async (request) => {
 Moralis.Cloud.define("ready2", async (request) => {
   const aPlayerData = request.params.playerData;
   const player_choices = aPlayerData.choice; //is an array
+ // const player_cards = aPlayerData.choiceIndexes; //is an array of card indexes
   const roomId = request.params.room;
   if (player_choices.length === 3){
     

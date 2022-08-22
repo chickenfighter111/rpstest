@@ -195,6 +195,48 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "payout",
+      "accounts": [
+        {
+          "name": "roomAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "winner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeAcc",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "payDraw",
+      "accounts": [
+        {
+          "name": "roomAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "winner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeAcc",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -214,6 +256,10 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
           }
         ]
       }

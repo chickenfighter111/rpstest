@@ -80,7 +80,9 @@ input:focus {
 
 .choiceRow{
   max-height: 160px !important;
-  margin-bottom: 20px;
+  margin-bottom: 50px !important;
+  margin-top: 50px !important;
+
 }
 
 
@@ -116,7 +118,7 @@ input:focus {
 
 .lossBorder {
   border-radius: 25px;
-  background: #f74444;
+  background: #FFD0DA;
   padding: 20px; 
   width: 200px;
   height: 150px;  
@@ -200,14 +202,19 @@ button:hover{
 
 
 .aCard{
-  height: 160px;
+  max-height: 160px;
+  max-width: 90px;
   width: 90px;
+  height: 160px;
   border-radius: 15px !important;
   background-color: #FFD0DA !important;
   background-image: url("./components/media/cards/card2.png");
   margin-top: 20px;
   margin-bottom: 20px;
   margin: auto;
+  border: 4px solid black !important;
+
+  
 }
 
 .aCard:hover{
@@ -241,6 +248,10 @@ button:hover{
   padding-top: 30px !important;
 }
 
+.bselectedCard{
+  margin-top: -30px !important;
+}
+
 .myTable{
   background-color: #FBE5D6 !important;
   border-radius: 20px !important;
@@ -259,5 +270,34 @@ button:hover{
 .announcementsContainer{
   max-height: 400px !important;
   height: 400px;
+  overflow-y: scroll;
 }
 
+.annns{
+  margin-top: 20px !important;
+}
+
+.modalBody{
+  height: 250px;
+}
+
+.modal-header{
+  border-bottom: none !important;
+  justify-Content: center !important;
+   align-items: "center" !important;
+}
+
+.winningImg{
+  display:block !important;
+  margin:auto !important;
+  margin-bottom: 10px !important;
+  border: 3px solid black !important;
+}
+
+.modal-content{
+  border: 4px solid black !important;
+}
+
+.deckRow{
+  padding-top: 40px !important;
+}

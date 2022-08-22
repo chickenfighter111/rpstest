@@ -56,13 +56,15 @@ function WalletManager(props) {
           program.programId
         );
         try {
-          await program.methods.depow(new BN(amount*one_sol))
+          const tx = await program.methods.depow(new BN(amount*one_sol))
             .accounts({
               lockAccount: escrowPda,
               owner: publicKey
             }).rpc()  
+           // console.log(tx)
           await getBalance();//refresh
         } catch (err) {
+         // console.log(err)
         }
       }
     };

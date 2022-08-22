@@ -15,7 +15,6 @@ function Chat(props) {
   const [chatId, setChatId] = useState(props.id);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
-  const [useCustomBubble, setCustomBubble] = useState(true);
   const [sender, setSnder] = useState(props.sender);
 
   const newMessage = async (msg) => {
@@ -49,25 +48,21 @@ function Chat(props) {
   };
 
   const pushMessage = async (recipient, message) => {
-    //const prevStateMsg = messages;
     const newMessage = new Message({
       id: recipient,
       message,
       senderName: users[0], //sender,
     });
     messages.push(newMessage);
-    //setMessages(prevStateMsg);
   };
 
   const receivedmsg = async (recipient, message) => {
-    //const prevStateMsg = messages;
     const newMessage = new Message({
       id: recipient,
       message,
       senderName: users[2], //sender,
     });
     messages.push(newMessage);
-   // setMessages(prevStateMsg);
   };
 
   useEffect(() => {
@@ -110,18 +105,12 @@ function Chat(props) {
       });
     };
 
-    if(chatId && isAuthenticated){
+    if(chatId){
+      setSnder(Moralis.User.current().getUsername())
       pingNewMsg();
     }
 
     if (messages.length === 0) {
-      const newMessage = new Message({
-        id: "Admin",
-        message: "Welcome !",
-        senderName: "Admin", //sender,
-      });
-      messages.push(newMessage);
-      setMessages(messages);
       fetchChatMessages();
     }
   }, [messages, chatId, sender, isAuthenticated]);

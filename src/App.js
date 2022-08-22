@@ -217,7 +217,7 @@ const App = () => {
                                     else return "Waiting";
                                   };
                                   const joinStatus = () => {
-                                    if (playing && chall !== "null") return <Button disabled id={roomId} onClick={joinRoom}>
+                                    if (playing || chall !== "null") return <Button disabled id={roomId} onClick={joinRoom}>
                                     Join
                                   </Button>;
                                     else return <Button id={roomId} onClick={joinRoom}>

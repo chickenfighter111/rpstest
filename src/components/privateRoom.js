@@ -13,7 +13,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
 
-import React,{ useEffect, useState, useMemo, useRef } from "react";
+import React,{ useEffect, useState, useMemo, useReducer } from "react";
 import Chat from "./roomchat";
 import { Loading, Table, Card, Tag } from "@web3uikit/core";
 import Countdown from "react-countdown";
@@ -33,6 +33,10 @@ import r1 from "./media/results/r1.png";
 import r2 from "./media/results/r2.png";
 import r3 from "./media/results/r3.png";
 import r4 from "./media/results/r4.jpg";
+
+import AOS from "aos";
+
+import "aos/dist/aos.css";
 
 
 import {AiFillEye, AiFillSound, AiOutlineSound} from 'react-icons/ai'
@@ -58,13 +62,14 @@ const StyledModal = styled(Modal)`
  div{
   div{
     background-color: #FFD966;
-    border-radius: 15px;
+    border-radius: 25px;
   }
  }
 `
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 
+const imgs = [rock, paper, scissor]
 const Hands = {
   rock: "0",
   paper: "1",
@@ -72,7 +77,25 @@ const Hands = {
   none: "3",
 }
 
-const imgs = [rock, paper, scissor]
+
+const resultMessages = [
+  {
+    msg: "You win ",
+    img: r2,
+    leaveMsg: "Leave with shame",
+  },
+  {
+    msg: "You got beat ",
+    img: r4,
+    leaveMsg: "Leave with shame",
+  },
+  {
+    msg: "Draw?!",
+    img: r1,
+    leaveMsg: "Leave with shame",
+  },
+];
+
 
 const fee_wallet = new anchor.web3.PublicKey(
   "4mkNvUq24DN9g8EWuJWkc176t9PiRnRU4d3U8WuZ1TC1"
@@ -84,7 +107,7 @@ const Rooms = (props) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useMoralis();
 
-  const [smShow, setSmShow] = useState(true);
+  const [smShow, setSmShow] = useState(false);
 
   const [roomName, setRoomName] = useState("");
   const [mode, setMode] = useState(false);
@@ -101,6 +124,7 @@ const Rooms = (props) => {
   const [chosenCards, setchosenCards] = useState(new Set());
   const [choices, setChoices] = useState([null, null, null, null, null]);
   const [cards, setCards] = useState([logo, logo, logo, logo, logo]);
+  const [opCards, setOpCards] = useState([logo, logo, logo, logo, logo]);
   const [opponentChoice, setOppenentChoice] = useState(none);
   const [generatedhands, setGenHands] = useState(null);
 
@@ -120,8 +144,6 @@ const Rooms = (props) => {
 
   const [chosenOnes, setChoseOnes] = useState([]);
   const [opChosenOnes, setOpChoseOnes] = useState([]);
-  const [opChosenCards, setOpChoseCards] = useState(null);
-
 
   const [soundState, setSoundState] = useState(false)
   const [winSound] = useSound(winnerSound);
@@ -132,8 +154,7 @@ const Rooms = (props) => {
     `Sengo slapped ZMK and won ${amount} SOL`,
     `It's a tie!`,
     `ZMK slapped Sengo and won ${amount} SOL`
-  ])
-
+  ]);
 
 
   const idl = require("../rps_project.json");
@@ -390,8 +411,8 @@ const Rooms = (props) => {
     let p2_score = 0;
     if (opChosenOnes){
       res = evaluateWinnerInUI();
-     // p1_score = res.filter(aDuel => aDuel[0] === 1).length;
-     // p2_score = res.filter(aDuel => aDuel[1] === 1).length;
+      p1_score = res.filter(aDuel => aDuel[0] === 1).length;
+      p2_score = res.filter(aDuel => aDuel[1] === 1).length;
     }
 
     return (  
@@ -400,9 +421,12 @@ const Rooms = (props) => {
         size="lg"
         aria-labelledby="contained-modal-title-vcenter"
         centered
+        backdrop="static"
       >
         <Modal.Body>
-          <Container>
+          <Row>
+            <Col>
+            <Container>
             <Row className="justify-content-md-center resultCol">
             {opChosenOnes.map((choice, idx) => {
                 const choiceIdx = Number(choice);
@@ -412,7 +436,14 @@ const Rooms = (props) => {
               })}
             </Row>
           </Container>
-          <Container>
+            </Col>
+            <Col xs lg="1">
+              <span ><h1 className="point">{p2_score}</h1></span>
+            </Col>
+          </Row>
+          <Row>
+              <Col>
+              <Container>
             {chosenOnes !== null ? (
               <Row className="justify-content-md-center resultCol">
                {chosenOnes.map((choice, idx) => {
@@ -442,6 +473,11 @@ const Rooms = (props) => {
               </Row>
             )}
           </Container>
+              </Col>
+              <Col xs lg="1">
+                <span><h1 className="point">{p1_score}</h1></span>
+              </Col>
+          </Row>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={props.onHide}>Close</Button>
@@ -462,17 +498,83 @@ const Rooms = (props) => {
     const current_player = Moralis.User.current().id;
     if (winner === current_player) {
       if(soundState)winSound()
-      addWinnerAnnouncement(user, opponent)
+      //addWinnerAnnouncement(user, opponent)
       //payWinner(Moralis.Moralis.User.current().get("solAddress"))
-      return <span>You win!</span>
+      return (
+        <StyledModal
+        size="sm"
+        show={smShow}
+        onHide={() => setSmShow(false)}
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        backdrop="static"
+      >
+        <Modal.Header>  <Modal.Title> <h2>{resultMessages[0].msg}</h2> </Modal.Title> </Modal.Header>
+        <Modal.Body className="modalBody">
+          <Container>
+          <img className="winningImg" width={60} height={60}  src={resultMessages[0].img} alt=""/>
+          <Button className="winningImg" onClick={() => {
+            resetRoom()
+            setSmShow(false)
+          }}><h3>Rematch</h3></Button>
+          <p style={{textAlign: "center"}}>with x Sol</p>
+          <Button className="winningImg" onClick={() => leaveRoom(params.userId)}>{resultMessages[0].leaveMsg}</Button>
+          </Container>
+        </Modal.Body>
+      </StyledModal>
+      )
     } else if (winner === "draw") {
       if(soundState)tieSound()
-      addDrawAnnouncement()
-      return <span>Draw!</span>;
+      //addDrawAnnouncement()
+      return(
+        <StyledModal
+        size="sm"
+        show={smShow}
+        onHide={() => setSmShow(false)}
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        backdrop="static"
+      >
+        <Modal.Header>  <Modal.Title> <h2>{resultMessages[2].msg}</h2> </Modal.Title> </Modal.Header>
+        <Modal.Body className="modalBody">
+          <Container>
+          <img className="winningImg" width={60} height={60}  src={resultMessages[2].img} alt=""/>
+          <Button className="winningImg" onClick={() => {
+            resetRoom()
+            setSmShow(false)
+          }}><h3>Rematch</h3></Button>
+          <p style={{textAlign: "center"}}>with x Sol</p>
+          <Button className="winningImg" onClick={() => leaveRoom(params.userId)}>{resultMessages[2].leaveMsg}</Button>
+          </Container>
+        </Modal.Body>
+      </StyledModal>
+      ) ;
     } else {
       if(soundState)loseSound()
-      addWinnerAnnouncement(opponent, user)
-      return <span>You lose!</span>;
+     // addWinnerAnnouncement(opponent, user)
+      return (
+        <StyledModal
+        size="sm"
+        show={smShow}
+        onHide={() => setSmShow(false)}
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+        backdrop="static"
+      >
+        <Modal.Header>  <Modal.Title> <h2>{resultMessages[1].msg}</h2> </Modal.Title> </Modal.Header>
+        <Modal.Body className="modalBody">
+          <Container>
+          <img className="winningImg" width={60} height={60}  src={resultMessages[1].img} alt=""/>
+          <Button className="winningImg" onClick={() => {
+            resetRoom()
+            setSmShow(false)
+          }}><h3>Rematch</h3></Button>
+          <p style={{textAlign: "center"}}>with x Sol</p>
+          <Button className="winningImg" onClick={() => leaveRoom(params.userId)}>{resultMessages[1].leaveMsg}</Button>
+          </Container>
+        </Modal.Body>
+      </StyledModal>
+      );
     }
   };
 
@@ -483,6 +585,7 @@ const Rooms = (props) => {
         setModalShow(false)
         setIsWinner(false)
         resetRoom()
+        setSmShow(true)
       }}/>)
     } else {
       // Render a countdown
@@ -618,10 +721,9 @@ const Rooms = (props) => {
       setChoseOnes([])
       setChoices([null, null, null, null, null])
       setCards([logo, logo, logo, logo, logo])
+      setOpCards([logo, logo, logo, logo, logo])
       setGenHands(null)
       setchosenCards(new Set())
-      setOpChoseCards(null)
-      opChosenCards([])
     //}
   };
 
@@ -633,6 +735,8 @@ const Rooms = (props) => {
       );
 
       const pdaPK = new web3.PublicKey(roomPDA)
+     // console.log(escrowPda.toBase58())
+    //  console.log(roomPDA)
 
       try {
         const tx = await program.methods.transferro(new BN(amount*one_sol))
@@ -641,8 +745,12 @@ const Rooms = (props) => {
           roomAccount: pdaPK,
           owner: publicKey
         }).rpc()
-        await sendSelectedHand();
+       // console.log("tx signature", tx)
+        //generateHands()
+        //setStarted(true);
+       // await sendSelectedHand();
       } catch (err) {
+     //   console.log(err)
       }
     }
   };
@@ -771,8 +879,6 @@ const Rooms = (props) => {
     else setReadtState(true)
   }
 
-  
-
   useEffect(() => {
     const fetchPdaAtEnterRoom = async () => {
       if (!roomPDA) {
@@ -873,13 +979,18 @@ const Rooms = (props) => {
           else setOpponentsChoice(player_one.choice);
         }
         else{
+          
           if (curr_user_id === player_one.player) {
             setOpChoseOnes(player_two.choice);
-           // setOpChoseCards(new Set(player_two.choiceIndexes))
+            player_two.choiceIndexes.forEach((aChoice, index) => {
+              opCards[aChoice] = imgs[Number(player_two.choice[index])]
+            })
           } 
           else {
             setOpChoseOnes(player_one.choice);
-            //setOpChoseCards(new Set(player_one.choiceIndexes))
+            player_one.choiceIndexes.forEach((aChoice, index) => {
+              opCards[aChoice] = imgs[Number(player_one.choice[index])]
+            })
           }
         }
     };
@@ -892,7 +1003,7 @@ const Rooms = (props) => {
       subscription.on("enter", async (object) => {
         generateHands()
         setStarted(true);
-        subscription.unsubscribe();
+        //subscription.unsubscribe();
       });
     };
 
@@ -903,7 +1014,7 @@ const Rooms = (props) => {
       let subscription = await query.subscribe();
       subscription.on("enter", async (object) => {
         start()
-        subscription.unsubscribe();
+       // subscription.unsubscribe();
       });
     };
 
@@ -921,7 +1032,7 @@ const Rooms = (props) => {
         if (Moralis.User.current().id === object.get("winner")) {
           setIsWinner(true)
         }
-        subscription.unsubscribe();
+       // subscription.unsubscribe();
       });
     };
     if (roomId) {
@@ -972,31 +1083,30 @@ const Rooms = (props) => {
       getRoomData(params.userId);
     }
 
-  }, [isAuthenticated, mode]);
-  
+    if (winner){
+      const current_player = Moralis.User.current().id
+      if (winner === current_player) {
+        addWinnerAnnouncement(user, opponent)
+      }
+      else if (winner === "draw") {
+        addDrawAnnouncement()
+      }
+      else{
+        addWinnerAnnouncement(opponent, user)
+      }
+    }
+
+  }, [isAuthenticated, mode, winner]);
+
+  useEffect(() => {
+    AOS.init({ duration: 1500 });
+  }, []);
 
   if (isAuthenticated && roomId) {
     return (
       <Container fluid="xxl" className="roomContainer">
         <Row>
-
-        <StyledModal
-          size="sm"
-          show={smShow}
-          onHide={() => setSmShow(false)}
-          aria-labelledby="contained-modal-title-vcenter"
-          centered
-        >
-          <Modal.Header>  <Modal.Title> <h2>Winning Msg</h2> </Modal.Title> </Modal.Header>
-          <Modal.Body className="modalBody">
-            <Container>
-            <img className="winningImg" width={60} height={60}  src={r1} alt=""/>
-            <Button className="winningImg" onClick={resetRoom}><h3>Rematch</h3></Button>
-            <p style={{textAlign: "center"}}>with x Sol</p>
-            <Button className="winningImg" onClick={() => leaveRoom(params.userId)}>Leave</Button>
-            </Container>
-          </Modal.Body>
-        </StyledModal>
+          {winner ? (<WinPopper/>) : (<div></div>)}
           <Col>
             <br />
             <div>
@@ -1014,34 +1124,37 @@ const Rooms = (props) => {
           <Col xs={7}>
             <Container>
               <Row className="justify-content-md-center">
-                {opChosenOnes && opChosenCards && duelEnded? 
+                <Container>
+                {opChosenOnes ? 
                 (<Row className="choiceRow">
-                  {cards.map((aHand, index) => {
-                    const handIdx = Number(opChosenOnes.shift());
-                    if (opChosenCards.has(index)){
-                      return(
-                        <Col className="aselectedCard">
-                        <Button className="aCard">
-                          <AiFillEye className="selectedCard" />
-                          <img
-                            className="handImg"
-                            width={60}
-                            height={60}
-                            src={imgs[handIdx]}
-                          />
-                        </Button>
-                      </Col>
+                  {
+                    opCards.map((aCard, idx) => {
+                      if (aCard !== logo){
+                        return (
+                          <Col className="aselectedCard" data-aos="fade-down">
+                            <Button className="aCardRev">
+                              <AiFillEye className="selectedCard" />
+                              <img
+                                className="handImg"
+                                width={60}
+                                height={60}
+                                src={aCard}
+                                alt="nah"
+                              />
+                            </Button>
+                          </Col>
+                        );
+                      }
+                      else return(
+                        <Col data-aos="fade-down">
+                          <Button className="aCard"/>
+                        </Col>
                       )
-                    }
-                    else return(
-                      <Col id={props.id}>
-                        <Button className="aCard"/>
-                      </Col>
-                    )
-                  })}
-                </Row>) : 
-                (<OppenentOptions />)
-              }
+                    })
+                  }
+                </Row>)
+                 : (<OppenentOptions/>)}
+                </Container>
               </Row>
               <Row className="justify-content-md-center">
                 <Col>
@@ -1157,11 +1270,13 @@ const Rooms = (props) => {
                               const handIdx = Number(aHand);
                               return (
                                 <Col
+                                  data-aos="fade-up"
                                   className={`${
                                     chosenCards.has(index)
                                       ? "bselectedCard"
                                       : ""
                                   }`}
+                                  
                                 >
                                   <Button
                                     onMouseOver={(e) =>

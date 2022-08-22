@@ -193,7 +193,8 @@ button:hover{
   margin-top: 20px;
   margin-bottom: 20px;
   margin: auto;
-  
+  border: 4px solid black !important;
+
 }
 
 .aCardRev:hover{
@@ -300,4 +301,9 @@ button:hover{
 
 .deckRow{
   padding-top: 40px !important;
+}
+
+.point{
+  padding-top: 60px !important;
+  font-size: 80px;
 }

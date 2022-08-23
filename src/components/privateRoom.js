@@ -874,7 +874,7 @@ const Rooms = (props) => {
     }).rpc()
    // console.log(tx)
     }
-    catch(err){
+    //catch(err){
     }
   };
 
@@ -1042,7 +1042,6 @@ const Rooms = (props) => {
       query.equalTo("ended", true);
       let subscription = await query.subscribe();
       subscription.on("enter", async (object) => {
-        //console.log("duel ended")
         updateOpponentData(object.get("players"))
         setEndedDuel(true); //COUNTDOWN
         setWinner(object.get("winner"));
@@ -1245,6 +1244,11 @@ const Rooms = (props) => {
                     ) : (
                       <div></div>
                     )}
+                    <br />
+                    <Row>
+                      <Button onClick={transferToEscrow}>Pay</Button>
+                    </Row>
+                    <br />
                   </Container>
                 </Col>
                 <Col xs={7}>
@@ -1314,7 +1318,10 @@ const Rooms = (props) => {
                         <div></div>
                       )}
                     </div>
-
+                    <br />
+                    <Row>
+                      <Button onClick={payo}>Claim</Button>
+                    </Row>
                     <Row className="deckRow">
                         <img src={deck} />
                      </Row>
@@ -1414,8 +1421,8 @@ const Rooms = (props) => {
             </Row>
             <Row>
               <Col>
-                <a href="https://discord.gg/VufJp2EY">
-                  <img width={50} height={50} src={dsc}></img>
+                <a target="_blank" href="https://discord.gg/VufJp2EY" >
+                  <img width={50} height={50} src={dsc} alt="discord"></img>
                 </a>
               </Col>
               <Col>
@@ -1424,8 +1431,8 @@ const Rooms = (props) => {
                 </a>
               </Col>
               <Col>
-                <a href="https://twitter.com/AsakaLabs">
-                  <img width={50} height={50} src={twt}></img>
+                <a target="_blank"  href="https://twitter.com/AsakaLabs">
+                  <img width={50} height={50} src={twt} alt="twitter"></img>
                 </a>
               </Col>
             </Row>

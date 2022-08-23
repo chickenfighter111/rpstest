@@ -30,7 +30,7 @@ function Signup() {
     return (
       <Form >
         <Form.Group className="mb-3" controlId="formBasicEmail">
-          <Form.Label>Username</Form.Label>
+          <Form.Label>Change username</Form.Label>
           <Form.Control required type="username" value={username} placeholder="Enter username" onChange={handleInput} />
           <Form.Text className="text-muted">
               Your in-game username

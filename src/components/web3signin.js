@@ -13,7 +13,6 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import {Navbar,Button,Dropdown,Badge,Container,Row,Col, Modal} from "react-bootstrap";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
-import ModifyUsername from "./signup";
 import CreatePlayerWallet from "./createPlayerWallet";
 import PlayerWalletManager from "./instructions/managePlayerWallet";
 
@@ -26,6 +25,8 @@ import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
 
 import {Cog} from '@web3uikit/icons'
 import logo from "./media/logg2.png"
+import sol from "./media/solc.png"
+
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 const idl = require("../rps_project.json");
@@ -39,7 +40,6 @@ const MyNavbar = (props) => {
 
   const { logout, isAuthenticated, authenticate } = useMoralis();
   const { connected, publicKey, wallet, disconnect } = useWallet();
-  const [modalShow, setModalShow] = useState(false);
   const [playerModalShow, setplayerModal] = useState(false);
 
   const [registered, setRegister] = useState(false);
@@ -227,28 +227,7 @@ const MyNavbar = (props) => {
     if (!isAuthenticated && connected) connectPhantomWallet();
   }, [connected]);
 
-  function MyVerticallyCenteredModal(props) {
-    return (
-      <Modal
-        {...props}
-        size="lg"
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title-vcenter">
-            Change username
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <ModifyUsername />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={props.onHide}>Close</Button>
-        </Modal.Footer>
-      </Modal>
-    );
-  }
+
 
   function CreatePlayerModal(props) {
     return (
@@ -289,16 +268,10 @@ const MyNavbar = (props) => {
             <Col>
               <Dropdown>
                 <Dropdown.Toggle className="navBtn" >
-                  Wallet: {balance} SOL <Cog fontSize='15px'/>
+                  Wallet: {balance} <img src={sol} width={30} height={25} alt="SOL"/> <Cog fontSize='15px'/>
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu>
-                  <Dropdown.Item onClick={() => {
-                        setModalShow(true);
-                      }}>
-                  
-                      Settings
-                  </Dropdown.Item>
                   <Dropdown.Item className="walletmanager">
                     
                     <PlayerWalletManager balance={balance} setBal={setBalance}/>
@@ -315,10 +288,6 @@ const MyNavbar = (props) => {
             <CreatePlayerModal
               show={playerModalShow}
               onHide={() => setplayerModal(false)}
-            />
-            <MyVerticallyCenteredModal
-              show={modalShow}
-              onHide={() => setModalShow(false)}
             />
           </Row>
         ) : (

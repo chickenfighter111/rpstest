@@ -11,6 +11,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
 import { Button, Modal, Form, Container, Dropdown } from "react-bootstrap";
+import ModifyUsername from './forms/signup';
 
 
 const network = "https://devnet.genesysgo.net/"; //devnet
@@ -19,12 +20,10 @@ const utf8 = utils.bytes.utf8;
 const one_sol = 1_000_000_000;
 
 function WalletManager(props) {
-  const [balance, setBalance] = useState(null);
 
   const [modalShow, setModalShow] = useState(false);
   const { isAuthenticated } = useMoralis();
-  const { wallet, publicKey, signTransaction, signAllTransactions, connected } =
-    useWallet();
+  const { wallet, publicKey, signTransaction, signAllTransactions, connected } = useWallet();
   const anchorWallet = useMemo(() => {
     if (!wallet || !publicKey || !signTransaction || !signAllTransactions) {
       return;
@@ -155,6 +154,7 @@ function WalletManager(props) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <ModifyUsername />
           <DepositForm />
         </Modal.Body>
         <Modal.Footer>

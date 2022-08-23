@@ -334,3 +334,18 @@ button:hover{
   margin-left: 30px !important;
   margin-right: -105px !important;
 }
+
+.amountSpan{
+  width: 65px;
+  position: relative;
+  left: 30px;
+}
+
+.logoSpan{
+  position: relative;
+  left: 30px;
+  top: -5px;
+  padding-right: 20px;
+  margin-left: 20px;
+
+}

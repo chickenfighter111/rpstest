@@ -7,11 +7,12 @@ import { Loading } from "@web3uikit/core";
 import { Container, Row, Col, Button, Form, Modal, Table as RTable } from "react-bootstrap";
 import {utils, web3} from "@project-serum/anchor";
 import WidgetBot from "@widgetbot/react-embed";
-import {  Routes, Route, useParams, useNavigate } from "react-router-dom";
+import {  Routes, Route, useParams, useNavigate, Link } from "react-router-dom";
 
 import RoomAmount from "./components/createRoom";
 import PrivateRoom from "./components/privateRoom"
 import { FiRefreshCcw } from "react-icons/fi";
+import sol from "./components/media/solc.png"
 
 import me from "./components/media/ME.png";
 import twt from "./components/media/twitter.png";
@@ -22,7 +23,6 @@ const App = () => {
   const { isAuthenticated, authenticate, isAuthenticating } = useMoralis();
   const { connected, publicKey } = useWallet();
   const navigate = useNavigate();
-
 
 
   function CreateRoomModal(props) {
@@ -228,7 +228,10 @@ const App = () => {
                                     <tr>
                                     <td>{null}</td>
                                     <td colSpan={2}>{room.get("owner").substring(0,15)}</td>
-                                    <td>{room.get("bet_amount")}</td>
+                                    <td className="testSpan"> 
+                                      <td className="amountSpan"><span>{room.get("bet_amount")}</span> </td>
+                                      <td className="logoSpan"><img src={sol} width={30} height={25} alt="SOL"/></td>
+                                    </td>
                                     <td>{status()}</td>
                                     <td colSpan={2}>{joinStatus()}</td>
                                     </tr>
@@ -315,13 +318,13 @@ const App = () => {
               </Row>
               <Row>
                 <Col>
-                  <a href="https://discord.gg/VufJp2EY"><img width={50} height={50} src={dsc}></img></a>
+                  <a target="_blank" href='https://discord.gg/VufJp2EY' ><img width={50} height={50} src={dsc} alt="twitter"></img></a>
                 </Col>
                 <Col>
                   <a><img width={50} height={50} src={me}></img></a>
                 </Col>
                 <Col>
-                  <a href="https://twitter.com/AsakaLabs"><img width={50} height={50} src={twt}></img></a>
+                  <a target="_blank"  href='https://twitter.com/AsakaLabs' ><img width={50} height={50} src={twt} alt="discord"></img></a>
                 </Col>
             </Row>
             </Container>

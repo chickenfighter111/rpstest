@@ -19,7 +19,7 @@
               {
                 "kind": "const",
                 "type": "string",
-                "value": "player_escrow_wallet"
+                "value": "a_player_escrow_wallet"
               },
               {
                 "kind": "account",
@@ -59,7 +59,7 @@
               {
                 "kind": "const",
                 "type": "string",
-                "value": "room_escrow_wallet"
+                "value": "a_room_escrow_wallet"
               },
               {
                 "kind": "account",
@@ -75,12 +75,7 @@
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "authority",
-          "type": "publicKey"
-        }
-      ]
+      "args": []
     },
     {
       "name": "depow",

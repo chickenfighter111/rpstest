@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Web3AuthCore } from "@web3auth/core";
-import { PhantomAdapter } from "@web3auth/phantom-adapter";
 import {
   CHAIN_NAMESPACES,
   SafeEventEmitterProvider,
@@ -11,8 +10,8 @@ import "../App.css";
 import { useMoralis } from "react-moralis";
 import Moralis from "moralis";
 import { useWallet } from "@solana/wallet-adapter-react";
-import {Navbar,Button,Dropdown,Nav,Container,Row,Col, Modal} from "react-bootstrap";
-import {WalletDisconnectButton,WalletMultiButton} from "@solana/wallet-adapter-react-ui";
+import {Navbar,Button,Dropdown,Badge,Container,Row,Col, Modal} from "react-bootstrap";
+import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
 import ModifyUsername from "./signup";
 import CreatePlayerWallet from "./createPlayerWallet";
@@ -71,7 +70,7 @@ const MyNavbar = (props) => {
       const playerPDA = aUser.get("player_wallet");
       if (playerPDA) {
         const [escrowPda, _] = await anchor.web3.PublicKey.findProgramAddress(
-          [utf8.encode('player_escrow_wallet'), publicKey.toBuffer()],
+          [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
           program.programId
         );
         try {
@@ -260,8 +259,11 @@ const MyNavbar = (props) => {
       <Container>
         <Navbar.Brand className="burando" href="/">
          
-          <h1>  <img src={logo} width={60} height={50} /> Asaka Games </h1>
-       
+          <span><h1>  <img src={logo} width={60} height={50} /> Asaka Games </h1>
+          </span>
+
+          <Badge className="abadge" bg="secondary">Beta</Badge>
+
         </Navbar.Brand>
         {connected && isAuthenticated ? (
           <Row >

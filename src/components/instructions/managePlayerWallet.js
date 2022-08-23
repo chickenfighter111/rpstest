@@ -52,7 +52,7 @@ function WalletManager(props) {
       const playerPDA = aUser.get("player_wallet");
       if (playerPDA) {
         const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-          [utf8.encode('player_escrow_wallet'),publicKey.toBuffer()],
+          [utf8.encode('a_player_escrow_wallet'),publicKey.toBuffer()],
           program.programId
         );
         try {
@@ -61,7 +61,7 @@ function WalletManager(props) {
               lockAccount: escrowPda,
               owner: publicKey
             }).rpc()  
-           // console.log(tx)
+            //console.log(tx)
           await getBalance();//refresh
         } catch (err) {
          // console.log(err)
@@ -76,7 +76,7 @@ function WalletManager(props) {
         if (playerPDA) {
           const aPlayerPDA = new web3.PublicKey(playerPDA);
           const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-            [utf8.encode('player_escrow_wallet'),publicKey.toBuffer()],
+            [utf8.encode('a_player_escrow_wallet'),publicKey.toBuffer()],
             program.programId
           );
           try {
@@ -123,7 +123,7 @@ function WalletManager(props) {
     const playerPDA = aUser.get("player_wallet");
     if (playerPDA) {
       const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-        [utf8.encode('player_escrow_wallet'), publicKey.toBuffer()],
+        [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
         program.programId
       );
       try {

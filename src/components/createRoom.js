@@ -67,18 +67,15 @@ function CreateRoom(props) {
     aGameRoom.set("room_name", name);
     aGameRoom.set("chat", aChat);
 
-    const [roomPDA, roomBump] = await web3.PublicKey.findProgramAddress([utf8.encode("room_escrow_wallet"), publicKey.toBuffer()],
+    const [roomPDA, roomBump] = await web3.PublicKey.findProgramAddress([utf8.encode("a_room_escrow_wallet"), publicKey.toBuffer()],
       program.programId
     );
     
-    const [roomMasterPDA, _] = await web3.PublicKey.findProgramAddress([utf8.encode("room_master"), publicKey.toBuffer()], 
-    roomMasterProgram.programId) 
-
     try {
       await program.account.lockAccount.fetch(roomPDA);
     } catch (err) {
       await program.methods
-        .initRoomEscrow(roomMasterPDA)
+        .initRoomEscrow()
         .accounts({
           signer: publicKey,
           roomAccount: roomPDA,
@@ -92,7 +89,7 @@ function CreateRoom(props) {
         const roomId = gameRoomObject.id;
         const playerAddress = user.get("solAddress");
 
-        const params = { solAddress: playerAddress, room: roomId, roomMaster: roomMasterPDA.toBase58() };    
+        const params = { solAddress: playerAddress, room: roomId, roomMaster: playerAddress };    
 
         user.set("is_playing", true);
         user.set("in_room", roomId);

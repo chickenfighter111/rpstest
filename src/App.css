@@ -80,8 +80,8 @@ input:focus {
 
 .choiceRow{
   max-height: 160px !important;
-  margin-bottom: 50px !important;
-  margin-top: 50px !important;
+  margin-bottom: 40px !important;
+  margin-top: 20px !important;
 
 }
 
@@ -139,8 +139,15 @@ input:focus {
   
 }
 
+.abadge{
+  top: -30px !important;
+  left: 125px !important;
+  position:relative !important;
+}
+
 .burando{
-  color:#ffffff !important
+  color:#ffffff !important;
+  height:70px !important;
 }
 
 button:active{
@@ -246,11 +253,11 @@ button:hover{
 }
 
 .aselectedCard{
-  padding-top: 30px !important;
+  padding-top: 20px !important;
 }
 
 .bselectedCard{
-  margin-top: -30px !important;
+  margin-top: -20px !important;
 }
 
 .myTable{

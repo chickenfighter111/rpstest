@@ -121,6 +121,7 @@ const Rooms = (props) => {
 
   const [selectedHand, setHand] = useState(Hands.none);
   const [selectedChoice, setChoice] = useState(none);
+  const [revealedCards, setrevealedCards] = useState(new Set());
   const [chosenCards, setchosenCards] = useState(new Set());
   const [choices, setChoices] = useState([null, null, null, null, null]);
   const [cards, setCards] = useState([logo, logo, logo, logo, logo]);
@@ -150,11 +151,8 @@ const Rooms = (props) => {
   const [loseSound] = useSound(loser);
   const [tieSound] = useSound(tie);
   const [showHg, setShowHg] = useState(false)
-  const [announcements, setAnnouncements] = useState([
-    `Sengo slapped ZMK and won ${amount} SOL`,
-    `It's a tie!`,
-    `ZMK slapped Sengo and won ${amount} SOL`
-  ]);
+  const [announcements, setAnnouncements] = useState([]);
+  const [reveal, setReveal] = useState(false);
 
 
   const idl = require("../rps_project.json");
@@ -310,7 +308,7 @@ const Rooms = (props) => {
       } else {
         const challenger = Moralis.User.current().id;
         const roomID = roomId;
-        const playerData = { player: challenger, choice: chosenOnes, choiceIndexes: Array.from(chosenCards) };
+        const playerData = { player: challenger, choice: chosenOnes };
         const params = { room: roomID, playerData: playerData };
         await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
       }
@@ -337,10 +335,8 @@ const Rooms = (props) => {
 
   const startRound = async () => {
     //sign transaction & send hands to DB
-    if (readyState) {
-      const params = { room: roomId };
-      await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
-    }
+    const params = { room: roomId };
+    await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
   };
 
   const evaluateWinnerInUI = () => {
@@ -608,7 +604,7 @@ const Rooms = (props) => {
               setTotalSel(totalSelected + 1)
             }
         }
-        
+
         setchosenCards(new Set(arr))
       }
   }
@@ -617,13 +613,40 @@ const Rooms = (props) => {
     setBox(id);
   };
 
-  async function generateHands(){
+ function generateHands(){
     var choices = []
     for (let i = 0; i < 5; i++){
       var r = Math.floor(Math.random() * 3);
       choices.push(r.toString());
     }
     setGenHands(choices)
+   // setGen(false)
+  }
+
+ async function reveal3random() {
+    if (generatedhands) {
+      let arr = [];
+      while (arr.length !== 3) {
+        var r = Math.floor(Math.random() * 5); //generate 3 random indices
+        if (arr.indexOf(r) === -1) {
+          arr.push(r);
+        }
+      }
+      setrevealedCards(new Set(arr));
+      let toRevealCards = [];
+      for(let i = 0; i < arr.length; i++){
+        const aHand = generatedhands[i];
+        const aHandIdx = arr[i];
+        toRevealCards.push([aHand, aHandIdx])
+      }
+
+      const playerId = Moralis.User.current().id
+      const aPlayerData = {player: playerId, cards: toRevealCards}
+      const parameters = {room: roomId, playerData: aPlayerData}
+     // console.log(parameters)
+      await Moralis.Cloud.run("revealCard", parameters); //runs a function on the cloud
+      //return toRevealCards //is an array of tuples(card, cardIdx)
+    }
   }
 
   async function getHands(){
@@ -710,9 +733,11 @@ const Rooms = (props) => {
   };
 
   const resetRoom = async () => {
-    await Moralis.Cloud.run("rematch", {roomId: roomId,});
+      if (readyState){
+        await Moralis.Cloud.run("rematch", {roomId: roomId,});
+        setReadtState(false)
+      }
     //if (winner) {
-      setReadtState(false)
       setStarted(false);
       setConfirmed(false);
       setEndedDuel(false);
@@ -724,13 +749,15 @@ const Rooms = (props) => {
       setOpCards([logo, logo, logo, logo, logo])
       setGenHands(null)
       setchosenCards(new Set())
+      setReveal(false)
+
     //}
   };
 
   const transferToEscrow = async () => {
     if (roomPDA) {
       const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-        [utf8.encode('player_escrow_wallet'), publicKey.toBuffer()],
+        [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
         program.programId
       );
 
@@ -875,8 +902,7 @@ const Rooms = (props) => {
   const getReady = async () =>{
     const params = { roomId: roomId };
     await Moralis.Cloud.run("getReady", params); //runs a function on the cloud
-    if (readyState) setReadtState(false)
-    else setReadtState(true)
+    setReadtState(true)
   }
 
   useEffect(() => {
@@ -959,11 +985,12 @@ const Rooms = (props) => {
       let subscription = await query.subscribe();
       subscription.on("enter", async () => {
         setReadtState(true)
-        subscription.unsubscribe();
       });
       subscription.on("leave", async () => {
         setReadtState(false)
-        subscription.unsubscribe();
+        if(isOwner()){
+          resetRoom()
+        }
       });
     };
 
@@ -982,28 +1009,28 @@ const Rooms = (props) => {
           
           if (curr_user_id === player_one.player) {
             setOpChoseOnes(player_two.choice);
-            player_two.choiceIndexes.forEach((aChoice, index) => {
-              opCards[aChoice] = imgs[Number(player_two.choice[index])]
-            })
+       //     player_two.choiceIndexes.forEach((aChoice, index) => {
+         //     opCards[aChoice] = imgs[Number(player_two.choice[index])]
+          //  })
           } 
           else {
             setOpChoseOnes(player_one.choice);
-            player_one.choiceIndexes.forEach((aChoice, index) => {
-              opCards[aChoice] = imgs[Number(player_one.choice[index])]
-            })
+           // player_one.choiceIndexes.forEach((aChoice, index) => {
+             // opCards[aChoice] = imgs[Number(player_one.choice[index])]
+           // })
           }
         }
     };
+
 
     const gameStartPing = async () => {
       let query = new Moralis.Query("Room");
       query.get(roomId);
       query.equalTo("playing", true);
       let subscription = await query.subscribe();
-      subscription.on("enter", async (object) => {
+      subscription.on("enter", async () => {
         generateHands()
-        setStarted(true);
-        //subscription.unsubscribe();
+        subscription.unsubscribe();
       });
     };
 
@@ -1039,9 +1066,9 @@ const Rooms = (props) => {
       setUser(Moralis.User.current().getUsername());
       isOwner()
       enterRoomPing();
-     // leaveRoomPing();  
+    }
 
-      //readyPdaPing();
+    if (roomId && readyState){
       gameStartPing(); //to check if servers got both choices of players
       gamePlayingPing()
     }
@@ -1050,7 +1077,7 @@ const Rooms = (props) => {
       sendSelectedHand()
     }
 
-    if (roomId && owner && opponent){
+    if (roomId && opponent){
       readyPing()
     }
 
@@ -1074,7 +1101,8 @@ const Rooms = (props) => {
     totalSelected,
     chosenCards,
     choiceConfirmed,
-    owner
+    owner,
+    readyState
   ]);
 
   useEffect(() => {
@@ -1099,6 +1127,49 @@ const Rooms = (props) => {
   }, [isAuthenticated, mode, winner]);
 
   useEffect(() => {
+
+    const revealOpponentData = (players) => {
+      const curr_user_id = Moralis.User.current().id;
+      const player_one = players[0];
+      const player_two = players[1];
+
+      if (curr_user_id === player_one.player) {
+        player_two.cards.forEach((aChoice, index) => {
+          const aHand = aChoice[0];
+          const aHandIdx = aChoice[1];
+          opCards[aHandIdx] = imgs[Number(aHand)]
+        })
+      } 
+      else {
+        player_one.cards.forEach((aChoice, index) => {
+          const aHand = aChoice[0];
+          const aHandIdx = aChoice[1];
+          opCards[aHandIdx] = imgs[Number(aHand)]
+        })
+      }
+      setStarted(true); 
+  };
+
+    const revealPing = async () => {
+      let query = new Moralis.Query("Duel");
+      query.equalTo("room", roomId);
+      query.equalTo("revealed", true);
+      let subscription = await query.subscribe();
+      subscription.on("enter", async (object) => {
+        revealOpponentData(object.get("reveals"))
+        setReveal(true)
+        subscription.unsubscribe()
+      });
+    };
+
+    if(generatedhands && roomId){
+      reveal3random()
+      revealPing()
+    }
+
+  }, [generatedhands, roomId]);
+
+  useEffect(() => {
     AOS.init({ duration: 1500 });
   }, []);
 
@@ -1106,7 +1177,7 @@ const Rooms = (props) => {
     return (
       <Container fluid="xxl" className="roomContainer">
         <Row>
-          {winner ? (<WinPopper/>) : (<div></div>)}
+          {winner ? <WinPopper /> : <div></div>}
           <Col>
             <br />
             <div>
@@ -1125,35 +1196,35 @@ const Rooms = (props) => {
             <Container>
               <Row className="justify-content-md-center">
                 <Container>
-                {opChosenOnes ? 
-                (<Row className="choiceRow">
-                  {
-                    opCards.map((aCard, idx) => {
-                      if (aCard !== logo){
-                        return (
-                          <Col className="aselectedCard" data-aos="fade-down">
-                            <Button className="aCardRev">
-                              <AiFillEye className="selectedCard" />
-                              <img
-                                className="handImg"
-                                width={60}
-                                height={60}
-                                src={aCard}
-                                alt="nah"
-                              />
-                            </Button>
-                          </Col>
-                        );
-                      }
-                      else return(
-                        <Col data-aos="fade-down">
-                          <Button className="aCard"/>
-                        </Col>
-                      )
-                    })
-                  }
-                </Row>)
-                 : (<OppenentOptions/>)}
+                  {generatedhands && opCards && reveal ? (
+                    <Row className="choiceRow">
+                      {opCards.map((aCard, idx) => {
+                        if (aCard !== logo) {
+                          return (
+                            <Col className="aselectedCard" data-aos="fade-down">
+                              <Button className="aCardRev">
+                                <AiFillEye className="selectedCard" />
+                                <img
+                                  className="handImg"
+                                  width={60}
+                                  height={60}
+                                  src={aCard}
+                                  alt="nah"
+                                />
+                              </Button>
+                            </Col>
+                          );
+                        } else
+                          return (
+                            <Col data-aos="fade-down">
+                              <Button className="aCard" />
+                            </Col>
+                          );
+                      })}
+                    </Row>
+                  ) : (
+                    <OppenentOptions />
+                  )}
                 </Container>
               </Row>
               <Row className="justify-content-md-center">
@@ -1166,17 +1237,11 @@ const Rooms = (props) => {
                         </Button>
                       </Row>
                     ) : (
-                      <div></div>
+                        <Row>
+                          <Button onClick={resetRoom}>Unready</Button>
+                        </Row>
                     )}
-                    <br />
-                    <Row>
-                      <Button onClick={resetRoom}>Reset</Button>
-                    </Row>
-                    <br />
-                    <Row>
-                      <Button onClick={transferToEscrow}>Pay</Button>
-                    </Row>
-                    <br />
+
                   </Container>
                 </Col>
                 <Col xs={7}>
@@ -1200,7 +1265,7 @@ const Rooms = (props) => {
                             </div>
                           ) : (
                             <div>
-                               <h3 className="room_name">Room {roomName}</h3>
+                              <h3 className="room_name">Room {roomName}</h3>
                               <span> Click on ready </span>
                               <h5>Opponent: {opponent}</h5>
                               <p>
@@ -1211,23 +1276,23 @@ const Rooms = (props) => {
                         </Col>
                         <Col xs lg="1">
                           <Row>
-                          {soundState ? (
-                            <Button onClick={() => setSoundState(false)}>
-                              <AiFillSound />
-                            </Button>
-                          ) : (
-                            <Button onClick={() => setSoundState(true)}>
-                              <AiOutlineSound />
-                            </Button>
-                          )}
+                            {soundState ? (
+                              <Button onClick={() => setSoundState(false)}>
+                                <AiFillSound />
+                              </Button>
+                            ) : (
+                              <Button onClick={() => setSoundState(true)}>
+                                <AiOutlineSound />
+                              </Button>
+                            )}
                           </Row>
                         </Col>
                       </Row>
                     </Container>
                   )}
-                  {generatedhands ? (
+                  {generatedhands && gameStarted && reveal ? (
                     <div>
-                        <CustomCountDown seconds={10} check={checkSelected} />
+                      <CustomCountDown seconds={10} check={checkSelected} />
                     </div>
                   ) : (
                     <div></div>
@@ -1239,19 +1304,19 @@ const Rooms = (props) => {
                     <div>
                       {!owner ? (
                         <Row>
-                          <Button disabled={readyState} onClick={getReady}>Ready</Button>
+                          <Button disabled={readyState} onClick={getReady}>
+                            Ready
+                          </Button>
                         </Row>
                       ) : (
                         <div></div>
                       )}
                     </div>
                     <br />
-                    <Row>
-                      <Button onClick={payo}>Claim</Button>
-                    </Row>
+  
                     <Row className="deckRow">
-                        <img src={deck} />
-                     </Row>
+                      <img src={deck} />
+                    </Row>
                     <br />
                     <Row></Row>
                   </Container>
@@ -1276,7 +1341,6 @@ const Rooms = (props) => {
                                       ? "bselectedCard"
                                       : ""
                                   }`}
-                                  
                                 >
                                   <Button
                                     onMouseOver={(e) =>
@@ -1286,7 +1350,7 @@ const Rooms = (props) => {
                                     className="aCardRev"
                                     disabled={choiceConfirmed}
                                   >
-                                    {chosenCards.has(index) ? (
+                                    {revealedCards.has(index) ? (
                                       <AiFillEye className="selectedCard" />
                                     ) : (
                                       <div></div>

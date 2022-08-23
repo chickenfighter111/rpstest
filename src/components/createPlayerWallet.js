@@ -35,7 +35,7 @@ function PlayerWallet() {
     });
     const program = new Program(idl, idl.metadata.address, provider);
     const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [utf8.encode('player_escrow_wallet'), publicKey.toBuffer()],
+      [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
       program.programId
     );
     try {

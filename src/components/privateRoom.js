@@ -874,7 +874,7 @@ const Rooms = (props) => {
     }).rpc()
    // console.log(tx)
     }
-    //catch(err){
+    catch(err){
     }
   };
 
@@ -1244,11 +1244,6 @@ const Rooms = (props) => {
                     ) : (
                       <div></div>
                     )}
-                    <br />
-                    <Row>
-                      <Button onClick={transferToEscrow}>Pay</Button>
-                    </Row>
-                    <br />
                   </Container>
                 </Col>
                 <Col xs={7}>
@@ -1318,10 +1313,6 @@ const Rooms = (props) => {
                         <div></div>
                       )}
                     </div>
-                    <br />
-                    <Row>
-                      <Button onClick={payo}>Claim</Button>
-                    </Row>
                     <Row className="deckRow">
                         <img src={deck} />
                      </Row>

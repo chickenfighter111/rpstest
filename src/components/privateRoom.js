@@ -1267,7 +1267,6 @@ const Rooms = (props) => {
                     ) : (
                       <div></div>
                     )}
-
                   </Container>
                 </Col>
                 <Col xs={7}>

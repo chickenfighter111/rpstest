@@ -300,7 +300,7 @@ const App = () => {
 
   const Home = () => {
     return (
-      <Container>
+      <Container className="roomContainer">
         <h1 className="room_name">Dashboard of {username}</h1>
         <Row>
           <DiscordChat/>

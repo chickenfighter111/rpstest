@@ -20,6 +20,7 @@ import PlayerWalletManager from "./instructions/managePlayerWallet";
 import * as anchor from "@project-serum/anchor";
 import {AnchorProvider, web3, utils, Program,} from "@project-serum/anchor";
 import styled from 'styled-components'
+import Buffer from 'buffer'
 
 import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
 
@@ -274,7 +275,7 @@ const MyNavbar = (props) => {
 
   return (
     <Navbar bg="dark" expand="lg">
-      <Container>
+      <Container className="roomContainer">
         <Navbar.Brand className="burando" href="/">
          
           <span><h1>  <img src={logo} width={60} height={50} /> Asaka Games </h1>

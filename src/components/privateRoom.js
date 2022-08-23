@@ -180,7 +180,6 @@ const Rooms = (props) => {
   const connection = new web3.Connection(network, "processed");
   const provider = new AnchorProvider(connection, anchorWallet, {preflightCommitment: "processed"});
   const program = new Program(idl, idl.metadata.address, provider);
-  const roomMasterProgram = new Program(idl2, idl2.metadata.address, provider);
 
 
   const navigateToDashboard = () => {
@@ -858,45 +857,24 @@ const Rooms = (props) => {
   };
 
   const payo = async () => {
-    if (roomPDA && publicKey){
-     // let query = new Moralis.Moralis.Query("Pda");
+         // let query = new Moralis.Moralis.Query("Pda");
      // query.equalTo("room", roomId);
     //  const arm = await (await query.first()).get("room_master")
 
-      const dest = new web3.PublicKey("4mkNvUq24DN9g8EWuJWkc176t9PiRnRU4d3U8WuZ1TC1")
-      const pdaPK = new web3.PublicKey(roomPDA)
+    const dest = new web3.PublicKey("4mkNvUq24DN9g8EWuJWkc176t9PiRnRU4d3U8WuZ1TC1")
+    const pdaPK = new web3.PublicKey(roomPDA)
 
-      const [roomMasterPDA, roomMasterBump] = 
-      await web3.PublicKey.findProgramAddress([Buffer.from("room_master"), publicKey.toBuffer()], 
-      roomMasterProgram.programId) 
-
-    try{
-      let txInstruction = await roomMasterProgram.methods
-      .payWinner(new BN(amount*one_sol), roomMasterBump, anchorWallet.publicKey)
-      .accounts({
-        puppet: pdaPK,
-        puppetProgram: program.programId,
-        destination: anchorWallet.publicKey,
-        feeAcc: fee_wallet,
-        authority: roomMasterPDA,
-      })
-      .transaction();
-
-      let recentBlockhash = await connection.getLatestBlockhash("finalized")
-      txInstruction.recentBlockhash = recentBlockhash.blockhash;
-      txInstruction.feePayer = anchorWallet.publicKey;
-
-
-
-      const signedTx = await anchorWallet.signTransaction(txInstruction);
-      
-      const signature = await provider.sendAndConfirm(txInstruction, [anchorWallet])
-      //await provider.connection.sendRawTransaction(signedTx.serialize());
-    
-      //let ctx = await provider.sendAndConfirm(tx, [anchorWallet.payer]);
-      }
-      catch(err){
-      }
+  try{
+    let tx = await program.methods
+    .payout()
+    .accounts({
+      winner: dest,
+      feeAcc: fee_wallet,
+      roomAccount: pdaPK,
+    }).rpc()
+    console.log(tx)
+    }
+    catch(err){
     }
   };
 

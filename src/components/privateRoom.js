@@ -872,7 +872,7 @@ const Rooms = (props) => {
       feeAcc: fee_wallet,
       roomAccount: pdaPK,
     }).rpc()
-    console.log(tx)
+   // console.log(tx)
     }
     catch(err){
     }
@@ -1042,7 +1042,7 @@ const Rooms = (props) => {
       query.equalTo("ended", true);
       let subscription = await query.subscribe();
       subscription.on("enter", async (object) => {
-        console.log("duel ended")
+        //console.log("duel ended")
         updateOpponentData(object.get("players"))
         setEndedDuel(true); //COUNTDOWN
         setWinner(object.get("winner"));

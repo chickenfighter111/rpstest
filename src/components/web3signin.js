@@ -45,6 +45,7 @@ const MyNavbar = (props) => {
   const [registered, setRegister] = useState(false);
   const [web3auth, setWeb3auth] = useState(null);
   const [provider, setProvider] = useState(null);
+  const [hasWallet, setHasWallet] = useState(false)
   const [adapter, setAdapter] = useState(null);
 
 
@@ -84,6 +85,9 @@ const MyNavbar = (props) => {
 
     if (connected && isAuthenticated) {
       getBalance();
+      const playerWallet = Moralis.User.current().get("player_wallet");
+      if(playerWallet) setHasWallet(true)
+      else setHasWallet(false)
     }
   }, [connected, isAuthenticated]);
 
@@ -256,32 +260,42 @@ const MyNavbar = (props) => {
     <Navbar bg="dark" expand="lg">
       <Container className="roomContainer">
         <Navbar.Brand className="burando" href="/">
-         
-          <span><h1>  <img src={logo} width={60} height={50} /> Asaka Games </h1>
+          <span>
+            <h1>
+              {" "}
+              <img src={logo} width={60} height={50} /> Asaka Games{" "}
+            </h1>
           </span>
 
-          <Badge className="abadge" bg="secondary">Beta</Badge>
-
+          <Badge className="abadge" bg="secondary">
+            Beta
+          </Badge>
         </Navbar.Brand>
         {connected && isAuthenticated ? (
-          <Row >
+          <Row>
             <Col>
               <Dropdown>
-                <Dropdown.Toggle className="navBtn" >
-                  Wallet: {balance} <img src={sol} width={30} height={25} alt="SOL"/> <Cog fontSize='15px'/>
+                <Dropdown.Toggle className="navBtn">
+                  Wallet: {balance}{" "}
+                  <img src={sol} width={30} height={25} alt="SOL" />{" "}
+                  <Cog fontSize="15px" />
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu>
                   <Dropdown.Item className="walletmanager">
-                    
-                    <PlayerWalletManager balance={balance} setBal={setBalance}/>
+                    <PlayerWalletManager
+                      balance={balance}
+                      setBal={setBalance}
+                    />
                   </Dropdown.Item>
-                  <Dropdown.Item onClick={() => setplayerModal(true)}>
+                  {!hasWallet ? (
+                    <Dropdown.Item onClick={() => setplayerModal(true)}>
                       Player Wallet
-                  </Dropdown.Item>
-                  <Dropdown.Item onClick={web3logout}>
-                    Log Out
-                  </Dropdown.Item>
+                    </Dropdown.Item>
+                  ) : (
+                    <div></div>
+                  )}
+                  <Dropdown.Item onClick={web3logout}>Log Out</Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
             </Col>
@@ -293,7 +307,7 @@ const MyNavbar = (props) => {
         ) : (
           <Row>
             <Col md="auto">
-              <WalletMultiButton className="navBtn"/>
+              <WalletMultiButton className="navBtn" />
             </Col>
             <Col>
               <Button onClick={login}>Sign-in</Button>

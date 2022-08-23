@@ -51,7 +51,7 @@ const MyNavbar = (props) => {
   const connectPhantomWallet = async () => {
     try {
       await authenticate({
-        signingMessage: "Log in",
+        signingMessage: "Register",
         type: "sol",
       })
     } catch (err) {
@@ -136,23 +136,41 @@ const MyNavbar = (props) => {
       //we found the user signed in via Web3Auth
       const aUser = Moralis.User.current();
       if (userInfo) {
-        if (userInfo.aggregateVerifier == "tkey-discord") {
+        if (userInfo.aggregateVerifier === "discord-verif") {
           aUser.setUsername(userInfo.name);
           try {
             await aUser.save();
             await logout(); //moralis logout
             setRegister(false);
+            //revokeToken(userInfo.oAuthAccessToken)
             await web3logout();
-            alert("Succes ");
+            alert("Succes, you can now connect with your wallet!");
           } catch (err) {
-            alert("Signin error: " + err.message);
+            alert("Signin error" );
           }
         }
       }
     };
 
-    if (isAuthenticated){
-      //registerUser(); //register the web3atuh user to Moralis DB
+    const revokeToken = async (token) =>{
+      const axios = require("axios").default;
+      const FormData = require("form-data");
+      const userInfo = await getUserInfo();
+
+
+      const { REACT_APP_DISCORD_CLIENT_SECRET, DISCORD_CLIENT_ID } = process.env;
+      const formData = new FormData();
+      formData.append("token", token);
+      await axios.post("https://discord.com/api/oauth2/token/revoke", formData, {
+        headers: {
+          ...formData.getHeaders(),
+          Authorization: `Basic ${Buffer.from(`${DISCORD_CLIENT_ID}:${REACT_APP_DISCORD_CLIENT_SECRET}`, "binary").toString("base64")}`,
+        },
+      }); 
+    }
+
+    if (isAuthenticated && registered){
+      registerUser(); //register the web3atuh user to Moralis DB
     }
   }, [isAuthenticated, web3auth]);
 
@@ -172,13 +190,13 @@ const MyNavbar = (props) => {
       return;
     }
     try {
+      await connectPhantomWallet()
       const web3authProvider = await web3auth.connectTo(
         WALLET_ADAPTERS.OPENLOGIN,
         {
           loginProvider: 'discord',
         },
       )
-      //console.log(await getUserInfo())
       setRegister(true)
       setProvider(web3authProvider)
     } catch (err) {
@@ -308,7 +326,7 @@ const MyNavbar = (props) => {
               <WalletMultiButton className="navBtn"/>
             </Col>
             <Col>
-              <Button disabled={true} onClick={login}>Sign-in</Button>
+              <Button onClick={login}>Sign-in</Button>
             </Col>
           </Row>
         )}

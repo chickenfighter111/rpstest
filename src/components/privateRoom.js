@@ -40,6 +40,8 @@ import "aos/dist/aos.css";
 
 
 import {AiFillEye, AiFillSound, AiOutlineSound} from 'react-icons/ai'
+import  {FaVolumeUp} from 'react-icons/fa'
+import  {BiVolumeMute} from 'react-icons/bi'
 import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import {
   AnchorProvider,
@@ -54,6 +56,7 @@ import useSound from 'use-sound';
 import winnerSound from './media/results/winner.mp3'; 
 import loser from './media/results/loser.mp3'; 
 import tie from './media/results/tie.mp3'; 
+import countdownSound from './media/7s.wav'; 
 import hg from './media/hourglass.gif'
 import Buffer from 'buffer'
 import styled from "styled-components"
@@ -150,9 +153,10 @@ const Rooms = (props) => {
   const [winSound] = useSound(winnerSound);
   const [loseSound] = useSound(loser);
   const [tieSound] = useSound(tie);
-  const [showHg, setShowHg] = useState(false)
+  const [ctdwnSound] = useSound(countdownSound);
   const [announcements, setAnnouncements] = useState([]);
   const [reveal, setReveal] = useState(false);
+  const [selectEnded, setSelectEnded] = useState(false)
 
 
   const idl = require("../rps_project.json");
@@ -493,7 +497,6 @@ const Rooms = (props) => {
   const WinPopper = () => {
     const current_player = Moralis.User.current().id;
     if (winner === current_player) {
-      if(soundState)winSound()
       //addWinnerAnnouncement(user, opponent)
       //payWinner(Moralis.Moralis.User.current().get("solAddress"))
       return (
@@ -514,13 +517,15 @@ const Rooms = (props) => {
             setSmShow(false)
           }}><h3>Rematch</h3></Button>
           <p style={{textAlign: "center"}}>with x Sol</p>
-          <Button className="winningImg" onClick={() => leaveRoom(params.userId)}>{resultMessages[0].leaveMsg}</Button>
+          <Button className="winningImg" onClick={ () => {
+            resetRoom()
+            leaveRoom(params.userId)
+          }}>{resultMessages[0].leaveMsg}</Button>
           </Container>
         </Modal.Body>
       </StyledModal>
       )
     } else if (winner === "draw") {
-      if(soundState)tieSound()
       //addDrawAnnouncement()
       return(
         <StyledModal
@@ -540,13 +545,15 @@ const Rooms = (props) => {
             setSmShow(false)
           }}><h3>Rematch</h3></Button>
           <p style={{textAlign: "center"}}>with x Sol</p>
-          <Button className="winningImg" onClick={() => leaveRoom(params.userId)}>{resultMessages[2].leaveMsg}</Button>
+          <Button className="winningImg" onClick={() => {
+            resetRoom()
+            leaveRoom(params.userId)
+          }}>{resultMessages[2].leaveMsg}</Button>
           </Container>
         </Modal.Body>
       </StyledModal>
       ) ;
     } else {
-      if(soundState)loseSound()
      // addWinnerAnnouncement(opponent, user)
       return (
         <StyledModal
@@ -566,7 +573,10 @@ const Rooms = (props) => {
             setSmShow(false)
           }}><h3>Rematch</h3></Button>
           <p style={{textAlign: "center"}}>with x Sol</p>
-          <Button className="winningImg" onClick={() => leaveRoom(params.userId)}>{resultMessages[1].leaveMsg}</Button>
+          <Button className="winningImg" onClick={() => {
+            resetRoom()
+            leaveRoom(params.userId)
+          }}>{resultMessages[1].leaveMsg}</Button>
           </Container>
         </Modal.Body>
       </StyledModal>
@@ -579,13 +589,11 @@ const Rooms = (props) => {
     if (completed && modalShow) {
       return(<ShowResultsModal show={modalShow && completed} onHide={() => {
         setModalShow(false)
-        setIsWinner(false)
-        resetRoom()
         setSmShow(true)
       }}/>)
     } else {
       // Render a countdown
-      return <h3>Showing results in {seconds} <img src={hg} width={60} height={60} /></h3>;
+      return <h3>SHOWING RESULTS IN {seconds} <img src={hg} width={60} height={60} /> SECONDS</h3>;
     }
   };
 
@@ -643,7 +651,6 @@ const Rooms = (props) => {
       const playerId = Moralis.User.current().id
       const aPlayerData = {player: playerId, cards: toRevealCards}
       const parameters = {room: roomId, playerData: aPlayerData}
-     // console.log(parameters)
       await Moralis.Cloud.run("revealCard", parameters); //runs a function on the cloud
       //return toRevealCards //is an array of tuples(card, cardIdx)
     }
@@ -750,9 +757,13 @@ const Rooms = (props) => {
       setGenHands(null)
       setchosenCards(new Set())
       setReveal(false)
+      setWinner(null)
+      setIsWinner(false)
 
     //}
   };
+
+  
 
   const transferToEscrow = async () => {
     if (roomPDA) {
@@ -984,14 +995,15 @@ const Rooms = (props) => {
       query.equalTo("ready", true);
       let subscription = await query.subscribe();
       subscription.on("enter", async () => {
-        setReadtState(true)
-      });
-      subscription.on("leave", async () => {
-        setReadtState(false)
-        if(isOwner()){
-          resetRoom()
+        if (isOwner()){
+          setReadtState(true)
         }
       });
+/*      subscription.on("leave", async () => {
+        if (isOwner()){
+          //setReadtState(false)
+        }
+      }); */ 
     };
 
 
@@ -1052,6 +1064,7 @@ const Rooms = (props) => {
       query.equalTo("ended", true);
       let subscription = await query.subscribe();
       subscription.on("enter", async (object) => {
+        console.log("duel ended")
         updateOpponentData(object.get("players"))
         setEndedDuel(true); //COUNTDOWN
         setWinner(object.get("winner"));
@@ -1088,6 +1101,10 @@ const Rooms = (props) => {
     if (totalSelected === 3 || chosenCards.size === 3) {
       setConfirmed(true);
     }
+
+    if (duelEnded && opChosenOnes){
+      setSelectEnded(true)
+    }
     
   }, [
     isAuthenticated,
@@ -1102,7 +1119,8 @@ const Rooms = (props) => {
     chosenCards,
     choiceConfirmed,
     owner,
-    readyState
+    readyState,
+    opChosenOnes
   ]);
 
   useEffect(() => {
@@ -1111,20 +1129,23 @@ const Rooms = (props) => {
       getRoomData(params.userId);
     }
 
-    if (winner){
+    if (winner && smShow){
       const current_player = Moralis.User.current().id
       if (winner === current_player) {
         addWinnerAnnouncement(user, opponent)
+        if(soundState)winSound()
       }
       else if (winner === "draw") {
         addDrawAnnouncement()
+        if(soundState)tieSound()
       }
       else{
         addWinnerAnnouncement(opponent, user)
+        if(soundState)loseSound()
       }
     }
 
-  }, [isAuthenticated, mode, winner]);
+  }, [isAuthenticated, mode, winner, smShow]);
 
   useEffect(() => {
 
@@ -1167,24 +1188,31 @@ const Rooms = (props) => {
       revealPing()
     }
 
+ /*   if(generatedhands && gameStarted && reveal && !selectEnded && soundState){
+      ctdwnSound()
+    }
+ */
   }, [generatedhands, roomId]);
 
   useEffect(() => {
-    AOS.init({ duration: 1500 });
+    AOS.init({ 
+      duration: 1500,
+      offset:0
+    });
   }, []);
 
   if (isAuthenticated && roomId) {
     return (
       <Container fluid="xxl" className="roomContainer">
         <Row>
-          {winner ? <WinPopper /> : <div></div>}
+          {winner ? (<WinPopper/>) : (<div></div>)}
           <Col>
             <br />
             <div>
               <Button onClick={() => leaveRoom(params.userId)}>Leave</Button>
             </div>
             <br />
-            <Container>
+            <Container className="chatContainer">
               {chatId != null ? (
                 <Chat id={chatId} sender={user} />
               ) : (
@@ -1196,38 +1224,38 @@ const Rooms = (props) => {
             <Container>
               <Row className="justify-content-md-center">
                 <Container>
-                  {generatedhands && opCards && reveal ? (
-                    <Row className="choiceRow">
-                      {opCards.map((aCard, idx) => {
-                        if (aCard !== logo) {
-                          return (
-                            <Col className="aselectedCard" data-aos="fade-down">
-                              <Button className="aCardRev">
-                                <AiFillEye className="selectedCard" />
-                                <img
-                                  className="handImg"
-                                  width={60}
-                                  height={60}
-                                  src={aCard}
-                                  alt="nah"
-                                />
-                              </Button>
-                            </Col>
-                          );
-                        } else
-                          return (
-                            <Col data-aos="fade-down">
-                              <Button className="aCard" />
-                            </Col>
-                          );
-                      })}
-                    </Row>
-                  ) : (
-                    <OppenentOptions />
-                  )}
+                {generatedhands && opCards && reveal? 
+                (<Row className="choiceRow">
+                  {
+                    opCards.map((aCard, idx) => {
+                      if (aCard !== logo){
+                        return (
+                          <Col className="aselectedCard" data-aos="fade-down">
+                            <Button className="aCardRev">
+                              <AiFillEye className="selectedCard" />
+                              <img
+                                className="handImg"
+                                width={60}
+                                height={60}
+                                src={aCard}
+                                alt="nah"
+                              />
+                            </Button>
+                          </Col>
+                        );
+                      }
+                      else return(
+                        <Col data-aos="fade-down">
+                          <Button className="aCard"/>
+                        </Col>
+                      )
+                    })
+                  }
+                </Row>)
+                 : (<OppenentOptions/>)}
                 </Container>
               </Row>
-              <Row className="justify-content-md-center">
+              <Row className="justify-content-md-center boxContent">
                 <Col>
                   <Container>
                     {owner ? (
@@ -1237,9 +1265,7 @@ const Rooms = (props) => {
                         </Button>
                       </Row>
                     ) : (
-                        <Row>
-                          <Button onClick={resetRoom}>Unready</Button>
-                        </Row>
+                      <div></div>
                     )}
 
                   </Container>
@@ -1247,7 +1273,7 @@ const Rooms = (props) => {
                 <Col xs={7}>
                   {duelEnded && opChosenOnes ? (
                     <Container>
-                      <Countdown date={Date.now() + 5000} renderer={renderer} />
+                      <Countdown date={Date.now() + 3000} renderer={renderer} />
                     </Container>
                   ) : (
                     //winner should be shown here
@@ -1260,39 +1286,39 @@ const Rooms = (props) => {
                               <span> Waiting for challenger to be ready </span>
                               <h5>Challenger: {opponent}</h5>
                               <p>
-                                Bet: {amount} <img src={sol} />
+                                {amount} SOL PER MATCH
                               </p>
                             </div>
                           ) : (
                             <div>
-                              <h3 className="room_name">Room {roomName}</h3>
+                               <h3 className="room_name">Room {roomName}</h3>
                               <span> Click on ready </span>
                               <h5>Opponent: {opponent}</h5>
                               <p>
-                                Bet: {amount} <img src={sol} />
+                              {amount} SOL PER MATCH
                               </p>
                             </div>
                           )}
                         </Col>
                         <Col xs lg="1">
                           <Row>
-                            {soundState ? (
-                              <Button onClick={() => setSoundState(false)}>
-                                <AiFillSound />
-                              </Button>
-                            ) : (
-                              <Button onClick={() => setSoundState(true)}>
-                                <AiOutlineSound />
-                              </Button>
-                            )}
+                          {soundState ? (
+                            <Button onClick={() => setSoundState(false)}>
+                              <FaVolumeUp />
+                            </Button>
+                          ) : (
+                            <Button onClick={() => setSoundState(true)}>
+                              <BiVolumeMute />
+                            </Button>
+                          )}
                           </Row>
                         </Col>
                       </Row>
                     </Container>
                   )}
-                  {generatedhands && gameStarted && reveal ? (
+                  {generatedhands && gameStarted && reveal? (
                     <div>
-                      <CustomCountDown seconds={10} check={checkSelected} />
+                        <CustomCountDown seconds={7} check={checkSelected} ended={selectEnded}/>
                     </div>
                   ) : (
                     <div></div>
@@ -1304,19 +1330,17 @@ const Rooms = (props) => {
                     <div>
                       {!owner ? (
                         <Row>
-                          <Button disabled={readyState} onClick={getReady}>
-                            Ready
-                          </Button>
+                          <Button disabled={readyState} onClick={getReady}>Ready</Button>
+                          <Button disabled={!readyState} onClick={resetRoom}>Uneady</Button>
                         </Row>
                       ) : (
                         <div></div>
                       )}
                     </div>
-                    <br />
-  
+
                     <Row className="deckRow">
-                      <img src={deck} />
-                    </Row>
+                        <img src={deck} />
+                     </Row>
                     <br />
                     <Row></Row>
                   </Container>
@@ -1341,6 +1365,7 @@ const Rooms = (props) => {
                                       ? "bselectedCard"
                                       : ""
                                   }`}
+                                  
                                 >
                                   <Button
                                     onMouseOver={(e) =>
@@ -1448,7 +1473,7 @@ class CustomCountDown extends React.Component {
     super(props)
     this.tick = this.tick.bind(this)
     this.state = {seconds: props.seconds, ended:false}
-    this.ended = false
+    this.ended = props.ended
     this.checkFun = {checkFun: props.check}
 
   }
@@ -1460,7 +1485,7 @@ class CustomCountDown extends React.Component {
     if (this.state.seconds > 0 && !this.state.ended) {
       this.setState({seconds: this.state.seconds - 1})
     }
-    else if (this.state.seconds === 0 && !this.state.ended){
+    else if (this.state.seconds === 0 || !this.state.ended){
       this.setState({ended: true})
       this.checkFun.checkFun()
     }
@@ -1473,10 +1498,13 @@ class CustomCountDown extends React.Component {
     if (!this.state.ended){
       return (
         <div style={{ width: "100%", textAlign: "center" }}>
-          <p>
-          <h3> Time remaining </h3>
-          <h1>{this.state.seconds} <img src={hg} width={60} height={60} /></h1>
-          </p>
+          <Row>
+          <Col md={9} className="countDownCol">
+            <Row><h3> TIME REMAINING </h3></Row>
+            <Row><h1>{this.state.seconds} SECONDS </h1></Row>
+          </Col>
+          <Col xs={1}> <img src={hg} width={80} height={80} /></Col>
+          </Row>
         </div>
       );
     }

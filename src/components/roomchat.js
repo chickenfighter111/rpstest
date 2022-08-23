@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { ChatFeed, Message } from "react-chat-ui";
-import { Container, Form, Button } from "react-bootstrap";
+import { Container, Form, Button, Row, Col } from "react-bootstrap";
 import Moralis from "moralis";
 import { useMoralis, useNewMoralisObject  } from "react-moralis";
+import styled from "styled-components"
 
+const StyledBtn = styled(Button)`
+  border-radius: 45px;
+`
 const users = {
   0: "Me",
   1: "Admin",
@@ -101,6 +105,7 @@ function Chat(props) {
       query.equalTo("chatRoomId", chatId);
       let subscription = await query.subscribe();
       subscription.on("create", (object) => {
+        //console.log("new msg")
         if (sender !== object.get("sender")) receivedmsg(object.get("sender"), object.get("message"));
       });
     };
@@ -116,8 +121,8 @@ function Chat(props) {
   }, [messages, chatId, sender, isAuthenticated]);
 
   return (
-    <Container>
-      <div className="chatfeed-wrapper">
+    <Container className="chatfeed-wrapper">
+      <div >
         <ChatFeed
           maxHeight={250}
           messages={messages} // Boolean: list of message objects
@@ -125,13 +130,10 @@ function Chat(props) {
         />
 
         <Form onSubmit={onMessageSubmit}>
-          <Form.Group className="mb-2" placeholder="Write your message">
-            <Form.Label>Write your message</Form.Label>
-            <Form.Control type="text" value={message} onChange={handleInput} />
-          </Form.Group>
-          <Button type="submit" onClick={onMessageSubmit}>
-            Send
-          </Button>
+          <Row className="chatInput">
+            <Col xs={9}> <input type="text" className="form-control" value={message} onChange={handleInput}/></Col> 
+            <Col><StyledBtn type="submit" onClick={onMessageSubmit}>Send</StyledBtn></Col>
+          </Row>
         </Form>
       </div>
     </Container>

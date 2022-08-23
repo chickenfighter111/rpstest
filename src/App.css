@@ -42,14 +42,20 @@ input:focus {
   outline: none;
 }
 
+
+
 .chatfeed-wrapper {
   box-shadow: 0 20px 20px rgba(0, 0, 0, 0.08);
   border-radius: 15px;
   max-width: 450px;
+  height: 550px;
   margin: 0 auto;
   border: 4px solid rgb(0, 0, 0);
   padding: 10px;
   background-color: rgb(231, 253, 231);
+}
+.chatInput{
+  margin-top: 70px !important;
 }
 
 #chat-panel {
@@ -58,7 +64,7 @@ input:focus {
 
 .chat-history {
   display: block;
-  min-height: 250px;
+  min-height: 390px;
 }
 
 .outer {
@@ -82,8 +88,12 @@ input:focus {
   max-height: 160px !important;
   margin-bottom: 40px !important;
   margin-top: 20px !important;
-
 }
+
+.boxContent{
+  padding-top: 30px !important;
+}
+
 
 
 .recentMoves{
@@ -98,8 +108,8 @@ input:focus {
 
 
 .aBorder{
-  height: 160px;
-  width: 90px;
+  height: 180px;
+  width: 130px;
   border-radius: 15px !important;
   background-color: #FFD0DA !important;
   margin-top: 20px;
@@ -136,7 +146,9 @@ input:focus {
 
 .handImg{
   margin: auto;
-  
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .abadge{
@@ -193,8 +205,8 @@ button:hover{
 }
 
 .aCardRev{
-  height: 160px;
-  width: 90px;
+  height: 180px;
+  width: 130px;
   border-radius: 15px !important;
   background-color: #FFD0DA !important;
   margin-top: 20px;
@@ -210,13 +222,15 @@ button:hover{
 
 
 .aCard{
-  max-height: 160px;
-  max-width: 90px;
-  width: 90px;
-  height: 160px;
+  max-height: 180px;
+  max-width: 130px;
+  width: 130px;
+  height: 180px;
   border-radius: 15px !important;
   background-color: #FFD0DA !important;
   background-image: url("./components/media/cards/card2.png");
+  background-position: center;
+  background-repeat: no-repeat;
   margin-top: 20px;
   margin-bottom: 20px;
   margin: auto;
@@ -268,7 +282,7 @@ button:hover{
 
 .roomContainer{
   margin: auto;
-  max-width: 1450px !important;
+  max-width: 1950px !important;
 }
 
 .walletmanager{
@@ -276,8 +290,9 @@ button:hover{
 }
 
 .announcementsContainer{
-  max-height: 400px !important;
-  height: 400px;
+  max-height: 700px !important;
+  height: 60vh;
+  min-height: 60vh !important;
   overflow-y: scroll;
 }
 
@@ -313,4 +328,9 @@ button:hover{
 .point{
   padding-top: 60px !important;
   font-size: 80px;
+}
+
+.countDownCol{
+  margin-left: 30px !important;
+  margin-right: -105px !important;
 }

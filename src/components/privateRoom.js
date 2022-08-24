@@ -1182,7 +1182,7 @@ const Rooms = (props) => {
         addWinnerAnnouncement(user, opponent)
         if(soundState)winSound()
         payo()
-        update_playerStats()
+        update_playerStats(current_player)
       }
       else if (winner === "draw") {
         addDrawAnnouncement()

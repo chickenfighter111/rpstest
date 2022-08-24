@@ -1389,8 +1389,7 @@ const Rooms = (props) => {
                       {!owner ? (
                         <Row>
                           <Button disabled={readyState} onClick={getReady}>Ready</Button>
-                          <Button disabled={!readyState} onClick={resetRoom}>Uneady</Button>
-                          <Button onClick={resetRoom}>Reset</Button>
+                          {/* <Button disabled={!readyState} onClick={resetRoom}>Uneady</Button> */}
                         </Row>
                       ) : (
                         <div></div>

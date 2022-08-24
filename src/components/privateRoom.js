@@ -60,6 +60,7 @@ import countdownSound from './media/7s.wav';
 import hg from './media/hourglass.gif'
 import Buffer from 'buffer'
 import styled from "styled-components"
+import { User } from "@web3uikit/icons";
 
 const StyledModal = styled(Modal)`
  div{
@@ -97,6 +98,11 @@ const resultMessages = [
     img: r1,
     leaveMsg: "Leave with shame",
   },
+  {
+    msg: "Insufficient funds...",
+    img: r3,
+    leaveMsg: "Close",
+  }
 ];
 
 
@@ -156,7 +162,9 @@ const Rooms = (props) => {
   const [ctdwnSound] = useSound(countdownSound);
   const [announcements, setAnnouncements] = useState([]);
   const [reveal, setReveal] = useState(false);
+  const [noFunds, setNoFunds] = useState(false);
   const [selectEnded, setSelectEnded] = useState(false)
+  const [betProcessing, setBetProcess] = useState(false)
 
 
   const idl = require("../rps_project.json");
@@ -177,8 +185,8 @@ const Rooms = (props) => {
   }, [wallet]);
   const one_sol = 1_000_000_000;
 
-  const connection = new web3.Connection(network, "processed");
-  const provider = new AnchorProvider(connection, anchorWallet, {preflightCommitment: "processed"});
+  const connection = new web3.Connection(network, "finalized");
+  const provider = new AnchorProvider(connection, anchorWallet, {preflightCommitment: "finalized"});
   const program = new Program(idl, idl.metadata.address, provider);
 
 
@@ -217,6 +225,17 @@ const Rooms = (props) => {
       else setOpponent(roomData.get("owner").substring(0,15));
     }
   };
+
+  const canPlay = async () => {
+    const [escrowPda, _] = await anchor.web3.PublicKey.findProgramAddress(
+      [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
+      program.programId
+    );
+    const balance = await provider.connection.getBalance(escrowPda); //player escrow
+    const roundedBalance = Math.round((balance / one_sol)  * 100) / 100
+    if (roundedBalance > amount) return true
+    else return false
+  }
 
   const setOpponentsChoice = async (index) => {
     switch (index) {
@@ -338,8 +357,11 @@ const Rooms = (props) => {
 
   const startRound = async () => {
     //sign transaction & send hands to DB
-    const params = { room: roomId };
-    await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
+    if (await canPlay()){
+      const params = { room: roomId };
+      await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
+    }
+    else setNoFunds(true)
   };
 
   const evaluateWinnerInUI = () => {
@@ -497,7 +519,6 @@ const Rooms = (props) => {
     const current_player = Moralis.User.current().id;
     if (winner === current_player) {
       //addWinnerAnnouncement(user, opponent)
-      //payWinner(Moralis.Moralis.User.current().get("solAddress"))
       return (
         <StyledModal
         size="sm"
@@ -510,7 +531,7 @@ const Rooms = (props) => {
         <Modal.Header>  <Modal.Title> <h2>{resultMessages[0].msg}</h2> </Modal.Title> </Modal.Header>
         <Modal.Body className="modalBody">
           <Container>
-          <img className="winningImg" width={60} height={60}  src={resultMessages[0].img} alt=""/>
+          <img className="resultImg" width={80} height={80}  src={resultMessages[0].img} alt=""/>
           <Button className="winningImg" onClick={() => {
             resetRoom()
             setSmShow(false)
@@ -538,7 +559,7 @@ const Rooms = (props) => {
         <Modal.Header>  <Modal.Title> <h2>{resultMessages[2].msg}</h2> </Modal.Title> </Modal.Header>
         <Modal.Body className="modalBody">
           <Container>
-          <img className="winningImg" width={60} height={60}  src={resultMessages[2].img} alt=""/>
+          <img className="resultImg" width={80} height={80}  src={resultMessages[2].img} alt=""/>
           <Button className="winningImg" onClick={() => {
             resetRoom()
             setSmShow(false)
@@ -566,7 +587,7 @@ const Rooms = (props) => {
         <Modal.Header>  <Modal.Title> <h2>{resultMessages[1].msg}</h2> </Modal.Title> </Modal.Header>
         <Modal.Body className="modalBody">
           <Container>
-          <img className="winningImg" width={60} height={60}  src={resultMessages[1].img} alt=""/>
+          <img className="resultImg" width={80} height={80}  src={resultMessages[1].img} alt=""/>
           <Button className="winningImg" onClick={() => {
             resetRoom()
             setSmShow(false)
@@ -582,6 +603,40 @@ const Rooms = (props) => {
       );
     }
   };
+
+  const NoFundsPopper = () =>{
+    return (
+      <StyledModal
+        size="sm"
+        show={noFunds}
+        onHide={() => setNoFunds(false)}
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header>
+          <Modal.Title>
+            <h4>{resultMessages[3].msg}</h4>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="modalBody">
+          <Container>
+            <img
+              className="resultImg"
+              width={100}
+              height={100}
+              src={resultMessages[3].img}
+              alt=""
+            />
+            <Button
+              className="winningImg"
+              onClick={() => setNoFunds(false)}>
+              {resultMessages[3].leaveMsg}
+            </Button>
+          </Container>
+        </Modal.Body>
+      </StyledModal>
+    );
+  }
 
   // Renderer callback with condition
   const renderer = ({ hours, minutes, seconds, completed }) => {
@@ -758,73 +813,98 @@ const Rooms = (props) => {
       setReveal(false)
       setWinner(null)
       setIsWinner(false)
-
+      setBetProcess(false)
     //}
   };
 
   
 
   const transferToEscrow = async () => {
+    /*    const getConfirmation = async (connection, tx) => {
+      const result = await connection.getSignatureStatus(tx, {
+        searchTransactionHistory: true,
+      });
+      return result.value?.confirmationStatus;
+    }; */
+
     if (roomPDA) {
+      setBetProcess(true)
       const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
         [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
         program.programId
       );
 
       const pdaPK = new web3.PublicKey(roomPDA)
-     // console.log(escrowPda.toBase58())
-    //  console.log(roomPDA)
 
       try {
-        const tx = await program.methods.transferro(new BN(amount*one_sol))
+        const tx = await program.methods.transferro(
+          new BN(
+           amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
+          *one_sol))
         .accounts({
           fromLockAccount: escrowPda,
           roomAccount: pdaPK,
           owner: publicKey
         }).rpc()
-       // console.log("tx signature", tx)
-        //generateHands()
-        //setStarted(true);
-       // await sendSelectedHand();
+        //console.log(tx)
+        const aPlayerData = {player: Moralis.User.current().id, tx: tx};
+        await Moralis.Cloud.run("confirmTransaction", {room: roomId, playerData: aPlayerData})
       } catch (err) {
-     //   console.log(err)
+        //console.log(err)
       }
     }
   };
 
-  const payWinner = async (winner) => {
+  const payo = async () => {
+    const awinner = Moralis.User.current().get("solAddress");
+    const dest = new web3.PublicKey(awinner);
+    const pdaPK = new web3.PublicKey(roomPDA);
+
+    try {
+      let tx = await program.methods
+        .payout()
+        .accounts({
+          winner: dest,
+          feeAcc: fee_wallet,
+          roomAccount: pdaPK,
+        })
+        .rpc();
+      //console.log(tx);
+    } catch (err) {
+      //console.log(err);
+    }
+  };
+
+
+  const payWinner = async (awinner) => {
+    const payo = async () => {
+      const awinner = Moralis.User.current().get("solAddress");
+      const dest = new web3.PublicKey(awinner);
+      const pdaPK = new web3.PublicKey(roomPDA);
+
+      try {
+        let tx = await program.methods
+          .payout()
+          .accounts({
+            winner: dest,
+            feeAcc: fee_wallet,
+            roomAccount: pdaPK,
+          })
+          .rpc();
+       // console.log(tx);
+      } catch (err) {
+       // console.log(err);
+      }
+    };
+
     //before paying we first check again who the winner is
     if (duelEnded && canPay) {
-      if (winner === Moralis.User.current().id) {
+      if (winner === Moralis.User.current().id && winner === awinner) {
         const params = { room: roomId };
-        const aPDA = await Moralis.Cloud.run("findPDA", params);
-        const addr1 = aPDA.get("players")[0];
-        const addr2 = aPDA.get("players")[1];
-        const pk1 = new anchor.web3.PublicKey(addr1);
-        const pk2 = new anchor.web3.PublicKey(addr2);
         // Fetch our Room Escrow PDA
-        if (
-          await Moralis.Cloud.run("checkWinner", {
-            user: Moralis.User.current().id,
-            room: roomId,
-          })
-        ) {
+        if (await Moralis.Cloud.run("checkWinner", {user: Moralis.User.current().id,room: roomId})) {
           try {
-            const [roomEscrow, roomBump] =
-              await anchor.web3.PublicKey.findProgramAddress(
-                [
-                  Buffer.from(aPDA.get("random_string")),
-                  pk1.toBuffer(),
-                  pk2.toBuffer(),
-                ],
-                program.programId
-              );
-            if (
-              await Moralis.Cloud.run("checkWinner", {
-                user: Moralis.User.current().id,
-                room: roomId,
-              })
-            ) {
+            if (await Moralis.Cloud.run("checkWinner", {user: Moralis.User.current().id, room: roomId})) {
               const current_wins = Moralis.User.current().get("wins");
               Moralis.User.current().set("wins", current_wins + 1);
               await Moralis.User.current().save();
@@ -832,49 +912,13 @@ const Rooms = (props) => {
               //const playerWallet = Moralis.Moralis.User.current().get("player_wallet"); //error 3011, account not owned by system program...
               const playerWallet = Moralis.User.current().get("solAddress");
               const winnerPk = new anchor.web3.PublicKey(playerWallet);
-              const tx = await program.methods
-                .payWinner(
-                  new BN(one_sol * amount * 2),
-                  roomBump,
-                  pk1,
-                  pk2,
-                  aPDA.get("random_string")
-                )
-                .accounts({
-                  destination: winnerPk,
-                  pda: roomEscrow,
-                  systemProgram: anchor.web3.SystemProgram.programId,
-                  feeAcc: fee_wallet,
-                })
-                .rpc();
+              await payo()
             } else alert("you did not win... 1");
           } catch (err) {
            alert("Some problems... ", err);
           }
         } else alert("you did not win... 2");
       } else alert("you did not win... 3");
-    }
-  };
-
-  const payo = async () => {
-         // let query = new Moralis.Moralis.Query("Pda");
-     // query.equalTo("room", roomId);
-    //  const arm = await (await query.first()).get("room_master")
-
-    const dest = new web3.PublicKey("4mkNvUq24DN9g8EWuJWkc176t9PiRnRU4d3U8WuZ1TC1")
-    const pdaPK = new web3.PublicKey(roomPDA)
-
-  try{
-    let tx = await program.methods
-    .payout()
-    .accounts({
-      winner: dest,
-      feeAcc: fee_wallet,
-      roomAccount: pdaPK,
-    }).rpc()
-   // console.log(tx)
-    }
-    catch(err){
     }
   };
 
@@ -889,9 +933,14 @@ const Rooms = (props) => {
   }
 
   const getReady = async () =>{
-    const params = { roomId: roomId };
-    await Moralis.Cloud.run("getReady", params); //runs a function on the cloud
-    setReadtState(true)
+    if (await canPlay()){
+      const params = { roomId: roomId };
+      await Moralis.Cloud.run("getReady", params); //runs a function on the cloud
+      setReadtState(true)
+    }
+    else{
+      setNoFunds(true)
+    }
   }
 
   useEffect(() => {
@@ -1019,7 +1068,7 @@ const Rooms = (props) => {
       query.equalTo("playing", true);
       let subscription = await query.subscribe();
       subscription.on("enter", async () => {
-        generateHands()
+        transferToEscrow()
         subscription.unsubscribe();
       });
     };
@@ -1052,6 +1101,19 @@ const Rooms = (props) => {
        // subscription.unsubscribe();
       });
     };
+
+    const paymentProcessedPing = async () => {
+      let query = new Moralis.Query("Transaction");
+      query.equalTo("room", roomId);
+      query.equalTo("processed", true);
+      let subscription = await query.subscribe();
+      subscription.on("enter", async () => {
+        setBetProcess(false)
+        generateHands()
+        subscription.unsubscribe();
+      });
+    };
+
     if (roomId) {
       setUser(Moralis.User.current().getUsername());
       isOwner()
@@ -1060,7 +1122,8 @@ const Rooms = (props) => {
 
     if (roomId && readyState){
       gameStartPing(); //to check if servers got both choices of players
-      gamePlayingPing()
+      gamePlayingPing();
+      paymentProcessedPing()
     }
 
     if(choiceConfirmed && gameStarted){
@@ -1101,16 +1164,25 @@ const Rooms = (props) => {
   ]);
 
   useEffect(() => {
+    
+    const update_playerStats = async(player) =>{
+      const current_wins = player.get("wins")
+      player.set("wins", current_wins + 1)
+      player.save()
+    }
+
     if (isAuthenticated) {
       setRoomId(params.userId);
       getRoomData(params.userId);
     }
 
     if (winner && smShow){
-      const current_player = Moralis.User.current().id
-      if (winner === current_player) {
+      const current_player = Moralis.User.current()
+      if (winner === current_player.id) {
         addWinnerAnnouncement(user, opponent)
         if(soundState)winSound()
+        payo()
+        update_playerStats()
       }
       else if (winner === "draw") {
         addDrawAnnouncement()
@@ -1181,6 +1253,7 @@ const Rooms = (props) => {
   if (isAuthenticated && roomId) {
     return (
       <Container fluid="xxl" className="roomContainer">
+        <NoFundsPopper/>
         <Row>
           {winner ? (<WinPopper/>) : (<div></div>)}
           <Col>
@@ -1193,7 +1266,7 @@ const Rooms = (props) => {
               {chatId != null ? (
                 <Chat id={chatId} sender={user} />
               ) : (
-                <Loading spinnerColor="#2E7DAF" text="Fetching Data..." />
+                <Loading spinnerColor="#444343" text="Fetching Data..." />
               )}
             </Container>
           </Col>
@@ -1244,7 +1317,6 @@ const Rooms = (props) => {
                     ) : (
                       <div></div>
                     )}
-
                   </Container>
                 </Col>
                 <Col xs={7}>
@@ -1257,7 +1329,14 @@ const Rooms = (props) => {
                     <Container>
                       <Row>
                         <Col>
-                          {owner ? (
+                          {betProcessing ? 
+                          (<Container style={{margin: "auto"}}>
+                            <Loading spinnerColor="#444343" text={<h3>Both payments are processing...</h3>} />
+                          </Container>) 
+                          : 
+                          (
+                            <Container>
+                              {owner ? (
                             <div>
                               <h3 className="room_name">Room {roomName}</h3>
                               <span> Waiting for challenger to be ready </span>
@@ -1275,6 +1354,8 @@ const Rooms = (props) => {
                               {amount} SOL PER MATCH
                               </p>
                             </div>
+                          )}
+                            </Container>
                           )}
                         </Col>
                         <Col xs lg="1">
@@ -1295,7 +1376,7 @@ const Rooms = (props) => {
                   )}
                   {generatedhands && gameStarted && reveal? (
                     <div>
-                        <CustomCountDown seconds={7} check={checkSelected} ended={selectEnded}/>
+                        <CustomCountDown seconds={10} check={checkSelected} ended={selectEnded}/>
                     </div>
                   ) : (
                     <div></div>
@@ -1309,6 +1390,7 @@ const Rooms = (props) => {
                         <Row>
                           <Button disabled={readyState} onClick={getReady}>Ready</Button>
                           <Button disabled={!readyState} onClick={resetRoom}>Uneady</Button>
+                          <Button onClick={resetRoom}>Reset</Button>
                         </Row>
                       ) : (
                         <div></div>

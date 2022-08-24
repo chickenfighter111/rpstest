@@ -224,11 +224,12 @@ button:hover{
 .aCard{
   max-height: 180px;
   max-width: 130px;
-  width: 130px;
+  width: 100%;
   height: 180px;
   border-radius: 15px !important;
   background-color: #FFD0DA !important;
-  background-image: url("./components/media/cards/card2.png");
+  background-image: url("./components/media/cards/asak.jpg");
+  background-size: 200px 200px;
   background-position: center;
   background-repeat: no-repeat;
   margin-top: 20px;
@@ -241,7 +242,6 @@ button:hover{
 
 .aCard:hover{
   background-color: #aa8b92 !important;
-  background-image: url("./components/media/cards/card2hover.png");
 }
 
 .exPhXV{
@@ -348,4 +348,12 @@ button:hover{
   padding-right: 20px;
   margin-left: 20px;
 
+}
+
+.resultImg{
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: -30px;
+  margin-bottom: 40px;
 }

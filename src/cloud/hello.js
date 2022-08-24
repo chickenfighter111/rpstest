@@ -477,15 +477,20 @@ Moralis.Cloud.define("rematch", async (request) => {
   aRoom.set("playing", false);
   aRoom.set("ready", false);
   aRoom.save();
+
+  const txQry = new Parse.Query("Transaction");
+  txQry.equalTo("room", request.params.roomId);
+  const aTx = await txQry.first();
+  if (aTx){
+    aTx.destroy()
+  }
   
   const qry = new Parse.Query("Duel");
   qry.equalTo("room", request.params.roomId);
   const aDuel = await qry.first();
   if(aDuel){
     aDuel.destroy()
-    return true
   }
-  else return true
 });
 
 Moralis.Cloud.define("isOwner", async (request) => {
@@ -554,3 +559,36 @@ Moralis.Cloud.define("revealCard", async (request) => {
     }
   }
 });
+
+Moralis.Cloud.define("getRoomBet", async (request) => {
+  const roomId = request.params.room;
+  const aRoomQuery = new Parse.Query("Room");
+  aRoomQuery.equalTo("objectId", roomId)
+  const aRoom = await aRoomQuery.first();
+  const bet = aRoom.get("bet_amount");
+  return bet
+})
+
+Moralis.Cloud.define("confirmTransaction", async (request) => {
+  let aTx;
+  let playerData;
+  const roomId = request.params.room;
+  const qry = new Parse.Query("Transaction");
+  qry.equalTo("room", roomId);
+  aTx = await qry.first();
+  if (aTx){
+    playerData = request.params.playerData;
+    aTx.set("processed", true)
+    aTx.add("players", playerData);
+    aTx.save()
+  }
+  else{
+    playerData = request.params.playerData;
+    const Transaction = Moralis.Object.extend("Transaction");
+    aTx = new Transaction();
+    aTx.set("room", roomId);
+    aTx.set("processed", false)
+    aTx.add("players", playerData);
+    aTx.save()
+  }
+})

@@ -54,13 +54,11 @@ function PlayerWallet() {
         alert("problem in init " + err)
       }
       const aUser = Moralis.User.current();
-      if (aUser) {
-        aUser.set("player_wallet", escrowPda.toBase58());
-        try {
-          await aUser.save().then(() => alert("Player wallet created!"));
-        } catch (err) {
-          alert("Signup error: " + err.message);
-        }
+      aUser.set("player_wallet", escrowPda.toBase58());
+      try {
+        await aUser.save().then(() => alert("Player wallet created!"));
+      } catch (err) {
+        alert("Signup error: " + err.message);
       }
     }
   };

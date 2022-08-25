@@ -18,6 +18,13 @@ import me from "./components/media/ME.png";
 import twt from "./components/media/twitter.png";
 import dsc from "./components/media/discord.png";
 import DiscordChat from './components/discordChat'
+import styled from "styled-components"
+
+const StyledBtn = styled(Button)`
+  max-width: 150px;
+  max-height: 45px;
+  font-size: 20px;
+`
 
 
 const App = () => {
@@ -184,12 +191,12 @@ const App = () => {
                   <th><Button onClick={fetchRooms}>
                       <FiRefreshCcw />
                     </Button></th>
-                  <th colSpan={2}><h5>Room name</h5></th>
+                  <th colSpan={5}><h5>Room name</h5></th>
                   <th ><h5>Bet</h5></th>
                   <th  colSpan={2}><h5>Challenger</h5></th>
                   <th >
                   <Container>
-                    <Button onClick={() => setModalShow(true)}>Create Room</Button>
+                    <StyledBtn onClick={() => setModalShow(true)}>Create Room</StyledBtn>
                   </Container>
                   </th>
                 </tr>
@@ -205,9 +212,9 @@ const App = () => {
                                     else return "Waiting";
                                   };
                                   const joinStatus = () => {
-                                    if (playing || chall !== "null") return <Button disabled id={roomId} onClick={joinRoom}>
+                                    if (playing || chall !== "null") return <StyledBtn disabled id={roomId} onClick={joinRoom}>
                                     Join
-                                  </Button>;
+                                  </StyledBtn>;
                                     else return <Button id={roomId} onClick={joinRoom}>
                                     Join
                                   </Button>;
@@ -215,7 +222,7 @@ const App = () => {
                                   return (
                                     <tr>
                                     <td>{null}</td>
-                                    <td colSpan={2}>{room.get("room_name").substring(0,15)}</td>
+                                    <td colSpan={5}>{room.get("room_name").substring(0,15)}</td>
                                     <td className="testSpan"> 
                                       <td className="amountSpan"><span>{room.get("bet_amount")}</span> </td>
                                       <td className="logoSpan"><img src={sol} width={30} height={25} alt="SOL"/></td>

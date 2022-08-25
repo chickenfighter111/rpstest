@@ -9,8 +9,8 @@ const DiscordChat = () => {
           <WidgetBot
             server="1002944553050968215"
             channel="1002949643077963857"
-            height={700}
-            width={400}
+            height="80vh"
+            width='20vw'
           />
         </Container>
       </Col>

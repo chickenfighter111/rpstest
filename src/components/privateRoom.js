@@ -21,7 +21,6 @@ import rock from "./media/cards/rock.png";
 import paper from "./media/cards/paper.png";
 import scissor from "./media/cards/scissor.png";
 import none from "./media/cards/unkown.PNG";
-import sol from "./media/sol.png";
 import logo from "./media/cards/card2.png";
 import deck from "./media/cards/deck_final.png";
 import me from "./media/ME.png";
@@ -1135,7 +1134,7 @@ const Rooms = (props) => {
       readyPing()
     }
 
-    if (gameStarted && roomId) {
+    if (gameStarted) {
       gameEndedPing();
     }
 
@@ -1253,18 +1252,11 @@ const Rooms = (props) => {
 
   if (isAuthenticated && roomId) {
     return (
-      <Container fluid="xxl" className="roomContainer">
+      <Container fluid="xxl" className="roomContainer" style={{  height: "85vh"}}>
         <NoFundsPopper />
         <Row>
           {winner ? <WinPopper /> : <div></div>}
           <Col>
-            <br />
-            <div>
-              <StartBtn onClick={() => leaveRoom(params.userId)}>
-                Leave
-              </StartBtn>
-            </div>
-            <br />
             <Container className="chatContainer">
               <DiscordChat />
             </Container>
@@ -1274,13 +1266,13 @@ const Rooms = (props) => {
               <Row className="justify-content-md-center">
                 <Container style={{ width: "90%" }}>
                   {generatedhands && opCards && reveal ? (
-                    <Row className="choiceRow">
+                    <Row className="choiceRow" data-aos="fade-down">
                       {opCards.map((aCard, idx) => {
                         if (aCard !== logo) {
                           return (
                             <Col
                               className="aselectedCard cardCol"
-                              data-aos="fade-down"
+                              
                             >
                               <Button className="aCardRev">
                                 <AiFillEye className="selectedCard" />
@@ -1296,7 +1288,7 @@ const Rooms = (props) => {
                           );
                         } else
                           return (
-                            <Col data-aos="fade-down" className="cardCol">
+                            <Col className="cardCol">
                               <Button className="aCard" />
                             </Col>
                           );
@@ -1311,14 +1303,21 @@ const Rooms = (props) => {
                 <Col xs={2}>
                   <Container>
                     {owner ? (
-                      <Row>
+                        <Row>
                         <StartBtn disabled={!readyState} onClick={startRound}>
                           Start
                         </StartBtn>
                       </Row>
+
                     ) : (
                       <div></div>
                     )}
+                    <br/>
+                      <Row>
+                        <StartBtn onClick={() => leaveRoom(params.userId)}>
+                          Leave
+                        </StartBtn>
+                      </Row>
                   </Container>
                 </Col>
                 <Col lg={7}>
@@ -1373,11 +1372,12 @@ const Rooms = (props) => {
                     <div></div>
                   )}
                 </Col>
-                <Col xs={3}>
+                <Col xs={2}>
                   <Container>
                     <div>
                       {!owner ? (
                         <div>
+                          <br/>
                           <StartBtn disabled={readyState} onClick={getReady}>
                             Ready
                           </StartBtn>
@@ -1387,10 +1387,8 @@ const Rooms = (props) => {
                         <div></div>
                       )}
                     </div>
-                    <Container className="deckContainer">
-                      <img width={280} height={250} src={deck} />
-                    </Container>
                     <div>
+                    <br/>
                       {soundState ? (
                         <Button onClick={() => setSoundState(false)}>
                           <FaVolumeUp size={30} />
@@ -1412,12 +1410,12 @@ const Rooms = (props) => {
                     {readyState ? (
                       <div>
                         {generatedhands ? (
-                          <Row className="choiceRow">
+                          <Row className="choiceRow" data-aos="fade-up">
                             {generatedhands.map((aHand, index) => {
                               const handIdx = Number(aHand);
                               return (
                                 <Col
-                                  data-aos="fade-up"
+                                  
                                   className={` cardCol ${
                                     chosenCards.has(index)
                                       ? "bselectedCard"

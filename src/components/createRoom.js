@@ -50,10 +50,7 @@ function CreateRoom(props) {
   };
 
   async function createRoom() {
-    //room chat
-    const Chat = Moralis.Object.extend("Chat");
-    const aChat = new Chat();
-    aChat.set("messages", []);
+
 
     //game room
     const GameRoom = Moralis.Object.extend("Room");
@@ -65,12 +62,11 @@ function CreateRoom(props) {
     aGameRoom.set("playing", false);
     aGameRoom.set("challenger", "null");
     aGameRoom.set("room_name", name);
-    aGameRoom.set("chat", aChat);
 
-    const [roomPDA, roomBump] = await web3.PublicKey.findProgramAddress([utf8.encode("a_room_escrow_wallet"), publicKey.toBuffer()],
-      program.programId
-    );
-    
+    const [roomPDA, roomBump] = 
+    await web3.PublicKey.findProgramAddress([utf8.encode("a_room_escrow_wallet"), publicKey.toBuffer()],
+      program.programId);
+
     try {
       await program.account.lockAccount.fetch(roomPDA);
     } catch (err) {
@@ -84,6 +80,15 @@ function CreateRoom(props) {
         .rpc();
     }
     finally{
+      /*const params = {
+        owner: owner,
+        bet: Number(amount),
+        room_name: name,
+        RoomPDA: roomPDA.toBase58(),
+      }
+      const aRoomObj = await Moralis.Cloud.run("createRoom", params)
+       */
+
       aGameRoom.set("room_address", roomPDA.toBase58())
       await aGameRoom.save().then(async (gameRoomObject) => {
         const roomId = gameRoomObject.id;
@@ -97,6 +102,7 @@ function CreateRoom(props) {
 
         await Moralis.Cloud.run("createPDA", params); //runs a function on the cloud
         navigateToRoom(roomId);
+
     })
   }
   }

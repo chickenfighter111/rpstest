@@ -23,9 +23,16 @@ import Buffer from 'buffer'
 
 import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
 
-import {Cog} from '@web3uikit/icons'
+import {AiTwotoneSetting} from 'react-icons/ai'
 import logo from "./media/logg2.png"
 import sol from "./media/solc.png"
+
+
+const StartBtn = styled(Dropdown.Toggle)`
+  width: 250px;
+  height: 45px;
+  font-size: 25px;
+`
 
 
 const network = "https://devnet.genesysgo.net/"; //devnet
@@ -275,11 +282,11 @@ const MyNavbar = (props) => {
           <Row>
             <Col>
               <Dropdown>
-                <Dropdown.Toggle className="navBtn">
-                  Wallet: {balance}{" "}
+                <StartBtn>
+                  Wallet: {balance}
                   <img src={sol} width={30} height={25} alt="SOL" />{" "}
-                  <Cog fontSize="15px" />
-                </Dropdown.Toggle>
+                  <AiTwotoneSetting style={{position: "relative", left: "20px"}} size={25} />
+                </StartBtn>
 
                 <Dropdown.Menu>
                   <Dropdown.Item className="walletmanager">

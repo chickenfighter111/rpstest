@@ -9,7 +9,6 @@ import {
   Table as RTable
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
-
 import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
 
@@ -17,6 +16,7 @@ import React,{ useEffect, useState, useMemo, useReducer } from "react";
 import Chat from "./roomchat";
 import { Loading, Table, Card, Tag } from "@web3uikit/core";
 import Countdown from "react-countdown";
+import DiscordChat from './discordChat'
 
 import rock from "./media/cards/rock.png";
 import paper from "./media/cards/paper.png";
@@ -24,7 +24,7 @@ import scissor from "./media/cards/scissor.png";
 import none from "./media/cards/unkown.PNG";
 import sol from "./media/sol.png";
 import logo from "./media/cards/card2.png";
-import deck from "./media/cards/acardd3.png";
+import deck from "./media/cards/deck_final.png";
 import me from "./media/ME.png";
 import twt from "./media/twitter.png";
 import dsc from "./media/discord.png";
@@ -37,7 +37,6 @@ import r4 from "./media/results/r4.jpg";
 import AOS from "aos";
 
 import "aos/dist/aos.css";
-
 
 import {AiFillEye, AiFillSound, AiOutlineSound} from 'react-icons/ai'
 import  {FaVolumeUp} from 'react-icons/fa'
@@ -69,6 +68,12 @@ const StyledModal = styled(Modal)`
     border-radius: 25px;
   }
  }
+`
+
+const StartBtn = styled(Button)`
+  width: 150px;
+  height: 45px;
+  font-size: 35px;
 `
 
 const network = "https://devnet.genesysgo.net/"; //devnet
@@ -155,7 +160,7 @@ const Rooms = (props) => {
   const [chosenOnes, setChoseOnes] = useState([]);
   const [opChosenOnes, setOpChoseOnes] = useState([]);
 
-  const [soundState, setSoundState] = useState(false)
+  const [soundState, setSoundState] = useState(true)
   const [winSound] = useSound(winnerSound);
   const [loseSound] = useSound(loser);
   const [tieSound] = useSound(tie);
@@ -765,7 +770,7 @@ const Rooms = (props) => {
       );
     } else {
       return (
-        <Col id={props.id}>
+        <Col id={props.id} className="cardCol">
           <Button
             onMouseOver={(e) => handleChoiceButton(e, props.id)}
             className="aCard"
@@ -1253,73 +1258,74 @@ const Rooms = (props) => {
   if (isAuthenticated && roomId) {
     return (
       <Container fluid="xxl" className="roomContainer">
-        <NoFundsPopper/>
+        <NoFundsPopper />
         <Row>
-          {winner ? (<WinPopper/>) : (<div></div>)}
+          {winner ? <WinPopper /> : <div></div>}
           <Col>
             <br />
             <div>
-              <Button onClick={() => leaveRoom(params.userId)}>Leave</Button>
+              <StartBtn onClick={() => leaveRoom(params.userId)}>
+                Leave
+              </StartBtn>
             </div>
             <br />
             <Container className="chatContainer">
-              {chatId != null ? (
-                <Chat id={chatId} sender={user} />
-              ) : (
-                <Loading spinnerColor="#444343" text="Fetching Data..." />
-              )}
+              <DiscordChat />
             </Container>
           </Col>
-          <Col xs={7}>
+          <Col xs={7} className="mainCol">
             <Container>
               <Row className="justify-content-md-center">
-                <Container>
-                {generatedhands && opCards && reveal? 
-                (<Row className="choiceRow">
-                  {
-                    opCards.map((aCard, idx) => {
-                      if (aCard !== logo){
-                        return (
-                          <Col className="aselectedCard" data-aos="fade-down">
-                            <Button className="aCardRev">
-                              <AiFillEye className="selectedCard" />
-                              <img
-                                className="handImg"
-                                width={60}
-                                height={60}
-                                src={aCard}
-                                alt="nah"
-                              />
-                            </Button>
-                          </Col>
-                        );
-                      }
-                      else return(
-                        <Col data-aos="fade-down">
-                          <Button className="aCard"/>
-                        </Col>
-                      )
-                    })
-                  }
-                </Row>)
-                 : (<OppenentOptions/>)}
+                <Container style={{ width: "90%" }}>
+                  {generatedhands && opCards && reveal ? (
+                    <Row className="choiceRow">
+                      {opCards.map((aCard, idx) => {
+                        if (aCard !== logo) {
+                          return (
+                            <Col
+                              className="aselectedCard cardCol"
+                              data-aos="fade-down"
+                            >
+                              <Button className="aCardRev">
+                                <AiFillEye className="selectedCard" />
+                                <img
+                                  className="handImg"
+                                  width={60}
+                                  height={60}
+                                  src={aCard}
+                                  alt="nah"
+                                />
+                              </Button>
+                            </Col>
+                          );
+                        } else
+                          return (
+                            <Col data-aos="fade-down" className="cardCol">
+                              <Button className="aCard" />
+                            </Col>
+                          );
+                      })}
+                    </Row>
+                  ) : (
+                    <OppenentOptions />
+                  )}
                 </Container>
               </Row>
               <Row className="justify-content-md-center boxContent">
-                <Col>
+                <Col xs={2}>
                   <Container>
                     {owner ? (
                       <Row>
-                        <Button disabled={!readyState} onClick={startRound}>
+                        <StartBtn disabled={!readyState} onClick={startRound}>
                           Start
-                        </Button>
+                        </StartBtn>
                       </Row>
                     ) : (
                       <div></div>
                     )}
                   </Container>
                 </Col>
-                <Col xs={7}>
+                <Col lg={7}>
                   {duelEnded && opChosenOnes ? (
                     <Container>
                       <Countdown date={Date.now() + 3000} renderer={renderer} />
@@ -1329,77 +1335,76 @@ const Rooms = (props) => {
                     <Container>
                       <Row>
                         <Col>
-                          {betProcessing ? 
-                          (<Container style={{margin: "auto"}}>
-                            <Loading spinnerColor="#444343" text={<h3>Both payments are processing...</h3>} />
-                          </Container>) 
-                          : 
-                          (
+                          {betProcessing ? (
+                            <Container style={{ margin: "auto" }}>
+                              <Loading
+                                spinnerColor="#444343"
+                                text={<h3>Both payments are processing...</h3>}
+                              />
+                            </Container>
+                          ) : (
                             <Container>
                               {owner ? (
-                            <div>
-                              <h3 className="room_name">Room {roomName}</h3>
-                              <span> Waiting for challenger to be ready </span>
-                              <h5>Challenger: {opponent}</h5>
-                              <p>
-                                {amount} SOL PER MATCH
-                              </p>
-                            </div>
-                          ) : (
-                            <div>
-                               <h3 className="room_name">Room {roomName}</h3>
-                              <span> Click on ready </span>
-                              <h5>Opponent: {opponent}</h5>
-                              <p>
-                              {amount} SOL PER MATCH
-                              </p>
-                            </div>
-                          )}
+                                <div>
+                                  <h1 className="room_name">Room {roomName}</h1>
+                                  <h4> Waiting for challenger to be ready </h4>
+                                  <h3>Challenger: {opponent}</h3>
+                                  <h4>{amount} SOL PER MATCH</h4>
+                                </div>
+                              ) : (
+                                <div>
+                                  <h1 className="room_name">Room {roomName}</h1>
+                                  <h4> Click on ready </h4>
+                                  <h3>Opponent: {opponent}</h3>
+                                  <h4>{amount} SOL PER MATCH</h4>
+                                </div>
+                              )}
                             </Container>
                           )}
-                        </Col>
-                        <Col xs lg="1">
-                          <Row>
-                          {soundState ? (
-                            <Button onClick={() => setSoundState(false)}>
-                              <FaVolumeUp />
-                            </Button>
-                          ) : (
-                            <Button onClick={() => setSoundState(true)}>
-                              <BiVolumeMute />
-                            </Button>
-                          )}
-                          </Row>
                         </Col>
                       </Row>
                     </Container>
                   )}
-                  {generatedhands && gameStarted && reveal? (
+                  {generatedhands && gameStarted && reveal ? (
                     <div>
-                        <CustomCountDown seconds={10} check={checkSelected} ended={selectEnded}/>
+                      <CustomCountDown
+                        seconds={10}
+                        check={checkSelected}
+                        ended={selectEnded}
+                      />
                     </div>
                   ) : (
                     <div></div>
                   )}
                 </Col>
-                <Col>
+                <Col xs={3}>
                   <Container>
-                    <br />
                     <div>
                       {!owner ? (
-                        <Row>
-                          <Button disabled={readyState} onClick={getReady}>Ready</Button>
+                        <div>
+                          <StartBtn disabled={readyState} onClick={getReady}>
+                            Ready
+                          </StartBtn>
                           {/* <Button disabled={!readyState} onClick={resetRoom}>Uneady</Button> */}
-                        </Row>
+                        </div>
                       ) : (
                         <div></div>
                       )}
                     </div>
-                    <Row className="deckRow">
-                        <img src={deck} />
-                     </Row>
-                    <br />
-                    <Row></Row>
+                    <Container className="deckContainer">
+                      <img width={280} height={250} src={deck} />
+                    </Container>
+                    <div>
+                      {soundState ? (
+                        <Button onClick={() => setSoundState(false)}>
+                          <FaVolumeUp size={30} />
+                        </Button>
+                      ) : (
+                        <Button onClick={() => setSoundState(true)}>
+                          <BiVolumeMute size={30} />
+                        </Button>
+                      )}
+                    </div>
                   </Container>
                 </Col>
               </Row>
@@ -1407,7 +1412,7 @@ const Rooms = (props) => {
                 {mode ? (
                   <OptionDropDown id={"1"} />
                 ) : (
-                  <Container>
+                  <Container style={{ width: "90%" }}>
                     {readyState ? (
                       <div>
                         {generatedhands ? (
@@ -1417,12 +1422,11 @@ const Rooms = (props) => {
                               return (
                                 <Col
                                   data-aos="fade-up"
-                                  className={`${
+                                  className={` cardCol ${
                                     chosenCards.has(index)
                                       ? "bselectedCard"
                                       : ""
                                   }`}
-                                  
                                 >
                                   <Button
                                     onMouseOver={(e) =>
@@ -1494,7 +1498,7 @@ const Rooms = (props) => {
             </Row>
             <Row>
               <Col>
-                <a target="_blank" href="https://discord.gg/VufJp2EY" >
+                <a target="_blank" href="https://discord.gg/VufJp2EY">
                   <img width={50} height={50} src={dsc} alt="discord"></img>
                 </a>
               </Col>
@@ -1504,7 +1508,7 @@ const Rooms = (props) => {
                 </a>
               </Col>
               <Col>
-                <a target="_blank"  href="https://twitter.com/AsakaLabs">
+                <a target="_blank" href="https://twitter.com/AsakaLabs">
                   <img width={50} height={50} src={twt} alt="twitter"></img>
                 </a>
               </Col>

@@ -158,6 +158,27 @@ Moralis.Cloud.define("createPDA", async (request) => {
   await some_pda.save();
  });
 
+ Moralis.Cloud.define("createRoom", async (request) => {
+  const parameters = request.params;
+
+  const Chat = Moralis.Object.extend("Chat");
+  const aChat = new Chat();
+  aChat.set("messages", []);
+
+  const Room = Moralis.Object.extend("Room");
+  const aRoom = new Room();
+  aRoom.set("owner", parameters.owner);
+  aRoom.set("bet_amount", parameters.bet);
+  aRoom.set("playing", false);
+  aRoom.set("challenger", "null");
+  aRoom.set("room_name", parameters.room_name);
+  aRoom.set("chat", aChat);
+  aRoom.set("room_address", parameters.roomPDA)
+  aRoom.save().then((aRoomObject) => {
+    return aRoomObject
+  });
+ });
+
 Moralis.Cloud.define("ready", async (request) => {
   const aPlayerData = request.params.playerData;
   const roomId = request.params.room;

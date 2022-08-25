@@ -17,6 +17,8 @@ import sol from "./components/media/solc.png"
 import me from "./components/media/ME.png";
 import twt from "./components/media/twitter.png";
 import dsc from "./components/media/discord.png";
+import DiscordChat from './components/discordChat'
+
 
 const App = () => {
   const [username, setUser] = useState("");
@@ -60,20 +62,6 @@ const App = () => {
     const params = { text: "from belgium!" };
     const hello = await Moralis.Cloud.run("helloword", params); //runs a function on the cloud
   };
-
-  const DiscordChat = () => {
-    return (
-      <Col className="discordChat">
-        <Container className="discord_chat_container">
-          <WidgetBot
-            server="1002944553050968215"
-            channel="1002949643077963857"
-            height={500}
-          />
-        </Container>
-      </Col>
-    );
-  }
 
   const MainContainer = () => {
     const [modalShow, setModalShow] = useState(false);

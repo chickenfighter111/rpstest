@@ -43,7 +43,7 @@ const one_sol = 1_000_000_000;
 const clientId =  process.env.REACT_APP_WEB3_CLIENT_ID | "BGUYFB-xTJdSGPtMI92VdT-tFwmijpKvTGnDd-398H37Dy4alqnvb9QPR5PunNT5vBShifRYYz8cAFHSjhKltnI"; // get from https://dashboard.web3auth.io.
 
 const MyNavbar = (props) => {
-  const [balance, setBalance] = useState(null);
+  const [balance, setBalance] = useState(props.bal);
 
   const { logout, isAuthenticated, authenticate } = useMoralis();
   const { connected, publicKey, wallet, disconnect } = useWallet();
@@ -84,7 +84,9 @@ const MyNavbar = (props) => {
         );
         try {
           let abalance = await aprovider.connection.getBalance(escrowPda); //player escrow
+          //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
           setBalance(Math.round((abalance / one_sol)  * 100) / 100);
+
         } catch (err) {
         }
       }
@@ -96,6 +98,7 @@ const MyNavbar = (props) => {
       if(playerWallet) setHasWallet(true)
       else setHasWallet(false)
     }
+
   }, [connected, isAuthenticated]);
 
   useEffect(() => {

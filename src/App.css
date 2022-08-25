@@ -197,6 +197,14 @@ button:hover{
   --bs-btn-disabled-border-color: #000000 !important;
 }
 
+.dashboardName{
+  padding-top: 20px; 
+  position: relative;
+  right: 175px;
+  margin-left: 20vw ;
+  margin-right: 20vw;
+ }
+
 .room_name{
  padding-top: 20px; 
 }
@@ -311,6 +319,14 @@ button:hover{
   margin-top: 40px !important;
 }
 
+.leaderboardContainer{
+  margin-top: -20px !important;
+  max-height: 700px !important;
+  height: 65vh;
+  min-height: 65vh !important;
+  overflow-y: scroll;
+}
+
 .modalBody{
   height: 250px;
 }
@@ -342,8 +358,8 @@ button:hover{
 }
 
 .countDownCol{
-  margin-left: 30px !important;
-  margin-right: -105px !important;
+  position: relative;
+  left: 80px;
 }
 
 .amountSpan{
@@ -367,4 +383,10 @@ button:hover{
   margin-right: auto;
   margin-top: -30px;
   margin-bottom: 40px;
+}
+
+.welcomeContainer{
+  position: relative;
+  right: 200px;
+  margin: auto;
 }

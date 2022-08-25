@@ -10,7 +10,6 @@ import {
   utils,
   web3,
 } from "@project-serum/anchor";
-import { Chat } from "./roomchat";
 import { useParams, useNavigate } from "react-router-dom";
 
 const network = "https://devnet.genesysgo.net/"; //devnet
@@ -53,17 +52,34 @@ function CreateRoom(props) {
 
 
     //game room
-    const GameRoom = Moralis.Object.extend("Room");
+/*    const GameRoom = Moralis.Object.extend("Room");
     const aGameRoom = new GameRoom();
-    const user = Moralis.User.current();
-    const owner = user.getUsername();
-    aGameRoom.set("owner", owner);
+        aGameRoom.set("owner", owner);
     aGameRoom.set("bet_amount", Number(amount));
     aGameRoom.set("playing", false);
     aGameRoom.set("challenger", "null");
-    aGameRoom.set("room_name", name);
+    aGameRoom.set("room_name", name); */
+   
+    const user = Moralis.User.current();
+    const owner = user.getUsername();
+    const paramz = {
+      owner: owner,
+      bet: Number(amount),
+      room_name: name,
+     // RoomPDA: roomPDA.toBase58(),
+    }
+    const aRoomObj = await Moralis.Cloud.run("createRoom", paramz)
+    //aRoomObj.set("room_address", roomPDA.toBase58())
+    const playerAddress = user.get("solAddress");
+    const params = { solAddress: playerAddress, room: aRoomObj.id, roomMaster: playerAddress };    
+    user.set("is_playing", true);
+    user.set("in_room", aRoomObj.id);
+    await user.save();
 
-    const [roomPDA, roomBump] = 
+    //await Moralis.Cloud.run("createPDA", params); //runs a function on the cloud
+    navigateToRoom(aRoomObj.id);
+    
+/*    const [roomPDA, roomBump] = 
     await web3.PublicKey.findProgramAddress([utf8.encode("a_room_escrow_wallet"), publicKey.toBuffer()],
       program.programId);
 
@@ -80,31 +96,7 @@ function CreateRoom(props) {
         .rpc();
     }
     finally{
-      /*const params = {
-        owner: owner,
-        bet: Number(amount),
-        room_name: name,
-        RoomPDA: roomPDA.toBase58(),
-      }
-      const aRoomObj = await Moralis.Cloud.run("createRoom", params)
-       */
-
-      aGameRoom.set("room_address", roomPDA.toBase58())
-      await aGameRoom.save().then(async (gameRoomObject) => {
-        const roomId = gameRoomObject.id;
-        const playerAddress = user.get("solAddress");
-
-        const params = { solAddress: playerAddress, room: roomId, roomMaster: playerAddress };    
-
-        user.set("is_playing", true);
-        user.set("in_room", roomId);
-        await user.save();
-
-        await Moralis.Cloud.run("createPDA", params); //runs a function on the cloud
-        navigateToRoom(roomId);
-
-    })
-  }
+    } */
   }
 
   const navigateToRoom = (roomId) => {

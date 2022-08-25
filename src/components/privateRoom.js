@@ -12,17 +12,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
 
-import React,{ useEffect, useState, useMemo, useReducer } from "react";
-import { Loading, Table, Card, Tag } from "@web3uikit/core";
+import React,{ useEffect, useState, useMemo } from "react";
+import { Loading } from "@web3uikit/core";
 import Countdown from "react-countdown";
-import DiscordChat from './discordChat'
-
 import rock from "./media/cards/rock.png";
 import paper from "./media/cards/paper.png";
 import scissor from "./media/cards/scissor.png";
 import none from "./media/cards/unkown.PNG";
 import logo from "./media/cards/card2.png";
-import deck from "./media/cards/deck_final.png";
 import me from "./media/ME.png";
 import twt from "./media/twitter.png";
 import dsc from "./media/discord.png";
@@ -167,10 +164,11 @@ const Rooms = (props) => {
   const [noFunds, setNoFunds] = useState(false);
   const [selectEnded, setSelectEnded] = useState(false)
   const [betProcessing, setBetProcess] = useState(false)
+  const [balance, setBalance] = useState(props.bal);
+
 
 
   const idl = require("../rps_project.json");
-  const idl2 = require("../rps_signer.json");
   const utf8 = utils.bytes.utf8;
 
   const { wallet, publicKey, signTransaction, signAllTransactions, connected } =
@@ -200,10 +198,7 @@ const Rooms = (props) => {
     const user = Moralis.User.current().getUsername();
     const id = anid;
     const params = { roomId: id, player: user };
-    const canLeave = await Moralis.Cloud.run(
-      "leaveRoom",
-      params
-    );
+    const canLeave = await Moralis.Cloud.run("leaveRoom", params);
     if (canLeave && !gameStarted) {
       Moralis.User.current().set("is_playing", false);
       Moralis.User.current().set("in_room", null);
@@ -231,8 +226,8 @@ const Rooms = (props) => {
       [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
       program.programId
     );
-    const balance = await provider.connection.getBalance(escrowPda); //player escrow
-    const roundedBalance = Math.round((balance / one_sol)  * 100) / 100
+    const abalance = await provider.connection.getBalance(escrowPda); //player escrow
+    const roundedBalance = Math.round((abalance / one_sol)  * 100) / 100
     if (roundedBalance > amount) return true
     else return false
   }
@@ -849,6 +844,7 @@ const Rooms = (props) => {
         //console.log(tx)
         const aPlayerData = {player: Moralis.User.current().id, tx: tx};
         await Moralis.Cloud.run("confirmTransaction", {room: roomId, playerData: aPlayerData})
+        props.onChangeBalance(balance-amount)
       } catch (err) {
         //console.log(err)
       }
@@ -1068,7 +1064,8 @@ const Rooms = (props) => {
       query.equalTo("playing", true);
       let subscription = await query.subscribe();
       subscription.on("enter", async () => {
-        transferToEscrow()
+        generateHands()
+        //transferToEscrow()
         subscription.unsubscribe();
       });
     };
@@ -1109,7 +1106,7 @@ const Rooms = (props) => {
       let subscription = await query.subscribe();
       subscription.on("enter", async () => {
         setBetProcess(false)
-        generateHands()
+        //generateHands()
         //subscription.unsubscribe();
       });
     };
@@ -1181,7 +1178,7 @@ const Rooms = (props) => {
       if (winner === current_player.id) {
         addWinnerAnnouncement(user, opponent)
         if(soundState)winSound()
-        payo()
+        //payo()
         update_playerStats(current_player)
       }
       else if (winner === "draw") {
@@ -1256,15 +1253,10 @@ const Rooms = (props) => {
         <NoFundsPopper />
         <Row>
           {winner ? <WinPopper /> : <div></div>}
-          <Col>
-            <Container className="chatContainer">
-              <DiscordChat />
-            </Container>
-          </Col>
-          <Col xs={7} className="mainCol">
+          <Col lg={9} className="mainCol">
             <Container>
               <Row className="justify-content-md-center">
-                <Container style={{ width: "90%" }}>
+                <Container >
                   {generatedhands && opCards && reveal ? (
                     <Row className="choiceRow" data-aos="fade-down">
                       {opCards.map((aCard, idx) => {
@@ -1363,7 +1355,7 @@ const Rooms = (props) => {
                   {generatedhands && gameStarted && reveal ? (
                     <div>
                       <CustomCountDown
-                        seconds={10}
+                        seconds={7}
                         check={checkSelected}
                         ended={selectEnded}
                       />
@@ -1406,7 +1398,7 @@ const Rooms = (props) => {
                 {mode ? (
                   <OptionDropDown id={"1"} />
                 ) : (
-                  <Container style={{ width: "90%" }}>
+                  <Container >
                     {readyState ? (
                       <div>
                         {generatedhands ? (
@@ -1414,22 +1406,11 @@ const Rooms = (props) => {
                             {generatedhands.map((aHand, index) => {
                               const handIdx = Number(aHand);
                               return (
-                                <Col
-                                  
-                                  className={` cardCol ${
-                                    chosenCards.has(index)
-                                      ? "bselectedCard"
-                                      : ""
-                                  }`}
-                                >
-                                  <Button
-                                    onMouseOver={(e) =>
-                                      handleChoiceButton(e, index)
-                                    }
+                                <Col className={` cardCol ${chosenCards.has(index)? "bselectedCard" : ""}`}>
+                                  <Button onMouseOver={(e) => handleChoiceButton(e, index)}
                                     onClick={selectCard}
                                     className="aCardRev"
-                                    disabled={choiceConfirmed}
-                                  >
+                                    disabled={choiceConfirmed}>
                                     {revealedCards.has(index) ? (
                                       <AiFillEye className="selectedCard" />
                                     ) : (
@@ -1528,7 +1509,7 @@ class CustomCountDown extends React.Component {
     super(props)
     this.tick = this.tick.bind(this)
     this.state = {seconds: props.seconds, ended:false}
-    this.ended = props.ended
+    //this.ended = props.ended
     this.checkFun = {checkFun: props.check}
 
   }
@@ -1540,7 +1521,7 @@ class CustomCountDown extends React.Component {
     if (this.state.seconds > 0 && !this.state.ended) {
       this.setState({seconds: this.state.seconds - 1})
     }
-    else if (this.state.seconds === 0 || !this.state.ended){
+    else if (this.state.seconds === 0){
       this.setState({ended: true})
       this.checkFun.checkFun()
     }
@@ -1555,8 +1536,8 @@ class CustomCountDown extends React.Component {
         <div style={{ width: "100%", textAlign: "center" }}>
           <Row>
           <Col md={9} className="countDownCol">
-            <Row><h3> TIME REMAINING </h3></Row>
-            <Row><h1>{this.state.seconds} SECONDS </h1></Row>
+            <Row><h4> TIME REMAINING </h4></Row>
+            <Row><h3>{this.state.seconds} SECONDS </h3></Row>
           </Col>
           <Col xs={1}> <img src={hg} width={80} height={80} /></Col>
           </Row>

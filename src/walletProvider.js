@@ -3,10 +3,9 @@ import {ConnectionProvider, WalletProvider} from "@solana/wallet-adapter-react";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import { clusterApiUrl } from "@solana/web3.js";
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
-import {WalletModalProvider,  WalletDisconnectButton, WalletMultiButton} from "@solana/wallet-adapter-react-ui";
+import {WalletModalProvider} from "@solana/wallet-adapter-react-ui";
 
-import App from "./App";
-import MyNavbar from './components/web3signin';
+import Main from './main'
 
 
 // Default styles that can be overridden by your app
@@ -25,8 +24,7 @@ const Dashboard = () => {
     <ConnectionProvider endpoint={customRPC}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
-          <MyNavbar />
-          {<App />}
+          <Main/>
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

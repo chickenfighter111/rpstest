@@ -17,7 +17,6 @@ import sol from "./components/media/solc.png"
 import me from "./components/media/ME.png";
 import twt from "./components/media/twitter.png";
 import dsc from "./components/media/discord.png";
-import DiscordChat from './components/discordChat'
 import styled from "styled-components"
 
 const StyledBtn = styled(Button)`
@@ -27,7 +26,7 @@ const StyledBtn = styled(Button)`
 `
 
 
-const App = () => {
+const App = (props) => {
   const [username, setUser] = useState("");
   const { isAuthenticated, authenticate, isAuthenticating } = useMoralis();
   const { connected, publicKey } = useWallet();
@@ -97,9 +96,7 @@ const App = () => {
 
       if (astring === "") fetchRooms()
       else {
-        setRooms(rooms.filter(aRoom => {
-          itContains( aRoom.get("owner"), astring)
-        }))
+        setRooms(rooms.filter(aRoom => itContains(aRoom.get("room_name"), astring)))
       }
     }
 
@@ -158,7 +155,7 @@ const App = () => {
     }, [isAuthenticated, connected]);
 
     return (
-      <Col className="roomList" xs={6}>
+      <Col className="roomList" lg={9}>
       <Container>
         <Row>
           <CreateRoomModal
@@ -299,15 +296,14 @@ const App = () => {
   const Home = () => {
     return (
       <Container className="roomContainer">
-        <h1 className="room_name">Dashboard of {username}</h1>
+        <h1 className="dashboardName">Dashboard of {username}</h1>
         <Row>
-          <DiscordChat/>
           <MainContainer/>
           <Col className="leaderboard">
             <h3>Season ranking</h3>
             <Container >
               <Row>
-                <div className="announcementsContainer">
+                <div className="leaderboardContainer">
                   <LeaderBoardContainer/>
                 </div>
               </Row>
@@ -335,7 +331,8 @@ const App = () => {
         <div>
           <Routes>
           <Route path="/" index element={<Home />}/>
-          <Route path="/rooms/:userId" element={<PrivateRoom/>} />
+          <Route path="/rooms/:userId" 
+            element={<PrivateRoom onChangeBalance={props.onChangeBalance} bal={props.bal}/>} />
         </Routes>
         </div>
     );
@@ -351,7 +348,7 @@ const App = () => {
   else{
     return(
       <div>
-        <Container>
+        <Container className="welcomeContainer">
         <h1 className="room_name">Welcome to Asaka Games</h1>
         <h3>Please log-in to continue</h3>
        </Container>

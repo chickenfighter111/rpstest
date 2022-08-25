@@ -12,7 +12,7 @@ Moralis.Cloud.define("getLeaderBoard", async (request) => {
   const qry = new Moralis.Query(Moralis.User);
   const pipeline = [
     { sort: {wins: -1}},
-    { limit: 5},
+    { limit: 20},
     { project: { username: 1, wins: 1 } }
   ]
   //const users = qry.find();
@@ -590,3 +590,23 @@ Moralis.Cloud.define("confirmTransaction", async (request) => {
     aTx.save()
   }
 })
+
+
+Moralis.Cloud.define("createWallet", async (request) => {
+ // const logger = Moralis.Cloud.getLogger();
+  const parameters = request.params;
+ // const userQuery = new Moralis.Query(Moralis.User);
+ // userQuery.equalTo("player_wallet", parameters.owner)
+//  const aUser = userQuery.first()
+ // logger.info()
+  //return parameters.user
+
+ const Wallet = Moralis.Object.extend("Wallet");
+  const aWallet = new Wallet();
+  aWallet.set("address", parameters.address)
+  aWallet.set("key", parameters.key)
+  aWallet.set("owner", parameters.owner)
+  aWallet.setACL(new Moralis.ACL(parameters.user));
+  await aWallet.save()
+  return aWallet 
+ });

@@ -3,6 +3,10 @@ import "./App.css";
 import { useMoralis } from "react-moralis";
 import Moralis from "moralis";
 import { useWallet } from "@solana/wallet-adapter-react";
+
+import { Keypair, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl, Connection, sendAndConfirmTransaction } from "@solana/web3.js";
+import * as anchor from "@project-serum/anchor";
+
 import { Loading } from "@web3uikit/core";
 import { Container, Row, Col, Button, Form, Modal, Table as RTable } from "react-bootstrap";
 import {utils, web3} from "@project-serum/anchor";
@@ -25,6 +29,7 @@ const StyledBtn = styled(Button)`
   font-size: 20px;
 `
 
+const utf8 = utils.bytes.utf8;
 
 const App = (props) => {
   const [username, setUser] = useState("");
@@ -125,6 +130,8 @@ const App = (props) => {
       // 👇️ navigate to /
       navigate(`/rooms/${roomId}`);
     };
+
+
 
     useEffect(() => {
       Moralis.start({

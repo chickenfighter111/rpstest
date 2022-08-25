@@ -50,10 +50,8 @@ function WalletManager(props) {
       const aUser = Moralis.User.current();
       const playerPDA = aUser.get("player_wallet");
       if (playerPDA) {
-        const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-          [utf8.encode('a_player_escrow_wallet'),publicKey.toBuffer()],
-          program.programId
-        );
+        const escrow = new anchor.web3.PublicKey(playerPDA)
+        /*
         try {
           const tx = await program.methods.depow(new BN(amount*one_sol))
             .accounts({
@@ -65,6 +63,7 @@ function WalletManager(props) {
         } catch (err) {
          // console.log(err)
         }
+        */
       }
     };
 
@@ -121,12 +120,9 @@ function WalletManager(props) {
     const aUser = Moralis.User.current();
     const playerPDA = aUser.get("player_wallet");
     if (playerPDA) {
-      const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-        [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
-        program.programId
-      );
+      const escrow = new anchor.web3.PublicKey(playerPDA)
       try {
-        let balance = await provider.connection.getBalance(escrowPda); //player escrow
+        const balance = await provider.connection.getBalance(escrow); //player escrow
         props.setBal(Math.round((balance / one_sol)  * 100) / 100);
       } catch (err) {
       }

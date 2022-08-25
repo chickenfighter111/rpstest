@@ -78,12 +78,9 @@ const MyNavbar = (props) => {
       const aUser = Moralis.User.current();
       const playerPDA = aUser.get("player_wallet");
       if (playerPDA) {
-        const [escrowPda, _] = await anchor.web3.PublicKey.findProgramAddress(
-          [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
-          program.programId
-        );
+        const escrow = new anchor.web3.PublicKey(playerPDA)
         try {
-          let abalance = await aprovider.connection.getBalance(escrowPda); //player escrow
+          let abalance = await aprovider.connection.getBalance(escrow); //player escrow
           //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
           setBalance(Math.round((abalance / one_sol)  * 100) / 100);
 
@@ -92,11 +89,16 @@ const MyNavbar = (props) => {
       }
     };
 
+    const fetchPlayerWallet = async() =>{
+      const playerWallet = Moralis.User.current().get("player_wallet");
+      if (playerWallet) setHasWallet(true)
+      else setHasWallet(false)
+
+    }
+
     if (connected && isAuthenticated) {
       getBalance();
-      const playerWallet = Moralis.User.current().get("player_wallet");
-      if(playerWallet) setHasWallet(true)
-      else setHasWallet(false)
+      fetchPlayerWallet()
     }
 
   }, [connected, isAuthenticated]);

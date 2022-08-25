@@ -5,6 +5,7 @@ import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { AnchorProvider, Program, utils, web3 } from "@project-serum/anchor";
+import { Keypair, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl, Connection, sendAndConfirmTransaction } from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 
 const network = "https://devnet.genesysgo.net/"; //devnet
@@ -65,10 +66,70 @@ function PlayerWallet() {
 
   const createWallet = async (event) => {
     event.preventDefault();
+   
     if (username) {
-      createPlayerWallet(username);
+      await create_player_wallet()
     }
   };
+
+
+  const generateWallet = async () =>{
+    function _arrayBufferToBase64( buffer ) {
+      var binary = '';
+      var bytes = new Uint8Array( buffer );
+      var len = bytes.byteLength;
+      for (var i = 0; i < len; i++) {
+          binary += String.fromCharCode( bytes[ i ] );
+      }
+      return window.btoa( binary );
+  }
+
+  function _base64ToArrayBuffer(base64) {
+    var binary_string = window.atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
+    const aKP = Keypair.generate()
+   // console.log("Publickey: ", aKP.publicKey)
+   // console.log("Secret key: ", aKP.secretKey)
+    var b64Secret = Buffer.from(aKP.secretKey).toString('base64');
+    var b58Public = aKP.publicKey.toBase58();
+   // console.log("Decoded(String) secret key : ", b64Secret)
+
+    /*var encb64 = _base64ToArrayBuffer(b64);
+    console.log("Re-encoded(Arraybuffer) secret key : ", encb64)
+    var b642 = Buffer.from(encb64).toString('base64');
+    console.log("Re-decoded(String) secret key : ", b642) */
+    return [b58Public,b64Secret]
+  }
+
+  const create_player_wallet = async () =>{
+    const aKp_string = await generateWallet()
+    const currentUser =  Moralis.User.current()
+    currentUser.set("player_wallet", aKp_string[0]);
+    await currentUser.save()
+    
+    /*const params = { 
+      owner: currentUser.id, 
+      address: aKp_string[0], 
+      key: aKp_string[1], 
+      user: currentUser.toPointer() 
+    } */
+   // const aUser = await Moralis.Cloud.run("createWallet", params); //runs a function on the cloud
+  //  console.log(aUser)
+    const Wallet = Moralis.Object.extend("Wallet");
+    const aWallet = new Wallet();
+    aWallet.set("address", aKp_string[0])
+    aWallet.set("key", aKp_string[1])
+    aWallet.set("owner", Moralis.User.current().id)
+    aWallet.setACL(new Moralis.ACL(Moralis.User.current()));
+    await aWallet.save()
+  }
 
   const handleInput = (event) => {
     setUsername(event.target.value);

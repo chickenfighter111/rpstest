@@ -222,11 +222,10 @@ const Rooms = (props) => {
   };
 
   const canPlay = async () => {
-    const [escrowPda, _] = await anchor.web3.PublicKey.findProgramAddress(
-      [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
-      program.programId
-    );
-    const abalance = await provider.connection.getBalance(escrowPda); //player escrow
+    const aUser = Moralis.User.current();
+    const playerPDA = aUser.get("player_wallet");
+    const escrow = new anchor.web3.PublicKey(playerPDA)
+    const abalance = await provider.connection.getBalance(escrow); //player escrow
     const roundedBalance = Math.round((abalance / one_sol)  * 100) / 100
     if (roundedBalance > amount) return true
     else return false
@@ -1249,23 +1248,24 @@ const Rooms = (props) => {
 
   if (isAuthenticated && roomId) {
     return (
-      <Container fluid="xxl" className="roomContainer" style={{  height: "85vh"}}>
+      <Container
+        fluid="xxl"
+        className="roomContainer"
+        style={{ height: "85vh" }}
+      >
         <NoFundsPopper />
         <Row>
           {winner ? <WinPopper /> : <div></div>}
           <Col lg={9} className="mainCol">
             <Container>
               <Row className="justify-content-md-center">
-                <Container >
+                <Container>
                   {generatedhands && opCards && reveal ? (
                     <Row className="choiceRow" data-aos="fade-down">
                       {opCards.map((aCard, idx) => {
                         if (aCard !== logo) {
                           return (
-                            <Col
-                              className="aselectedCard cardCol"
-                              
-                            >
+                            <Col className="aselectedCard cardCol">
                               <Button className="aCardRev">
                                 <AiFillEye className="selectedCard" />
                                 <img
@@ -1295,21 +1295,20 @@ const Rooms = (props) => {
                 <Col xs={2}>
                   <Container>
                     {owner ? (
-                        <Row>
+                      <Row>
                         <StartBtn disabled={!readyState} onClick={startRound}>
                           Start
                         </StartBtn>
                       </Row>
-
                     ) : (
-                      <div></div>
+                      <div>
+                        <Row>
+                          <StartBtn disabled={readyState} onClick={getReady}>
+                            Ready
+                          </StartBtn>
+                        </Row>
+                      </div>
                     )}
-                    <br/>
-                      <Row>
-                        <StartBtn onClick={() => leaveRoom(params.userId)}>
-                          Leave
-                        </StartBtn>
-                      </Row>
                   </Container>
                 </Col>
                 <Col lg={7}>
@@ -1366,21 +1365,13 @@ const Rooms = (props) => {
                 </Col>
                 <Col xs={2}>
                   <Container>
+                    <Row>
+                      <StartBtn onClick={() => leaveRoom(params.userId)}>
+                        Leave
+                      </StartBtn>
+                    </Row>
                     <div>
-                      {!owner ? (
-                        <div>
-                          <br/>
-                          <StartBtn disabled={readyState} onClick={getReady}>
-                            Ready
-                          </StartBtn>
-                          {/* <Button disabled={!readyState} onClick={resetRoom}>Uneady</Button> */}
-                        </div>
-                      ) : (
-                        <div></div>
-                      )}
-                    </div>
-                    <div>
-                    <br/>
+                      <br />
                       {soundState ? (
                         <Button onClick={() => setSoundState(false)}>
                           <FaVolumeUp size={30} />
@@ -1398,7 +1389,7 @@ const Rooms = (props) => {
                 {mode ? (
                   <OptionDropDown id={"1"} />
                 ) : (
-                  <Container >
+                  <Container>
                     {readyState ? (
                       <div>
                         {generatedhands ? (
@@ -1406,11 +1397,21 @@ const Rooms = (props) => {
                             {generatedhands.map((aHand, index) => {
                               const handIdx = Number(aHand);
                               return (
-                                <Col className={` cardCol ${chosenCards.has(index)? "bselectedCard" : ""}`}>
-                                  <Button onMouseOver={(e) => handleChoiceButton(e, index)}
+                                <Col
+                                  className={` cardCol ${
+                                    chosenCards.has(index)
+                                      ? "bselectedCard"
+                                      : ""
+                                  }`}
+                                >
+                                  <Button
+                                    onMouseOver={(e) =>
+                                      handleChoiceButton(e, index)
+                                    }
                                     onClick={selectCard}
                                     className="aCardRev"
-                                    disabled={choiceConfirmed}>
+                                    disabled={choiceConfirmed}
+                                  >
                                     {revealedCards.has(index) ? (
                                       <AiFillEye className="selectedCard" />
                                     ) : (

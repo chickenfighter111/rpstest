@@ -184,7 +184,7 @@ const App = () => {
                   <th><Button onClick={fetchRooms}>
                       <FiRefreshCcw />
                     </Button></th>
-                  <th colSpan={2}><h5>Host</h5></th>
+                  <th colSpan={2}><h5>Room name</h5></th>
                   <th ><h5>Bet</h5></th>
                   <th  colSpan={2}><h5>Challenger</h5></th>
                   <th >
@@ -215,7 +215,7 @@ const App = () => {
                                   return (
                                     <tr>
                                     <td>{null}</td>
-                                    <td colSpan={2}>{room.get("owner").substring(0,15)}</td>
+                                    <td colSpan={2}>{room.get("room_name").substring(0,15)}</td>
                                     <td className="testSpan"> 
                                       <td className="amountSpan"><span>{room.get("bet_amount")}</span> </td>
                                       <td className="logoSpan"><img src={sol} width={30} height={25} alt="SOL"/></td>

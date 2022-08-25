@@ -1099,7 +1099,7 @@ const Rooms = (props) => {
         if (Moralis.User.current().id === object.get("winner")) {
           setIsWinner(true)
         }
-       // subscription.unsubscribe();
+        subscription.unsubscribe();
       });
     };
 
@@ -1111,7 +1111,7 @@ const Rooms = (props) => {
       subscription.on("enter", async () => {
         setBetProcess(false)
         generateHands()
-        subscription.unsubscribe();
+        //subscription.unsubscribe();
       });
     };
 

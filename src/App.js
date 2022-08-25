@@ -268,9 +268,9 @@ const App = (props) => {
       <RTable responsive borderless>
       <thead>
         <tr>
-          <th>Rank</th>
-          <th colSpan={2}>Username</th>
-          <th>Wins</th>
+          <th><h5>Rank</h5></th>
+          <th colSpan={2}><h5>Username</h5></th>
+          <th><h5>Wins</h5></th>
         </tr>
       </thead>
       <tbody>
@@ -307,7 +307,7 @@ const App = (props) => {
         <Row>
           <MainContainer/>
           <Col className="leaderboard">
-            <h3>Season ranking</h3>
+            <h2>Season ranking</h2>
             <Container >
               <Row>
                 <div className="leaderboardContainer">

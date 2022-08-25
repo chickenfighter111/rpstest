@@ -13,7 +13,6 @@ import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
 
 import React,{ useEffect, useState, useMemo, useReducer } from "react";
-import Chat from "./roomchat";
 import { Loading, Table, Card, Tag } from "@web3uikit/core";
 import Countdown from "react-countdown";
 import DiscordChat from './discordChat'
@@ -129,7 +128,6 @@ const Rooms = (props) => {
 
   const [roomId, setRoomId] = useState(null);
   const [opponent, setOpponent] = useState(null);
-  const [chatId, setChatId] = useState(null);
   const [gameStarted, setStarted] = useState(false);
   const [amount, setAmount] = useState(0);
 
@@ -219,9 +217,7 @@ const Rooms = (props) => {
     const params = { roomId: id };
     const roomData = await Moralis.Cloud.run("getRoomData", params); //runs a function on the cloud
     const username = Moralis.User.current().getUsername();
-    const chat = roomData.get("chat");
     setRoomName(roomData.get("room_name"));
-    setChatId(chat.id);
     setRoomPda(roomData.get("room_address"))
     setAmount(roomData.get("bet_amount"));
     if (roomData.get("challenger") !== "null") {

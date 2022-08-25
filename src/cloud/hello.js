@@ -81,17 +81,6 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
     //room open?
     if (results.get("challenger") === "null") {
       results.destroy();
-      const aChat = results.get("chat");
-
-      //delete all msg of that chat
-      const chatQuery = new Parse.Query("Message");
-      chatQuery.equalTo("chatRoomId", aChat.id);
-      const chatMsgs = await chatQuery.find();
-      chatMsgs.forEach(async (msgObject) => {
-        await msgObject.destroy();
-      });
-
-      aChat.destroy();
       aPda.destroy();
       return true;
     } else if (whoIsLeaving === results.get("owner")) { //owner is leaving
@@ -99,18 +88,10 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
       results.set("challenger", "null");
       await results.save();
 
-      const ownerSolAddress = aPda.get("players")[0];
-      //aPda.remove("players", ownerSolAddress);
-      //aPda.set("ready", false)
-      //aPda.save()
       return true; //you can leave now
     } else { //challenger is leaving
       results.set("challenger", "null");
       await results.save();
-      const challengerSolAddress = aPda.get("players")[1];
-     // aPda.remove("players", challengerSolAddress);
-      //aPda.set("ready", false);
-      //aPda.save()
 
       return true; //you can leave now
     }
@@ -161,9 +142,6 @@ Moralis.Cloud.define("createPDA", async (request) => {
  Moralis.Cloud.define("createRoom", async (request) => {
   const parameters = request.params;
 
-  const Chat = Moralis.Object.extend("Chat");
-  const aChat = new Chat();
-  aChat.set("messages", []);
 
   const Room = Moralis.Object.extend("Room");
   const aRoom = new Room();
@@ -172,7 +150,6 @@ Moralis.Cloud.define("createPDA", async (request) => {
   aRoom.set("playing", false);
   aRoom.set("challenger", "null");
   aRoom.set("room_name", parameters.room_name);
-  aRoom.set("chat", aChat);
   aRoom.set("room_address", parameters.roomPDA)
   aRoom.save().then((aRoomObject) => {
     return aRoomObject

@@ -19,7 +19,7 @@
               {
                 "kind": "const",
                 "type": "string",
-                "value": "a_player_escrow_wallet"
+                "value": "rps_player_escrow_wallet"
               },
               {
                 "kind": "account",
@@ -59,7 +59,7 @@
               {
                 "kind": "const",
                 "type": "string",
-                "value": "a_room_escrow_wallet"
+                "value": "rps_room_escrow_wallet"
               },
               {
                 "kind": "account",
@@ -78,6 +78,46 @@
       "args": []
     },
     {
+      "name": "setRoomBet",
+      "accounts": [
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "roomAccount",
+          "isMut": true,
+          "isSigner": false,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "type": "string",
+                "value": "rps_room_escrow_wallet"
+              },
+              {
+                "kind": "account",
+                "type": "publicKey",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "depow",
       "accounts": [
         {
@@ -89,6 +129,58 @@
           "name": "owner",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "depozit",
+      "accounts": [
+        {
+          "name": "from",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "escrowAcc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "widrawl",
+      "accounts": [
+        {
+          "name": "escrowAcc",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "toMe",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "systemProgram",
@@ -254,6 +346,10 @@
           },
           {
             "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "bet",
             "type": "u64"
           }
         ]

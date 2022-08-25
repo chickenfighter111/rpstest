@@ -12,6 +12,7 @@ import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
 import { Button, Modal, Form, Container, Dropdown } from "react-bootstrap";
 import ModifyUsername from './forms/signup';
+import { LAMPORTS_PER_SOL, sendAndConfirmTransaction, Keypair } from "@solana/web3.js";
 
 
 const network = "https://devnet.genesysgo.net/"; //devnet
@@ -51,40 +52,60 @@ function WalletManager(props) {
       const playerPDA = aUser.get("player_wallet");
       if (playerPDA) {
         const escrow = new anchor.web3.PublicKey(playerPDA)
-        /*
         try {
-          const tx = await program.methods.depow(new BN(amount*one_sol))
+          const tx = await program.methods.depozit(new BN(amount*one_sol))
             .accounts({
-              lockAccount: escrowPda,
-              owner: publicKey
+              from: publicKey,
+              escrowAcc: escrow
             }).rpc()  
-            //console.log(tx)
+            console.log(tx)
           await getBalance();//refresh
         } catch (err) {
-         // console.log(err)
+          console.log(err)
         }
-        */
+        
       }
     };
 
     const withdraw = async (event) => {
+      async function _base64ToArrayBuffer(base64) {
+        var binary_string = window.atob(base64);
+        var len = binary_string.length;
+        var bytes = new Uint8Array(len);
+        for (var i = 0; i < len; i++) {
+            bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes.buffer;
+     }
+
         event.preventDefault();
         const aUser = Moralis.User.current();
         const playerPDA = aUser.get("player_wallet");
         if (playerPDA) {
-          const aPlayerPDA = new web3.PublicKey(playerPDA);
-          const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-            [utf8.encode('a_player_escrow_wallet'),publicKey.toBuffer()],
-            program.programId
-          );
           try {
-            const wtx = await program.methods.widro(new BN(amount*one_sol))
+            const walletQry = new Moralis.Query("Wallet")
+            walletQry.equalTo("owner", aUser.id)
+            const aWallet = await walletQry.first()
+            //console.log(aWallet)
+            const escrow = new anchor.web3.PublicKey(playerPDA)
+            const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
+            const u8int= new Uint8Array(arraybuf)
+            const escrowWallet = Keypair.fromSecretKey(u8int)
+            let tx = new anchor.web3.Transaction().add(anchor.web3.SystemProgram.transfer({
+              fromPubkey: escrowWallet.publicKey,
+              toPubkey: publicKey,
+              lamports: LAMPORTS_PER_SOL*amount-(0.00001*LAMPORTS_PER_SOL),
+          }))
+          await sendAndConfirmTransaction(connection, tx, [escrowWallet]);
+
+/*            const wtx = await program.methods.widrawl(new BN(amount*one_sol*0.9999))
             .accounts({
-              lockAccount: escrowPda,
-              owner: publicKey
-            }).rpc()  
+              escrowAcc: escrow,
+              toMe: publicKey
+            }).signers([escrowWallet]).rpc()   */
             await getBalance(); //refresh
           } catch (err) {
+            console.log(err)
           }
         }
       };

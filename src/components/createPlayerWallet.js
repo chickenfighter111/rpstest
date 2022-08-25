@@ -108,6 +108,8 @@ function PlayerWallet() {
     return [b58Public,b64Secret]
   }
 
+
+
   const create_player_wallet = async () =>{
     const aKp_string = await generateWallet()
     const currentUser =  Moralis.User.current()

@@ -14,7 +14,6 @@ import { useParams, useNavigate } from "react-router-dom";
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 const idl = require("../rps_project.json");
-const idl2 = require("../rps_signer.json");
 const utf8 = utils.bytes.utf8;
 
 function CreateRoom(props) {
@@ -39,7 +38,6 @@ function CreateRoom(props) {
     preflightCommitment: "processed",
   });
   const program = new Program(idl, idl.metadata.address, provider);
-  const roomMasterProgram = new Program(idl2, idl2.metadata.address, provider);
 
   const set_amount = async (event) => {
     event.preventDefault();

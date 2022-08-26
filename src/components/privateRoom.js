@@ -300,9 +300,11 @@ const Rooms = (props) => {
 
   const selectCard = async() =>{
     if (chosenCards.size < 3){
-      chosenCards.add(selectedBox)
-      setTotalSel(totalSelected + 1)
-      chosenOnes.push(generatedhands[selectedBox])
+      if(!chosenCards.has(selectedBox)){
+        chosenCards.add(selectedBox)
+        chosenOnes.push(generatedhands[selectedBox])
+        setTotalSel(totalSelected + 1);
+      }
     }
   }
 
@@ -794,10 +796,7 @@ const Rooms = (props) => {
       await Moralis.Cloud.run("rematch", {roomId: roomId});
       setReadtState(false)
     }
-    /*else if(roomData.get("ready") && isOwner()){
-      setReadtState(true);
-    }
- */
+
     //if (winner) {
       setConfirmed(false);
       setEndedDuel(false);
@@ -835,6 +834,7 @@ function _base64ToArrayBuffer(base64) {
   }
   return bytes.buffer;
 }
+
 
   const payo = async () => {
     const awinner = Moralis.User.current().get("solAddress");
@@ -932,8 +932,8 @@ function _base64ToArrayBuffer(base64) {
   const getReady = async () =>{
     //if (await canPlay()){
       const params = { roomId: roomId };
-      await Moralis.Cloud.run("getReady", params); //runs a function on the cloud
-      setReadtState(true)
+      const rdy = await Moralis.Cloud.run("getReady", params); //runs a function on the cloud
+      setReadtState(rdy)
     //}else setNoFunds(true)
   }
 
@@ -966,20 +966,23 @@ function _base64ToArrayBuffer(base64) {
     };
 
     const readyPing = async () => {
-      let query = new Moralis.Query("Room");
-      query.get(roomId);
-      query.equalTo("ready", true);
-      let subscription = await query.subscribe();
-      subscription.on("enter", async () => {
-        if (isOwner()){
-          setReadtState(true)
-          //subscription.unsubscribe()
-        }
-      });
-      /*subscription.on("leave", async () => {
-        setReadtState(false)
-        subscription.unsubscribe()
-      }); */  
+      if (!gameStarted && !duelEnded){
+        let query = new Moralis.Query("Room");
+        query.get(roomId);
+        query.equalTo("ready", true);
+        let subscription = await query.subscribe();
+        subscription.on("enter", async () => {
+          if (isOwner()){
+            setReadtState(true)
+            //subscription.unsubscribe()
+          }
+        });
+/*        subscription.on("leave", async () => {
+          if (isOwner()){
+            setReadtState(false)
+          }
+        }); */
+      }
     };
 
 
@@ -997,15 +1000,9 @@ function _base64ToArrayBuffer(base64) {
           
           if (curr_user_id === player_one.player) {
             setOpChoseOnes(player_two.choice);
-       //     player_two.choiceIndexes.forEach((aChoice, index) => {
-         //     opCards[aChoice] = imgs[Number(player_two.choice[index])]
-          //  })
           } 
           else {
             setOpChoseOnes(player_one.choice);
-           // player_one.choiceIndexes.forEach((aChoice, index) => {
-             // opCards[aChoice] = imgs[Number(player_one.choice[index])]
-           // })
           }
         }
     };
@@ -1266,6 +1263,12 @@ function _base64ToArrayBuffer(base64) {
                             Ready
                           </StartBtn>
                         </Row>
+                        <br/>
+                        <Row>
+                          <StartBtn disabled={!readyState} onClick={getReady}>
+                            Unready
+                          </StartBtn>
+                        </Row>
                       </div>
                     )}
                   </Container>
@@ -1469,7 +1472,7 @@ class CustomCountDown extends React.Component {
     super(props)
     this.tick = this.tick.bind(this)
     this.state = {seconds: props.seconds, ended:false}
-    //this.ended = props.ended
+    this.ended = props.ended
     this.checkFun = {checkFun: props.check}
 
   }

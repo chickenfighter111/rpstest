@@ -319,20 +319,18 @@ const Rooms = (props) => {
 
   //2
   const sendSelectedHand = async () => {
-    if (choiceConfirmed) {
-      if (mode) {
-        const challenger = Moralis.User.current().id;
-        const roomID = roomId;
-        const playerData = { player: challenger, choice: selectedHand };
-        const params = { room: roomID, playerData: playerData };
-        await Moralis.Cloud.run("ready", params); //runs a function on the cloud
-      } else {
-        const challenger = Moralis.User.current().id;
-        const roomID = roomId;
-        const playerData = { player: challenger, choice: chosenOnes };
-        const params = { room: roomID, playerData: playerData };
-        await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
-      }
+    if (mode) {
+      const challenger = Moralis.User.current().id;
+      const roomID = roomId;
+      const playerData = { player: challenger, choice: selectedHand };
+      const params = { room: roomID, playerData: playerData };
+      await Moralis.Cloud.run("ready", params); //runs a function on the cloud
+    } else {
+      const challenger = Moralis.User.current().id;
+      const roomID = roomId;
+      const playerData = { player: challenger, choice: chosenOnes };
+      const params = { room: roomID, playerData: playerData };
+      await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
     }
   };
 
@@ -834,7 +832,207 @@ function _base64ToArrayBuffer(base64) {
   }
   return bytes.buffer;
 }
+  const transferRoom = async () =>{
 
+    try{
+      const roomEscrow = new PublicKey(roomPDA);
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      const walletQry = new Moralis.Query("Wallet")
+      walletQry.equalTo("owner", aUser.id)
+      const aWallet = await walletQry.first()
+      const playerEscrow = new anchor.web3.PublicKey(playerPDA)
+      const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
+      const u8int= new Uint8Array(arraybuf)
+      const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
+
+      const tx = await program.methods.payRoom(
+        new BN(amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
+        *LAMPORTS_PER_SOL))
+      .accounts({
+        escrowAcc: escrowWallet.publicKey,
+        roomAcc: roomEscrow,
+      }).transaction()
+      const aConnection = new web3.Connection(network, 'finalized');
+      tx.feePayer = escrowWallet.publicKey;
+      tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+      const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
+      //console.log("tx ", signature)
+
+      const abalance = await provider.connection.getBalance(playerEscrow); //player escrow
+      //console.log(Math.round((abalance / one_sol)  * 100) / 100)
+      setBalance(Math.round((abalance / one_sol)  * 100) / 100);
+      //handleChangeBalance(Math.round((abalance / one_sol)  * 100) / 100)
+      //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
+    }catch(err){
+    //  console.log(err)
+    }
+
+  }
+
+  const payoutWinner = async () =>{
+    function _base64ToArrayBuffer(base64) {
+      var binary_string = window.atob(base64);
+      var len = binary_string.length;
+      var bytes = new Uint8Array(len);
+      for (var i = 0; i < len; i++) {
+          bytes[i] = binary_string.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+    try{
+      const roomEscrow = new PublicKey(roomPDA);
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      const walletQry = new Moralis.Query("Wallet")
+      walletQry.equalTo("owner", aUser.id)
+      const aWallet = await walletQry.first()
+      const playerEscrow = new anchor.web3.PublicKey(playerPDA)
+      const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
+      const u8int= new Uint8Array(arraybuf)
+      const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
+
+      const tx = await program.methods.payoutWinner(
+        new BN(amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
+        *LAMPORTS_PER_SOL))
+      .accounts({
+        roomAcc: roomEscrow,
+        winnerEscrowAcc: playerEscrow,
+        feeAcc: fee_wallet,
+        player: escrowWallet.publicKey
+      }).transaction()
+      const aConnection = new web3.Connection(network, 'finalized');
+      tx.feePayer = escrowWallet.publicKey;
+      tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+      //const signedTx = await tx.sign(escrowWallet);
+      const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
+     //const signature = await connection.sendRawTransaction(tx);
+     // console.log(signature)
+    }catch(err){
+  //    console.log(err)
+    }
+
+  }
+
+  const transferToEscrow = async () => {
+    /*    const getConfirmation = async (connection, tx) => {
+      const result = await connection.getSignatureStatus(tx, {
+        searchTransactionHistory: true,
+      });
+      return result.value?.confirmationStatus;
+    }; */
+
+    if (roomPDA) {
+      setBetProcess(true)
+      const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
+        [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
+        program.programId
+      );
+
+      const pdaPK = new web3.PublicKey(roomPDA)
+
+      try {
+        const tx = await program.methods.transferro(
+          new BN(
+           amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
+          *one_sol))
+        .accounts({
+          fromLockAccount: escrowPda,
+          roomAccount: pdaPK,
+          owner: publicKey
+        }).rpc()
+        //console.log(tx)
+        const aPlayerData = {player: Moralis.User.current().id, tx: tx};
+        await Moralis.Cloud.run("confirmTransaction", {room: roomId, playerData: aPlayerData})
+        props.onChangeBalance(balance-amount)
+      } catch (err) {
+        //console.log(err)
+      }
+    }
+  };
+
+  const payo = async () => {
+    const awinner = Moralis.User.current().get("solAddress");
+    const dest = new web3.PublicKey(awinner);
+
+    try {
+      const roomEscrow = new PublicKey(roomPDA);
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      const walletQry = new Moralis.Query("Wallet")
+      walletQry.equalTo("owner", aUser.id)
+      const aWallet = await walletQry.first()
+      const playerEscrow = new anchor.web3.PublicKey(playerPDA)
+      const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
+      const u8int= new Uint8Array(arraybuf)
+      const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
+
+      let tx = await program.methods
+        .payout()
+        .accounts({
+          winner: dest,
+          feeAcc: fee_wallet,
+          roomAccount: roomEscrow,
+          signer:escrowWallet.publicKey
+        }).signers([escrowWallet]).rpc() //.transaction()
+
+        /*const aConnection = new web3.Connection(network, 'finalized');
+        tx.feePayer = escrowWallet.publicKey;
+        tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+        const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet]);
+        console.log("tx ", signature) */
+       // console.log(tx)
+    } catch (err) {
+     // console.log(err);
+    }
+  };
+
+
+  const payWinner = async (awinner) => {
+    const payo = async () => {
+      const awinner = Moralis.User.current().get("solAddress");
+      const dest = new web3.PublicKey(awinner);
+      const pdaPK = new web3.PublicKey(roomPDA);
+
+      try {
+        let tx = await program.methods
+          .payout()
+          .accounts({
+            winner: dest,
+            feeAcc: fee_wallet,
+            roomAccount: pdaPK,
+          })
+          .rpc();
+       // console.log(tx);
+      } catch (err) {
+       // console.log(err);
+      }
+    };
+
+    //before paying we first check again who the winner is
+    if (duelEnded && canPay) {
+      if (winner === Moralis.User.current().id && winner === awinner) {
+        const params = { room: roomId };
+        // Fetch our Room Escrow PDA
+        if (await Moralis.Cloud.run("checkWinner", {user: Moralis.User.current().id,room: roomId})) {
+          try {
+            if (await Moralis.Cloud.run("checkWinner", {user: Moralis.User.current().id, room: roomId})) {
+              const current_wins = Moralis.User.current().get("wins");
+              Moralis.User.current().set("wins", current_wins + 1);
+              await Moralis.User.current().save();
+
+              //const playerWallet = Moralis.Moralis.User.current().get("player_wallet"); //error 3011, account not owned by system program...
+              const playerWallet = Moralis.User.current().get("solAddress");
+              const winnerPk = new anchor.web3.PublicKey(playerWallet);
+              await payo()
+            } else alert("you did not win... 1");
+          } catch (err) {
+           alert("Some problems... ", err);
+          }
+        } else alert("you did not win... 2");
+      } else alert("you did not win... 3");
+    }
+  };
 
   const isOwner = async() =>{
     const user = Moralis.User.current().getUsername()
@@ -1247,11 +1445,11 @@ function _base64ToArrayBuffer(base64) {
                     <div>
                       <br />
                       {soundState ? (
-                        <Button disabled={readyState} onClick={() => setSoundState(false)}>
+                        <Button onClick={() => setSoundState(false)}>
                           <FaVolumeUp size={30} />
                         </Button>
                       ) : (
-                        <Button disabled={readyState} onClick={() => setSoundState(true)}>
+                        <Button onClick={() => setSoundState(true)}>
                           <BiVolumeMute size={30} />
                         </Button>
                       )}

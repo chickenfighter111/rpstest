@@ -1263,12 +1263,6 @@ function _base64ToArrayBuffer(base64) {
                             Ready
                           </StartBtn>
                         </Row>
-                        <br/>
-                        <Row>
-                          <StartBtn disabled={!readyState} onClick={getReady}>
-                            Unready
-                          </StartBtn>
-                        </Row>
                       </div>
                     )}
                   </Container>

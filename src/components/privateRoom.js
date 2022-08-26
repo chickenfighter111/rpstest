@@ -849,15 +849,15 @@ function _base64ToArrayBuffer(base64) {
       tx.feePayer = escrowWallet.publicKey;
       tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
       const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
-      console.log("tx ", signature)
+      //console.log("tx ", signature)
 
       const abalance = await provider.connection.getBalance(playerEscrow); //player escrow
-      console.log(Math.round((abalance / one_sol)  * 100) / 100)
+      //console.log(Math.round((abalance / one_sol)  * 100) / 100)
       setBalance(Math.round((abalance / one_sol)  * 100) / 100);
       //handleChangeBalance(Math.round((abalance / one_sol)  * 100) / 100)
       //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
     }catch(err){
-      console.log(err)
+    //  console.log(err)
     }
 
   }
@@ -899,9 +899,9 @@ function _base64ToArrayBuffer(base64) {
       //const signedTx = await tx.sign(escrowWallet);
       const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
      //const signature = await connection.sendRawTransaction(tx);
-      console.log(signature)
+     // console.log(signature)
     }catch(err){
-      console.log(err)
+  //    console.log(err)
     }
 
   }
@@ -973,9 +973,9 @@ function _base64ToArrayBuffer(base64) {
         tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
         const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet]);
         console.log("tx ", signature) */
-        console.log(tx)
+       // console.log(tx)
     } catch (err) {
-      console.log(err);
+     // console.log(err);
     }
   };
 

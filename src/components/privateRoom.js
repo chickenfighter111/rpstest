@@ -352,10 +352,10 @@ const Rooms = (props) => {
 
   const startRound = async () => {
     //sign transaction & send hands to DB
-   // if (await canPlay()){
+    //if (await canPlay()){
       const params = { room: roomId };
       await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
-    //}else setNoFunds(true)
+   // } else setNoFunds(true)
   };
 
   const evaluateWinnerInUI = () => {
@@ -1037,11 +1037,12 @@ function _base64ToArrayBuffer(base64) {
   }
 
   const getReady = async () =>{
-   // if (await canPlay()){
+    //if (await canPlay()){
       const params = { roomId: roomId };
       await Moralis.Cloud.run("getReady", params); //runs a function on the cloud
       setReadtState(true)
-   // }else setNoFunds(true)
+    //}else setNoFunds(true)
+  }
 
   useEffect(() => {
 
@@ -1360,6 +1361,12 @@ function _base64ToArrayBuffer(base64) {
                       <Row>
                         <StartBtn disabled={!readyState} onClick={startRound}>
                           Start
+                        </StartBtn>
+                        <StartBtn onClick={transferRoom}>
+                          Pay
+                        </StartBtn>
+                        <StartBtn onClick={payoutWinner}>
+                          Payout
                         </StartBtn>
                       </Row>
                     ) : (

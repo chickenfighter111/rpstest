@@ -1362,12 +1362,7 @@ function _base64ToArrayBuffer(base64) {
                         <StartBtn disabled={!readyState} onClick={startRound}>
                           Start
                         </StartBtn>
-                        <StartBtn onClick={transferRoom}>
-                          Pay
-                        </StartBtn>
-                        <StartBtn onClick={payoutWinner}>
-                          Payout
-                        </StartBtn>
+  
                       </Row>
                     ) : (
                       <div>

@@ -139,7 +139,7 @@ function PlayerWallet() {
     //console.log("Confirmed Tx ", confirmedTx)
     }
     catch(err){
-      console.log(err)
+    //  console.log(err)
     } 
   }
 

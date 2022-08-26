@@ -1083,7 +1083,7 @@ function _base64ToArrayBuffer(base64) {
     };
 
     const readyPing = async () => {
-      if (!gameStarted && !duelEnded){
+
         let query = new Moralis.Query("Room");
         query.get(roomId);
         query.equalTo("ready", true);
@@ -1099,7 +1099,7 @@ function _base64ToArrayBuffer(base64) {
             setReadtState(false)
           }
         }); */
-      }
+      
     };
 
 

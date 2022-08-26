@@ -1290,7 +1290,6 @@ function _base64ToArrayBuffer(base64) {
           opCards[aHandIdx] = imgs[Number(aHand)]
         })
       }
-      setStarted(true); 
   };
 
     const revealPing = async () => {
@@ -1300,6 +1299,7 @@ function _base64ToArrayBuffer(base64) {
       let subscription = await query.subscribe();
       subscription.on("enter", async (object) => {
         revealOpponentData(object.get("reveals"))
+        setStarted(true); 
         setReveal(true)
         //subscription.unsubscribe()
       });
@@ -1309,11 +1309,6 @@ function _base64ToArrayBuffer(base64) {
       reveal3random()
       revealPing()
     }
-
- /*   if(generatedhands && gameStarted && reveal && !selectEnded && soundState){
-      ctdwnSound()
-    }
- */
   }, [generatedhands, roomId, readyState]);
 
   useEffect(() => {

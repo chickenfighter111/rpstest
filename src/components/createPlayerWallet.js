@@ -7,6 +7,8 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { AnchorProvider, Program, utils, web3 } from "@project-serum/anchor";
 import { Keypair, PublicKey, LAMPORTS_PER_SOL, clusterApiUrl, Connection, sendAndConfirmTransaction } from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
+import Buffer from 'buffer'
+
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 const idl = require("../rps_project.json");

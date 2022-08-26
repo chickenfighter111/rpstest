@@ -165,6 +165,7 @@ const Rooms = (props) => {
   const [noFunds, setNoFunds] = useState(false);
   const [selectEnded, setSelectEnded] = useState(false)
   const [betProcessing, setBetProcess] = useState(false)
+  const [roomReset, setReset] = useState(false)
   const [balance, setBalance] = useState(props.bal);
 
 
@@ -215,6 +216,7 @@ const Rooms = (props) => {
     setRoomName(roomData.get("room_name"));
     setRoomPda(roomData.get("room_address"))
     setAmount(roomData.get("bet_amount"));
+    if(roomData.get("ready")) setReadtState(true)
     if (roomData.get("challenger") !== "null") {
       if (username === roomData.get("owner"))
         setOpponent(roomData.get("challenger").substring(0,15));
@@ -531,7 +533,7 @@ const Rooms = (props) => {
             setSmShow(false)
           }}><h3>Rematch</h3></Button>
           <p style={{textAlign: "center"}}>with x Sol</p>
-          <Button className="winningImg" onClick={ () => {
+          <Button className="winningImg" onClick={() => {
             resetRoom()
             leaveRoom(params.userId)
           }}>{resultMessages[0].leaveMsg}</Button>
@@ -788,14 +790,18 @@ const Rooms = (props) => {
   };
 
   const resetRoom = async () => {
-      if (readyState){
-        await Moralis.Cloud.run("rematch", {roomId: roomId,});
-        setReadtState(false)
-      }
+    if(readyState){
+      await Moralis.Cloud.run("rematch", {roomId: roomId});
+      setReadtState(false)
+    }
+    /*else if(roomData.get("ready") && isOwner()){
+      setReadtState(true);
+    }
+ */
     //if (winner) {
-      setStarted(false);
       setConfirmed(false);
       setEndedDuel(false);
+      setStarted(false)
       setTotalSel(0);
       setOpChoseOnes(null);
       setChoseOnes([])
@@ -808,6 +814,11 @@ const Rooms = (props) => {
       setWinner(null)
       setIsWinner(false)
       setBetProcess(false)
+
+      setReset(true)
+      //if (readyState){
+
+     // }
     //}
   };
 
@@ -824,124 +835,6 @@ function _base64ToArrayBuffer(base64) {
   }
   return bytes.buffer;
 }
-  const transferRoom = async () =>{
-
-    try{
-      const roomEscrow = new PublicKey(roomPDA);
-      const aUser = Moralis.User.current();
-      const playerPDA = aUser.get("player_wallet");
-      const walletQry = new Moralis.Query("Wallet")
-      walletQry.equalTo("owner", aUser.id)
-      const aWallet = await walletQry.first()
-      const playerEscrow = new anchor.web3.PublicKey(playerPDA)
-      const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
-      const u8int= new Uint8Array(arraybuf)
-      const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
-
-      const tx = await program.methods.payRoom(
-        new BN(amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
-        *LAMPORTS_PER_SOL))
-      .accounts({
-        escrowAcc: escrowWallet.publicKey,
-        roomAcc: roomEscrow,
-      }).transaction()
-      const aConnection = new web3.Connection(network, 'finalized');
-      tx.feePayer = escrowWallet.publicKey;
-      tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
-      const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
-      //console.log("tx ", signature)
-
-      const abalance = await provider.connection.getBalance(playerEscrow); //player escrow
-      //console.log(Math.round((abalance / one_sol)  * 100) / 100)
-      setBalance(Math.round((abalance / one_sol)  * 100) / 100);
-      //handleChangeBalance(Math.round((abalance / one_sol)  * 100) / 100)
-      //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
-    }catch(err){
-    //  console.log(err)
-    }
-
-  }
-
-  const payoutWinner = async () =>{
-    function _base64ToArrayBuffer(base64) {
-      var binary_string = window.atob(base64);
-      var len = binary_string.length;
-      var bytes = new Uint8Array(len);
-      for (var i = 0; i < len; i++) {
-          bytes[i] = binary_string.charCodeAt(i);
-      }
-      return bytes.buffer;
-    }
-    try{
-      const roomEscrow = new PublicKey(roomPDA);
-      const aUser = Moralis.User.current();
-      const playerPDA = aUser.get("player_wallet");
-      const walletQry = new Moralis.Query("Wallet")
-      walletQry.equalTo("owner", aUser.id)
-      const aWallet = await walletQry.first()
-      const playerEscrow = new anchor.web3.PublicKey(playerPDA)
-      const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
-      const u8int= new Uint8Array(arraybuf)
-      const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
-
-      const tx = await program.methods.payoutWinner(
-        new BN(amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
-        *LAMPORTS_PER_SOL))
-      .accounts({
-        roomAcc: roomEscrow,
-        winnerEscrowAcc: playerEscrow,
-        feeAcc: fee_wallet,
-        player: escrowWallet.publicKey
-      }).transaction()
-      const aConnection = new web3.Connection(network, 'finalized');
-      tx.feePayer = escrowWallet.publicKey;
-      tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
-      //const signedTx = await tx.sign(escrowWallet);
-      const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
-     //const signature = await connection.sendRawTransaction(tx);
-     // console.log(signature)
-    }catch(err){
-  //    console.log(err)
-    }
-
-  }
-
-  const transferToEscrow = async () => {
-    /*    const getConfirmation = async (connection, tx) => {
-      const result = await connection.getSignatureStatus(tx, {
-        searchTransactionHistory: true,
-      });
-      return result.value?.confirmationStatus;
-    }; */
-
-    if (roomPDA) {
-      setBetProcess(true)
-      const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-        [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
-        program.programId
-      );
-
-      const pdaPK = new web3.PublicKey(roomPDA)
-
-      try {
-        const tx = await program.methods.transferro(
-          new BN(
-           amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
-          *one_sol))
-        .accounts({
-          fromLockAccount: escrowPda,
-          roomAccount: pdaPK,
-          owner: publicKey
-        }).rpc()
-        //console.log(tx)
-        const aPlayerData = {player: Moralis.User.current().id, tx: tx};
-        await Moralis.Cloud.run("confirmTransaction", {room: roomId, playerData: aPlayerData})
-        props.onChangeBalance(balance-amount)
-      } catch (err) {
-        //console.log(err)
-      }
-    }
-  };
 
   const payo = async () => {
     const awinner = Moralis.User.current().get("solAddress");
@@ -1045,8 +938,6 @@ function _base64ToArrayBuffer(base64) {
   }
 
   useEffect(() => {
-
-
     const enterRoomPing = async () => {
         let query = new Moralis.Query("Room");
         query.get(roomId);
@@ -1058,20 +949,20 @@ function _base64ToArrayBuffer(base64) {
         subscription.on("enter", (object) => {
           getRoomData(roomId);
           setOpponent(null);
+          setReadtState(false)
         });
     };
 
     const leaveRoomPing = async () => {
-      if (roomId){
         let query = new Moralis.Query("Room");
         query.get(roomId);
         query.equalTo("challenger", "null");
         let subscription = await query.subscribe();
         subscription.on("enter", (object) => {
           getRoomData(roomId);
+          resetRoom()
           setOpponent(null);
         });
-      }
     };
 
     const readyPing = async () => {
@@ -1082,13 +973,13 @@ function _base64ToArrayBuffer(base64) {
       subscription.on("enter", async () => {
         if (isOwner()){
           setReadtState(true)
+          //subscription.unsubscribe()
         }
       });
-/*      subscription.on("leave", async () => {
-        if (isOwner()){
-          //setReadtState(false)
-        }
-      }); */ 
+      /*subscription.on("leave", async () => {
+        setReadtState(false)
+        subscription.unsubscribe()
+      }); */  
     };
 
 
@@ -1128,7 +1019,7 @@ function _base64ToArrayBuffer(base64) {
       subscription.on("enter", async () => {
         generateHands()
         //transferToEscrow()
-        subscription.unsubscribe();
+        //subscription.unsubscribe();
       });
     };
 
@@ -1157,7 +1048,7 @@ function _base64ToArrayBuffer(base64) {
         if (Moralis.User.current().id === object.get("winner")) {
           setIsWinner(true)
         }
-        subscription.unsubscribe();
+        //subscription.unsubscribe();
       });
     };
 
@@ -1179,26 +1070,26 @@ function _base64ToArrayBuffer(base64) {
       enterRoomPing();
     }
 
+    if (roomId && opponent){
+      readyPing()
+    }
+
     if (roomId && readyState){
       gameStartPing(); //to check if servers got both choices of players
       gamePlayingPing();
-      paymentProcessedPing()
+     // paymentProcessedPing()
+    }
+
+    if (totalSelected === 3 || chosenCards.size === 3) {
+      setConfirmed(true);
     }
 
     if(choiceConfirmed && gameStarted){
       sendSelectedHand()
     }
 
-    if (roomId && opponent){
-      readyPing()
-    }
-
     if (gameStarted) {
       gameEndedPing();
-    }
-
-    if (totalSelected === 3 || chosenCards.size === 3) {
-      setConfirmed(true);
     }
 
     if (duelEnded && opChosenOnes){
@@ -1251,6 +1142,11 @@ function _base64ToArrayBuffer(base64) {
         addWinnerAnnouncement(opponent, user)
         if(soundState)loseSound()
       }
+    }
+
+    if(resetRoom){
+      getRoomData()
+      setReset(false)
     }
 
   }, [isAuthenticated, mode, winner, smShow]);
@@ -1362,7 +1258,6 @@ function _base64ToArrayBuffer(base64) {
                         <StartBtn disabled={!readyState} onClick={startRound}>
                           Start
                         </StartBtn>
-  
                       </Row>
                     ) : (
                       <div>
@@ -1430,7 +1325,7 @@ function _base64ToArrayBuffer(base64) {
                 <Col xs={2}>
                   <Container>
                     <Row>
-                      <StartBtn onClick={() => leaveRoom(params.userId)}>
+                      <StartBtn disabled={readyState} onClick={() => leaveRoom(params.userId)}>
                         Leave
                       </StartBtn>
                     </Row>

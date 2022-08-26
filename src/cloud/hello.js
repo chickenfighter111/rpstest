@@ -71,28 +71,24 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
   const results = await qry.first(); //room
   const whoIsLeaving = request.params.player;
   const playing = results.get("playing"); //room status
+  const ready = results.get("ready"); //room status
   const aPlayer = results.get("challenger");
 
-  //Pda
- // const pdaQry = new Parse.Query("Pda");
- // pdaQry.equalTo("room", request.params.roomId);
- // const aPda = await pdaQry.first();
   if (!playing) {
     //room open?
     if (results.get("challenger") === "null") {
       results.destroy();
-      //aPda.destroy();
       return true;
     } else if (whoIsLeaving === results.get("owner")) { //owner is leaving
       results.set("owner", aPlayer);
+      results.set("ready", false);
       results.set("challenger", "null");
       await results.save();
-
       return true; //you can leave now
     } else { //challenger is leaving
       results.set("challenger", "null");
+      results.set("ready", false)
       await results.save();
-
       return true; //you can leave now
     }
   } else return false; //you can not leave
@@ -471,9 +467,13 @@ Moralis.Cloud.define("rematch", async (request) => {
   const rqry = new Parse.Query("Room");
   rqry.equalTo("objectId", request.params.roomId);
   const aRoom = await rqry.first();
-  aRoom.set("playing", false);
-  aRoom.set("ready", false);
-  aRoom.save();
+  const rdy = aRoom.get("ready");
+  const playing = aRoom.get("playing")
+  if(rdy && playing){
+    aRoom.set("playing", false);
+    aRoom.set("ready", false);
+    aRoom.save();
+  }
 
 /*  const txQry = new Parse.Query("Transaction");
   txQry.equalTo("room", request.params.roomId);
@@ -486,8 +486,6 @@ Moralis.Cloud.define("rematch", async (request) => {
   qry.equalTo("room", request.params.roomId);
   const aDuel = await qry.first();
   if(aDuel){
-    //aDuel.set("players", [])
-    //aDuel.set("players", [])
     aDuel.destroy()
   }
 });

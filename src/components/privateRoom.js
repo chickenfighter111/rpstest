@@ -359,7 +359,8 @@ const Rooms = (props) => {
     //if (await canPlay()){
       const roomData = await Moralis.Cloud.run("getRoomData", params); //runs a function on the cloud
       const rdy = roomData.get("ready")
-      if (rdy && readyState){
+      if (rdy) setReadtState(rdy)
+      if (rdy){
         const params = { room: roomId };
         await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
       }

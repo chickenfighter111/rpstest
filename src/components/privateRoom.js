@@ -357,8 +357,12 @@ const Rooms = (props) => {
   const startRound = async () => {
     //sign transaction & send hands to DB
     //if (await canPlay()){
-      const params = { room: roomId };
-      await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
+      const roomData = await Moralis.Cloud.run("getRoomData", params); //runs a function on the cloud
+      const rdy = roomData.get("ready")
+      if (rdy && readyState){
+        const params = { room: roomId };
+        await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
+      }
    // } else setNoFunds(true)
   };
 
@@ -1297,11 +1301,11 @@ function _base64ToArrayBuffer(base64) {
       subscription.on("enter", async (object) => {
         revealOpponentData(object.get("reveals"))
         setReveal(true)
-        subscription.unsubscribe()
+        //subscription.unsubscribe()
       });
     };
 
-    if(generatedhands && roomId){
+    if(generatedhands && roomId && readyState){
       reveal3random()
       revealPing()
     }
@@ -1310,7 +1314,7 @@ function _base64ToArrayBuffer(base64) {
       ctdwnSound()
     }
  */
-  }, [generatedhands, roomId]);
+  }, [generatedhands, roomId, readyState]);
 
   useEffect(() => {
     AOS.init({ 

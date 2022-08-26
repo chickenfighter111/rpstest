@@ -47,39 +47,40 @@ function CreateRoom(props) {
   };
 
   async function createRoom() {
-
-
     //game room
-/*    const GameRoom = Moralis.Object.extend("Room");
-    const aGameRoom = new GameRoom();
-        aGameRoom.set("owner", owner);
-    aGameRoom.set("bet_amount", Number(amount));
-    aGameRoom.set("playing", false);
-    aGameRoom.set("challenger", "null");
-    aGameRoom.set("room_name", name); */
-   
-    const user = Moralis.User.current();
-    const owner = user.getUsername();
-    const paramz = {
-      owner: owner,
-      bet: Number(amount),
-      room_name: name,
-     // RoomPDA: roomPDA.toBase58(),
-    }
-    const aRoomObj = await Moralis.Cloud.run("createRoom", paramz)
-    //aRoomObj.set("room_address", roomPDA.toBase58())
-    const playerAddress = user.get("solAddress");
-    const params = { solAddress: playerAddress, room: aRoomObj.id, roomMaster: playerAddress };    
-    user.set("is_playing", true);
-    user.set("in_room", aRoomObj.id);
-    await user.save();
+    const [roomPDA, _] = await web3.PublicKey.findProgramAddress([
+      utf8.encode("rps_room_escrow_wallet"), publicKey.toBuffer()
+    ], program.programId);
 
-    //await Moralis.Cloud.run("createPDA", params); //runs a function on the cloud
-    navigateToRoom(aRoomObj.id);
+      try {
+        await program.account.lockAccount.fetch(roomPDA);
+      } catch (err) {
+        await program.methods
+          .initRoomEscrow()
+          .accounts({
+            signer: publicKey,
+            roomAccount: roomPDA,
+            systemProgram: web3.SystemProgram.programId,
+          })
+          .rpc();
+      }
+      finally{
+        const user = Moralis.User.current();
+        const owner = user.getUsername();
+        const paramz = {
+          owner: owner,
+          bet: Number(amount),
+          room_name: name,
+          room_pda: roomPDA.toBase58()
+        }
+        const aRoomObj = await Moralis.Cloud.run("createRoom", paramz)
+        user.set("is_playing", true);
+        user.set("in_room", aRoomObj.id);
+        await user.save();
     
-/*    const [roomPDA, roomBump] = 
-    await web3.PublicKey.findProgramAddress([utf8.encode("a_room_escrow_wallet"), publicKey.toBuffer()],
-      program.programId);
+        navigateToRoom(aRoomObj.id);
+      }
+/*   
 
     try {
       await program.account.lockAccount.fetch(roomPDA);

@@ -7,9 +7,13 @@ import { Container, Row, Col } from "react-bootstrap";
 const Main = () => {
   const [balance, setBalance] = useState(null);
 
+  const handleBalanceChange = React.useCallback((newValue) => {
+    setBalance(newValue);
+ }, []);
+
   return (
     <div>
-      <Navbar onChangeBalance={setBalance} bal={balance} />
+      <Navbar onChangeBalance={handleBalanceChange} bal={balance} />
       <Container className="roomContainer">
         <Row>
           <Col xs={3}>
@@ -18,7 +22,7 @@ const Main = () => {
             </div>
           </Col>
           <Col >
-            <App onChangeBalance={setBalance} bal={balance} />
+            <App onChangeBalance={handleBalanceChange} bal={balance} />
           </Col>
         </Row>
       </Container>

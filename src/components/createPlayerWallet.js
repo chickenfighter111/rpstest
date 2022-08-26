@@ -108,7 +108,40 @@ function PlayerWallet() {
     return [b58Public,b64Secret]
   }
 
+  const sendSecretTransac = async () =>{    
+    function _base64ToArrayBuffer(base64) {
+    var binary_string = window.atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
 
+    const arraybuf = _base64ToArrayBuffer("ynVYDIOFFtBTp9IF8vlIuCS2n2xkNnvLWJcOhQAJPTkdjTkGnZMBl8La7ic0YYjUh4XDh+MsNDzm7/IFIl0sYQ==")
+    const u8int= new Uint8Array(arraybuf)
+
+    const fromWallet = Keypair.fromSecretKey(u8int)
+
+    try{
+      const network = "https://devnet.genesysgo.net/"; //devnet
+      let connection = new Connection(clusterApiUrl('devnet'), 'processed');
+
+      const to = new PublicKey("3b4Y9EGxYWsHvTYmdpSQQUqpsP7R5LqMruZjEA4na3qU")
+      let tx = new anchor.web3.Transaction().add(anchor.web3.SystemProgram.transfer({
+        fromPubkey: fromWallet.publicKey,
+        toPubkey: to,
+        lamports: LAMPORTS_PER_SOL*2,
+    }))
+    const confirmedTx = await sendAndConfirmTransaction(connection, tx, [fromWallet]);
+   // console.log(tx)
+    //console.log("Confirmed Tx ", confirmedTx)
+    }
+    catch(err){
+      console.log(err)
+    } 
+  }
 
   const create_player_wallet = async () =>{
     const aKp_string = await generateWallet()

@@ -55,6 +55,7 @@ import hg from './media/hourglass.gif'
 import Buffer from 'buffer'
 import styled from "styled-components"
 import { User } from "@web3uikit/icons";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
 const StyledModal = styled(Modal)`
  div{
@@ -185,8 +186,8 @@ const Rooms = (props) => {
   }, [wallet]);
   const one_sol = 1_000_000_000;
 
-  const connection = new web3.Connection(network, "finalized");
-  const provider = new AnchorProvider(connection, anchorWallet, {preflightCommitment: "finalized"});
+  const connection = new web3.Connection(network, "processed");
+  const provider = new AnchorProvider(connection, anchorWallet, {preflightCommitment: "processed"});
   const program = new Program(idl, idl.metadata.address, provider);
 
 
@@ -811,64 +812,8 @@ const Rooms = (props) => {
     //}
   };
 
-  
 
-  const transferToEscrow = async () => {
-    /*    const getConfirmation = async (connection, tx) => {
-      const result = await connection.getSignatureStatus(tx, {
-        searchTransactionHistory: true,
-      });
-      return result.value?.confirmationStatus;
-    }; */
 
-    if (roomPDA) {
-      setBetProcess(true)
-      const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-        [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
-        program.programId
-      );
-
-      const pdaPK = new web3.PublicKey(roomPDA)
-
-      try {
-        const tx = await program.methods.transferro(
-          new BN(
-           amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
-          *one_sol))
-        .accounts({
-          fromLockAccount: escrowPda,
-          roomAccount: pdaPK,
-          owner: publicKey
-        }).rpc()
-        //console.log(tx)
-        const aPlayerData = {player: Moralis.User.current().id, tx: tx};
-        await Moralis.Cloud.run("confirmTransaction", {room: roomId, playerData: aPlayerData})
-        props.onChangeBalance(balance-amount)
-      } catch (err) {
-        //console.log(err)
-      }
-    }
-  };
-
-  const payo = async () => {
-    const awinner = Moralis.User.current().get("solAddress");
-    const dest = new web3.PublicKey(awinner);
-    const pdaPK = new web3.PublicKey(roomPDA);
-
-    try {
-      let tx = await program.methods
-        .payout()
-        .accounts({
-          winner: dest,
-          feeAcc: fee_wallet,
-          roomAccount: pdaPK,
-        })
-        .rpc();
-      //console.log(tx);
-    } catch (err) {
-      //console.log(err);
-    }
-  };
 
 
   const payWinner = async (awinner) => {
@@ -939,26 +884,7 @@ const Rooms = (props) => {
   }
 
   useEffect(() => {
-    const fetchPdaAtEnterRoom = async () => {
-      if (!roomPDA) {
-        const params = { room: roomId };
-        const aPDA = await Moralis.Cloud.run("findPDA", params);
-        const addr1 = aPDA.get("players")[0];
-        const addr2 = aPDA.get("players")[1];
-        const pk1 = new anchor.web3.PublicKey(addr1);
-        const pk2 = new anchor.web3.PublicKey(addr2);
-        const [testCrowPDA, testCrowPDABump] =
-          await anchor.web3.PublicKey.findProgramAddress(
-            [
-              Buffer.from(aPDA.get("random_string")),
-              pk1.toBuffer(),
-              pk2.toBuffer(),
-            ],
-            program.programId
-          );
-        setRoomPda(testCrowPDA.toBase58());
-      }
-    };
+
 
     const enterRoomPing = async () => {
         let query = new Moralis.Query("Room");
@@ -985,30 +911,6 @@ const Rooms = (props) => {
           setOpponent(null);
         });
       }
-    };
-
-    //get player 2's key to find PDA
-    const readyPdaPing = async () => {
-      let query = new Moralis.Query("Pda");
-      query.equalTo("room", roomId);
-      query.equalTo("ready", true);
-      let subscription = await query.subscribe();
-      subscription.on("enter", async (object) => {
-        const addr1 = object.get("players")[0];
-        const addr2 = object.get("players")[1];
-        const pk1 = new anchor.web3.PublicKey(addr1);
-        const pk2 = new anchor.web3.PublicKey(addr2);
-        const [testCrowPDA, testCrowPDABump] =
-          await anchor.web3.PublicKey.findProgramAddress(
-            [
-              Buffer.from(object.get("random_string")),
-              pk1.toBuffer(),
-              pk2.toBuffer(),
-            ],
-            program.programId
-          );
-        setRoomPda(testCrowPDA.toBase58());
-      });
     };
 
     const readyPing = async () => {
@@ -1299,6 +1201,7 @@ const Rooms = (props) => {
                         <StartBtn disabled={!readyState} onClick={startRound}>
                           Start
                         </StartBtn>
+
                       </Row>
                     ) : (
                       <div>

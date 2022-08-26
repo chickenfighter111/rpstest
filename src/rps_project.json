@@ -174,7 +174,7 @@
       "accounts": [
         {
           "name": "escrowAcc",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -253,6 +253,68 @@
       ]
     },
     {
+      "name": "payRoom",
+      "accounts": [
+        {
+          "name": "escrowAcc",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "roomAcc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "payoutWinner",
+      "accounts": [
+        {
+          "name": "roomAcc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "winnerEscrowAcc",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "feeAcc",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "payo",
       "accounts": [
         {
@@ -300,6 +362,11 @@
           "name": "feeAcc",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         }
       ],
       "args": []
@@ -321,6 +388,11 @@
           "name": "feeAcc",
           "isMut": true,
           "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
+          "isSigner": true
         }
       ],
       "args": []

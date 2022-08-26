@@ -81,7 +81,7 @@ const MyNavbar = (props) => {
         const escrow = new anchor.web3.PublicKey(playerPDA)
         try {
           let abalance = await aprovider.connection.getBalance(escrow); //player escrow
-          //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
+          props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
           setBalance(Math.round((abalance / one_sol)  * 100) / 100);
 
         } catch (err) {

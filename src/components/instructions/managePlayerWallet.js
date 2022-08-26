@@ -58,10 +58,10 @@ function WalletManager(props) {
               from: publicKey,
               escrowAcc: escrow
             }).rpc()  
-            console.log(tx)
+           // console.log(tx)
           await getBalance();//refresh
         } catch (err) {
-          console.log(err)
+         // console.log(err)
         }
         
       }
@@ -91,21 +91,19 @@ function WalletManager(props) {
             const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
             const u8int= new Uint8Array(arraybuf)
             const escrowWallet = Keypair.fromSecretKey(u8int)
-            let tx = new anchor.web3.Transaction().add(anchor.web3.SystemProgram.transfer({
-              fromPubkey: escrowWallet.publicKey,
-              toPubkey: publicKey,
-              lamports: LAMPORTS_PER_SOL*amount-(0.00001*LAMPORTS_PER_SOL),
-          }))
-          await sendAndConfirmTransaction(connection, tx, [escrowWallet]);
-
-/*            const wtx = await program.methods.widrawl(new BN(amount*one_sol*0.9999))
+            const wTx = await program.methods.widrawl(new BN(LAMPORTS_PER_SOL*amount-(0.00001*LAMPORTS_PER_SOL)))
             .accounts({
-              escrowAcc: escrow,
+              escrowAcc: escrowWallet.publicKey,
               toMe: publicKey
-            }).signers([escrowWallet]).rpc()   */
+            }).transaction()
+            const aConnection = new web3.Connection(network, 'finalized');
+            wTx.feePayer = escrowWallet.publicKey;
+            wTx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+            //const signedTx = wTx.sign([escrowWallet])
+            await sendAndConfirmTransaction(connection, wTx, [escrowWallet]);
             await getBalance(); //refresh
           } catch (err) {
-            console.log(err)
+           // console.log(err)
           }
         }
       };
@@ -144,7 +142,7 @@ function WalletManager(props) {
       const escrow = new anchor.web3.PublicKey(playerPDA)
       try {
         const balance = await provider.connection.getBalance(escrow); //player escrow
-        props.setBal(Math.round((balance / one_sol)  * 100) / 100);
+        props.onChangeBalance(Math.round((balance / one_sol)  * 100) / 100);
       } catch (err) {
       }
     }

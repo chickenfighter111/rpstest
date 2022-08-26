@@ -150,6 +150,7 @@ Moralis.Cloud.define("createPDA", async (request) => {
   aRoom.set("playing", false);
   aRoom.set("challenger", "null");
   aRoom.set("room_name", parameters.room_name);
+  aRoom.set("room_address", parameters.room_pda);
   await aRoom.save()
   return aRoom
  });

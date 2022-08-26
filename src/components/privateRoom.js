@@ -319,18 +319,20 @@ const Rooms = (props) => {
 
   //2
   const sendSelectedHand = async () => {
-    if (mode) {
-      const challenger = Moralis.User.current().id;
-      const roomID = roomId;
-      const playerData = { player: challenger, choice: selectedHand };
-      const params = { room: roomID, playerData: playerData };
-      await Moralis.Cloud.run("ready", params); //runs a function on the cloud
-    } else {
-      const challenger = Moralis.User.current().id;
-      const roomID = roomId;
-      const playerData = { player: challenger, choice: chosenOnes };
-      const params = { room: roomID, playerData: playerData };
-      await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
+    if (choiceConfirmed) {
+      if (mode) {
+        const challenger = Moralis.User.current().id;
+        const roomID = roomId;
+        const playerData = { player: challenger, choice: selectedHand };
+        const params = { room: roomID, playerData: playerData };
+        await Moralis.Cloud.run("ready", params); //runs a function on the cloud
+      } else {
+        const challenger = Moralis.User.current().id;
+        const roomID = roomId;
+        const playerData = { player: challenger, choice: chosenOnes };
+        const params = { room: roomID, playerData: playerData };
+        await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
+      }
     }
   };
 
@@ -1370,6 +1372,12 @@ function _base64ToArrayBuffer(base64) {
                         <StartBtn disabled={!readyState} onClick={startRound}>
                           Start
                         </StartBtn>
+                        <StartBtn onClick={transferRoom}>
+                          Pay
+                        </StartBtn>
+                        <StartBtn onClick={payoutWinner}>
+                          Payout
+                        </StartBtn>
                       </Row>
                     ) : (
                       <div>
@@ -1378,7 +1386,6 @@ function _base64ToArrayBuffer(base64) {
                             Ready
                           </StartBtn>
                         </Row>
-
                       </div>
                     )}
                   </Container>
@@ -1428,7 +1435,6 @@ function _base64ToArrayBuffer(base64) {
                       <CustomCountDown
                         seconds={7}
                         check={checkSelected}
-                        ended={selectEnded}
                       />
                     </div>
                   ) : (
@@ -1440,6 +1446,9 @@ function _base64ToArrayBuffer(base64) {
                     <Row>
                       <StartBtn disabled={readyState} onClick={() => leaveRoom(params.userId)}>
                         Leave
+                      </StartBtn>
+                      <StartBtn onClick={resetRoom}>
+                        Reset
                       </StartBtn>
                     </Row>
                     <div>

@@ -469,6 +469,14 @@ Moralis.Cloud.define("rematch", async (request) => {
   const aRoom = await rqry.first();
   const rdy = aRoom.get("ready");
   const playing = aRoom.get("playing")
+  
+  const qry = new Parse.Query("Duel");
+  qry.equalTo("room", request.params.roomId);
+  const aDuel = await qry.first();
+  if(aDuel){
+    aDuel.destroy()
+  }
+
   if(rdy && playing){
     aRoom.set("playing", false);
     aRoom.set("ready", false);
@@ -481,13 +489,7 @@ Moralis.Cloud.define("rematch", async (request) => {
   if (aTx){
     aTx.destroy()
   }*/
-  
-  const qry = new Parse.Query("Duel");
-  qry.equalTo("room", request.params.roomId);
-  const aDuel = await qry.first();
-  if(aDuel){
-    aDuel.destroy()
-  }
+
 });
 
 Moralis.Cloud.define("isOwner", async (request) => {

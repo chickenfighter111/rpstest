@@ -834,7 +834,8 @@ function _base64ToArrayBuffer(base64) {
   }
   return bytes.buffer;
 }
-  
+
+
   const isOwner = async() =>{
     const user = Moralis.User.current().getUsername()
     const params = { player: user, roomId: roomId}
@@ -1179,6 +1180,7 @@ function _base64ToArrayBuffer(base64) {
                             Ready
                           </StartBtn>
                         </Row>
+
                       </div>
                     )}
                   </Container>
@@ -1245,11 +1247,11 @@ function _base64ToArrayBuffer(base64) {
                     <div>
                       <br />
                       {soundState ? (
-                        <Button onClick={() => setSoundState(false)}>
+                        <Button disabled={readyState} onClick={() => setSoundState(false)}>
                           <FaVolumeUp size={30} />
                         </Button>
                       ) : (
-                        <Button onClick={() => setSoundState(true)}>
+                        <Button disabled={readyState} onClick={() => setSoundState(true)}>
                           <BiVolumeMute size={30} />
                         </Button>
                       )}

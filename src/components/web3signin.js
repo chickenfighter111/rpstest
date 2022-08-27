@@ -297,7 +297,7 @@ const MyNavbar = (props) => {
                   <Dropdown.Item className="walletmanager">
                     <PlayerWalletManager
                       balance={balance}
-                      setBal={setBalance}
+                      onChangeBalance={setBalance}
                     />
                   </Dropdown.Item>
                   {!hasWallet ? (

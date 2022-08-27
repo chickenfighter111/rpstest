@@ -332,6 +332,11 @@ button:hover{
   height: 280px;
 }
 
+.testSpan{
+  position: relative;
+  left: 20px;
+}
+
 .modal-header{
   border-bottom: none !important;
   justify-Content: center !important;

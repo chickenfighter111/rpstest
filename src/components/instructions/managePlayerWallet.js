@@ -21,6 +21,7 @@ const utf8 = utils.bytes.utf8;
 const one_sol = 1_000_000_000;
 
 function WalletManager(props) {
+  const [balance, setBalance] = useState(props.bal);
 
   const [modalShow, setModalShow] = useState(false);
   const { isAuthenticated } = useMoralis();
@@ -143,6 +144,7 @@ function WalletManager(props) {
       try {
         const balance = await provider.connection.getBalance(escrow); //player escrow
         props.onChangeBalance(Math.round((balance / one_sol)  * 100) / 100);
+        setBalance(Math.round((balance / one_sol)  * 100) / 100)
       } catch (err) {
       }
     }

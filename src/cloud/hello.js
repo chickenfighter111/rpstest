@@ -32,7 +32,7 @@ Moralis.Cloud.define("resetRoomState", async (request) => {
   const results = await qry.first();
   results.set("playing", false);
   results.set("playing", false);
-  results.save();
+  await results.save();
 });
 
 Moralis.Cloud.define("joinRoom", async (request) => {
@@ -44,7 +44,7 @@ Moralis.Cloud.define("joinRoom", async (request) => {
 
     //room open?
     results.set("challenger", request.params.challenger);
-    results.save();
+    await results.save();
 
     //return false; //was not busy
   } else return true; //busy
@@ -65,9 +65,9 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
     //room open?
     if (results.get("challenger") === "null") {
       const qry = new Parse.Query("Duel");
-      qry.equalTo("room", roomId);
+      qry.equalTo("room", request.params.roomId);
       const aDuel = await qry.first();
-      aDuel.destroy()
+      if(aDuel)aDuel.destroy()
 
       results.destroy();
       return true;
@@ -471,14 +471,14 @@ Moralis.Cloud.define("rematch", async (request) => {
     aDuel.set("ready", false)
     aDuel.set("ended", false)
     aDuel.set("winner", null)
-    aDuel.save()
+    await aDuel.save()
     //aDuel.destroy()
   }
 
   if(rdy && playing){
     aRoom.set("playing", false);
     aRoom.set("ready", false);
-    aRoom.save();
+    await aRoom.save();
   }
 
 /*  const txQry = new Parse.Query("Transaction");
@@ -544,11 +544,15 @@ Moralis.Cloud.define("revealCard", async (request) => {
         if(aPlayer !== toAddPlayer){
           aDuel.add("reveals", aPlayerData);
           aDuel.set("revealed", true);
-          aDuel.save();
+          await aDuel.save();
         }
       }else if(revealList.length === 0){
         aDuel.add("reveals", aPlayerData);
-        aDuel.save();
+        await aDuel.save();
+        if(aDuel.get("reveals").length === 2){
+          aDuel.set("revealed", true);
+          await aDuel.save();
+        }
       }
     }
   } else {
@@ -560,7 +564,7 @@ Moralis.Cloud.define("revealCard", async (request) => {
     aDuel.set("ready", false);
     aDuel.add("reveals", aPlayerData);
     aDuel.set("revealed", false);
-    aDuel.save();
+    await aDuel.save();
   }
 });
 

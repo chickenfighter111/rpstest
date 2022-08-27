@@ -56,6 +56,7 @@ import Buffer from 'buffer'
 import styled from "styled-components"
 import { User } from "@web3uikit/icons";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import base58 from 'bs58'
 
 const StyledModal = styled(Modal)`
  div{
@@ -687,7 +688,7 @@ const Rooms = (props) => {
       var r = Math.floor(Math.random() * 3);
       choices.push(r.toString());
     }
-    //console.log("generated ",choices)
+    console.log("generated ",choices)
     setGenHands(choices)
     setCanGen(false)
     return choices
@@ -695,7 +696,7 @@ const Rooms = (props) => {
   }
 
  async function reveal3random(someHands) {
-    //if (generated) {
+    //if (!generated) {
       let arr = [];
       while (arr.length !== 3) {
         var r = Math.floor(Math.random() * 5); //generate 3 random indices
@@ -711,15 +712,16 @@ const Rooms = (props) => {
         toRevealCards.push([aHand, aHandIdx])
       }
 
-      //console.log("to reveal ", toRevealCards)
+      console.log("to reveal ", toRevealCards)
       const playerId = Moralis.User.current().id
       const aPlayerData = {player: playerId, cards: toRevealCards}
       const parameters = {room: roomId, playerData: aPlayerData}
       await Moralis.Cloud.run("revealCard", parameters); //runs a function on the cloud
       setRevealDone(true)
+     // setGenerated(true)
       
       //return toRevealCards //is an array of tuples(card, cardIdx)
-   // }
+    //}
   }
 
   async function getHands(){
@@ -855,6 +857,7 @@ function _base64ToArrayBuffer(base64) {
 }
 
 
+
   const isOwner = async() =>{
     const user = Moralis.User.current().getUsername()
     const params = { player: user, roomId: roomId}
@@ -962,6 +965,7 @@ function _base64ToArrayBuffer(base64) {
       query.equalTo("ready", true);
       let subscription = await query.subscribe();
       subscription.on("enter", async () => {
+        console.log("game starts")
         start()
         subscription.unsubscribe();
       });
@@ -1264,6 +1268,12 @@ function _base64ToArrayBuffer(base64) {
                     <Row>
                       <StartBtn disabled={readyState} onClick={() => leaveRoom(params.userId)}>
                         Leave
+                      </StartBtn>
+                      <StartBtn onClick={async() => {
+                        await Moralis.Cloud.run("rematch", {roomId: roomId});
+                        resetRoom()
+                        }}>
+                        Reset
                       </StartBtn>
                     </Row>
                     <div>

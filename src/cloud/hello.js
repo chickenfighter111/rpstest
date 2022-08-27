@@ -192,14 +192,94 @@ Moralis.Cloud.define("ready2", async (request) => {
       const aPlayer = playerList[0].player;
       const toAddPlayer = aPlayerData.player;
       if(aPlayer !== toAddPlayer){
+       // await aDuel.save();
+
+        /////////
+        const player_one = playerList[0];
+        const player_two = aPlayerData;
+        //integrity check
+        const player_one_choice = player_one.choice; //should be array of choices
+        const player_two_choice = player_two.choice; //should be array of choices
+
+        const player_one_username = player_one.player;
+        const player_two_username = player_two.player;
+
+        let p1_score = 0;
+        let p2_score = 0;
+        //0 is rock, 1 is paper, 2 is scissor
+
+        for(let i = 0; i < player_one_choice.length; i++){
+          switch (player_one_choice[i]) {
+            case Hands.rock: 
+              switch (player_two_choice[i]) {
+                case Hands.rock:
+                  p1_score += 1;
+                  p2_score += 1;
+                  break;
+                case Hands.paper:
+                  p2_score += 1;
+                  break;
+                case Hands.scissor:
+                  p1_score += 1;
+                  break;
+                default:
+                  p1_score += 1;
+                  break;
+              };
+              break;
+            
+            case Hands.paper: 
+              switch (player_two_choice[i]) {
+                case Hands.rock:
+                  p1_score += 1;
+                  break;
+                case Hands.paper:
+                  p1_score += 1;
+                  p2_score += 1;
+                   break;
+                case Hands.scissor:
+                  p2_score += 1;
+                  break;
+                default:
+                  p1_score += 1;
+                  break;
+              };
+              break;
+            
+            case Hands.scissor: 
+              switch (player_two_choice[i]) {
+                case Hands.rock:
+                  p2_score += 1;
+                  break;
+                case Hands.paper:
+                  p1_score += 1;
+                  break;
+                case Hands.scissor:
+                  p1_score += 1;
+                  p2_score += 1;
+                  break;
+                default:
+                  p1_score += 1;
+                  break;
+              };
+              break;
+            default:
+              p2_score += 1;
+              break;
+          }
+        }
+        if (p1_score > p2_score)  aDuel.set("winner", player_one_username);
+        else if (p1_score < p2_score) aDuel.set("winner", player_two_username);
+        else if (p1_score === p2_score)  aDuel.set("winner", "draw");
+        else aDuel.set("winner", "draw");
+
+        aDuel.set("ended", true);
+        //await aDuel.save();    
+
+        /////////
         aDuel.add("players", aPlayerData);
         aDuel.set("ready", true)
         await aDuel.save();
-  
-        const aRoomQuery = new Parse.Query("Room");
-        aRoomQuery.equalTo("objectId", roomId)
-        const aRoom = await aRoomQuery.first();
-        await aRoom.save()
       }
     } 
     else if (playerList.length === 0) {

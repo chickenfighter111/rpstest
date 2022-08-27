@@ -356,7 +356,6 @@ const Rooms = (props) => {
         const playerData = { player: challenger, choice: chosenOnes };
         const params = { room: roomID, playerData: playerData };
         await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
-        setCardSent(true)
       }
     }
   };
@@ -375,6 +374,7 @@ const Rooms = (props) => {
       } else {
         const params = { room: roomId, playerData: challenger };
         await Moralis.Cloud.run("start2", params); //runs a function on the cloud
+        setCardSent(true)
       }
     }
   };
@@ -1194,10 +1194,10 @@ function _base64ToArrayBuffer(base64) {
         query.equalTo("objectId", roomId);
         query.equalTo("playing", true);
         let subscription = await query.subscribe();
-        subscription.on("enter", async () => {
+        subscription.on("enter",() => {
           setCanGen(true)
           //transferToEscrow()
-         // subscription.unsubscribe();
+          subscription.unsubscribe();
         });
     };
 
@@ -1206,10 +1206,15 @@ function _base64ToArrayBuffer(base64) {
       query.equalTo("room", roomId);
       query.equalTo("ready", true);
       let subscription = await query.subscribe();
-      subscription.on("enter", () => {
-       // console.log("game starts")
-        start()
-        //subscription.unsubscribe();
+      subscription.on("enter",(object) => {
+        updateOpponentData(object.get("players"))
+        setWinner(object.get("winner"));
+        if (Moralis.User.current().id === object.get("winner")) {
+          setIsWinner(true)
+        }
+        //console.log("game starts", object)
+        //start()
+        subscription.unsubscribe();
       });
     };
 
@@ -1219,18 +1224,11 @@ function _base64ToArrayBuffer(base64) {
       query.equalTo("room", roomId);
       query.equalTo("ended", true);
       let subscription = await query.subscribe();
-      subscription.on("enter", (object) => {
-        
-        //console.log("duel ended!")
-        updateOpponentData(object.get("players"))
+      subscription.on("enter", () => {
         setEndedDuel(true); //COUNTDOWN
-        setWinner(object.get("winner"));
         setModalShow(true);
-        if (Moralis.User.current().id === object.get("winner")) {
-          setIsWinner(true)
-        }
         setCardSent(false)
-        //subscription.unsubscribe();
+        subscription.unsubscribe();
       });
     };
 
@@ -1254,9 +1252,9 @@ function _base64ToArrayBuffer(base64) {
 
     if (roomId && opponent && owner) readyPing()
 
-    if (roomId && readyState){
+    
+    if (readyState){
       gameStartPing(); //to check if servers got both choices of players
-      gamePlayingPing();
      // paymentProcessedPing()
     }
 
@@ -1268,7 +1266,8 @@ function _base64ToArrayBuffer(base64) {
       sendSelectedHand()
     }
 
-    if (gameStarted) {
+    if (readyState && gameStarted) {
+      gamePlayingPing();
       gameEndedPing();
     }
 

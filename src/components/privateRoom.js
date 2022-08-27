@@ -1204,7 +1204,8 @@ function _base64ToArrayBuffer(base64) {
       query.equalTo("ended", true);
       let subscription = await query.subscribe();
       subscription.on("enter", (object) => {
-        //console.log("duel ended!")
+        
+       // console.log("duel ended!")
         updateOpponentData(object.get("players"))
         setEndedDuel(true); //COUNTDOWN
         setWinner(object.get("winner"));
@@ -1212,7 +1213,8 @@ function _base64ToArrayBuffer(base64) {
         if (Moralis.User.current().id === object.get("winner")) {
           setIsWinner(true)
         }
-        subscription.unsubscribe();
+        setCardSent(false)
+        //subscription.unsubscribe();
       });
     };
 
@@ -1272,8 +1274,7 @@ function _base64ToArrayBuffer(base64) {
     choiceConfirmed,
     owner,
     readyState,
-    opChosenOnes,
-    cardSent
+    opChosenOnes
   ]);
 
   useEffect(() => {

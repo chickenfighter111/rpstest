@@ -45,19 +45,6 @@ Moralis.Cloud.define("joinRoom", async (request) => {
     //room open?
     results.set("challenger", request.params.challenger);
     results.save();
-    //add 2nd seed to the PDA
-   // const pdaQry = new Parse.Query("Pda");
-  //  pdaQry.equalTo("room", request.params.roomId);
-   // const aPda = await pdaQry.first();
-   /* if (aPda){
-     if (aPda.get("players").length < 2){
-       const randomString = Math.random().toString(36).substring(2,12);
-       aPda.addUnique("players", request.params.solAddress);
-       aPda.set("random_string", randomString)
-       aPda.set("ready", true)
-       await aPda.save();
-     } 
-    }*/
 
     //return false; //was not busy
   } else return true; //busy
@@ -77,6 +64,11 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
   if (!playing) {
     //room open?
     if (results.get("challenger") === "null") {
+      const qry = new Parse.Query("Duel");
+      qry.equalTo("room", roomId);
+      const aDuel = await qry.first();
+      aDuel.destroy()
+
       results.destroy();
       return true;
     } else if (whoIsLeaving === results.get("owner")) { //owner is leaving
@@ -197,17 +189,20 @@ Moralis.Cloud.define("ready2", async (request) => {
   if (aDuel) {
     const playerList = aDuel.get("players");
     if (playerList.length === 1) {
-      
-      aDuel.add("players", aPlayerData);
-      aDuel.set("ready", true)
-      await aDuel.save();
-
-      const aRoomQuery = new Parse.Query("Room");
-      aRoomQuery.equalTo("objectId", roomId)
-      const aRoom = await aRoomQuery.first();
-      await aRoom.save()
+      const aPlayer = playerList[0].player;
+      const toAddPlayer = aPlayerData.player;
+      if(aPlayer !== toAddPlayer){
+        aDuel.add("players", aPlayerData);
+        aDuel.set("ready", true)
+        await aDuel.save();
+  
+        const aRoomQuery = new Parse.Query("Room");
+        aRoomQuery.equalTo("objectId", roomId)
+        const aRoom = await aRoomQuery.first();
+        await aRoom.save()
+      }
     } 
-    else {
+    else if (playerList.length === 0) {
       aDuel.add("players", aPlayerData);
       await aDuel.save();
     }
@@ -446,19 +441,15 @@ Moralis.Cloud.define("start2", async (request) => {
               break;
           }
         }
-        const logger = Moralis.Cloud.getLogger();
-        logger.info("p1 score: ", p1_score.toString(), " - p2 score: ", p2_score.toString())
+        //const logger = Moralis.Cloud.getLogger();
+        //logger.info("p1 score: ", p1_score.toString(), " - p2 score: ", p2_score.toString())
         if (p1_score > p2_score)  aDuel.set("winner", player_one_username);
         else if (p1_score < p2_score) aDuel.set("winner", player_two_username);
         else if (p1_score === p2_score)  aDuel.set("winner", "draw");
         else aDuel.set("winner", "draw");
         aDuel.set("ended", true);
         aDuel.save();
-        return true;
       }
-    }
-    else {
-      return true
     }
   }
 });
@@ -469,12 +460,19 @@ Moralis.Cloud.define("rematch", async (request) => {
   const aRoom = await rqry.first();
   const rdy = aRoom.get("ready");
   const playing = aRoom.get("playing")
-  
+
   const qry = new Parse.Query("Duel");
   qry.equalTo("room", request.params.roomId);
   const aDuel = await qry.first();
   if(aDuel){
-    aDuel.destroy()
+    aDuel.set("reveals", [])
+    aDuel.set("players", [])
+    aDuel.set("revealed", false)
+    aDuel.set("ready", false)
+    aDuel.set("ended", false)
+    aDuel.set("winner", null)
+    aDuel.save()
+    //aDuel.destroy()
   }
 
   if(rdy && playing){
@@ -534,28 +532,35 @@ Moralis.Cloud.define("revealCard", async (request) => {
   const roomId = request.params.room;
   const aPlayerData = request.params.playerData;
   // const player_cards = aPlayerData.choiceIndexes; //is an array of card indexes
-  if (aPlayerData.cards.length === 3) {
-    const qry = new Parse.Query("Duel");
-    qry.equalTo("room", roomId);
-    const aDuel = await qry.first();
-    if (aDuel) {
-      const revealList = aDuel.get("reveals")
-      if (revealList.length < 2) {
+  const qry = new Parse.Query("Duel");
+  qry.equalTo("room", roomId);
+  const aDuel = await qry.first();
+  if (aDuel) {
+    const revealList = aDuel.get("reveals");
+    if (revealList) {
+      if (revealList.length === 1) {
+        const aPlayer = revealList[0].player;
+        const toAddPlayer = aPlayerData.player;
+        if(aPlayer !== toAddPlayer){
+          aDuel.add("reveals", aPlayerData);
+          aDuel.set("revealed", true);
+          aDuel.save();
+        }
+      }else if(revealList.length === 0){
         aDuel.add("reveals", aPlayerData);
-        aDuel.set("revealed", true);
-        await aDuel.save();
-      } else return false;
-    } else {
-      const Duel = Moralis.Object.extend("Duel");
-      const aDuel = new Duel();
-      aDuel.set("room", roomId);
-      aDuel.set("ended", false);
-      aDuel.set("players", []);
-      aDuel.set("ready", false);
-      aDuel.add("reveals", aPlayerData);
-      aDuel.set("revealed", false);
-      await aDuel.save();
+        aDuel.save();
+      }
     }
+  } else {
+    const Duel = Moralis.Object.extend("Duel");
+    const aDuel = new Duel();
+    aDuel.set("room", roomId);
+    aDuel.set("ended", false);
+    aDuel.set("players", []);
+    aDuel.set("ready", false);
+    aDuel.add("reveals", aPlayerData);
+    aDuel.set("revealed", false);
+    aDuel.save();
   }
 });
 

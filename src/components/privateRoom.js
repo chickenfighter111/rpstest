@@ -341,8 +341,8 @@ const Rooms = (props) => {
         const playerData = { player: challenger, choice: chosenOnes };
         const params = { room: roomID, playerData: playerData };
         await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
+        setCardSent(true)
       }
-      setCardSent(true)
     }
   };
 

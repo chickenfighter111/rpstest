@@ -688,7 +688,7 @@ const Rooms = (props) => {
       var r = Math.floor(Math.random() * 3);
       choices.push(r.toString());
     }
-    console.log("generated ",choices)
+   // console.log("generated ",choices)
     setGenHands(choices)
     setCanGen(false)
     return choices
@@ -712,7 +712,7 @@ const Rooms = (props) => {
         toRevealCards.push([aHand, aHandIdx])
       }
 
-      console.log("to reveal ", toRevealCards)
+      //console.log("to reveal ", toRevealCards)
       const playerId = Moralis.User.current().id
       const aPlayerData = {player: playerId, cards: toRevealCards}
       const parameters = {room: roomId, playerData: aPlayerData}
@@ -880,7 +880,7 @@ function _base64ToArrayBuffer(base64) {
       tx.feePayer = escrowWallet.publicKey;
       tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
       const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
-      console.log("tx ", signature)
+      //console.log("tx ", signature)
 
       const abalance = await provider.connection.getBalance(playerEscrow); //player escrow
       //console.log(Math.round((abalance / one_sol)  * 100) / 100)
@@ -888,7 +888,7 @@ function _base64ToArrayBuffer(base64) {
       //handleChangeBalance(Math.round((abalance / one_sol)  * 100) / 100)
       //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
     }catch(err){
-      console.log(err)
+      //console.log(err)
     }
 
   }
@@ -929,10 +929,10 @@ function _base64ToArrayBuffer(base64) {
       tx.feePayer = escrowWallet.publicKey;
       tx.recentBlockhash = bh;
       //tx.sign(escrowWallet)
-      console.log(tx)
+      //console.log(tx)
       const ctx = await program.provider.connection.sendRawTransaction(tx.serialize(), 'processed');
       //const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
-      console.log(ctx)
+      //console.log(ctx)
 
 /*      tx.partialSign(escrowWallet);
       const serializedTx = tx.serialize({ requireAllSignatures: false });
@@ -955,7 +955,7 @@ function _base64ToArrayBuffer(base64) {
      //const signature = await connection.sendRawTransaction(tx);
      // console.log(signature)
     }catch(err){
-      console.log(err)
+      //console.log(err)
     }
 
   }
@@ -1422,7 +1422,12 @@ function _base64ToArrayBuffer(base64) {
                         <StartBtn disabled={!readyState||roundStarted} onClick={startRound}>
                           Start
                         </StartBtn>
-
+                        <StartBtn onClick={transferRoom}>
+                          Pay
+                        </StartBtn>
+                        <StartBtn onClick={payoutWinner}>
+                          Payout
+                        </StartBtn>
                       </Row>
                     ) : (
                       <div>

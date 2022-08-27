@@ -1190,7 +1190,7 @@ function _base64ToArrayBuffer(base64) {
       query.equalTo("room", roomId);
       query.equalTo("ready", true);
       let subscription = await query.subscribe();
-      subscription.on("enter", async () => {
+      subscription.on("enter", () => {
        // console.log("game starts")
         start()
         subscription.unsubscribe();

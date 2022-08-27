@@ -174,6 +174,8 @@ const Rooms = (props) => {
   const [canGen, setCanGen] = useState(false)
   const [roundStarted, setRoundStart] = useState(false)
   const [revealDone, setRevealDone] = useState(false)
+  const [cardSent, setCardSent] = useState(false)
+
 
 
 
@@ -340,6 +342,7 @@ const Rooms = (props) => {
         const params = { room: roomID, playerData: playerData };
         await Moralis.Cloud.run("ready2", params); //runs a function on the cloud
       }
+      setCardSent(true)
     }
   };
 
@@ -834,6 +837,7 @@ const Rooms = (props) => {
       setCanGen(false)
       setRoundStart(false)
       setRevealDone(false)
+      setCardSent(false)
 
       setReset(true)
       //if (readyState){
@@ -1244,11 +1248,10 @@ function _base64ToArrayBuffer(base64) {
 
     if(choiceConfirmed && gameStarted){
       sendSelectedHand()
-      gameEndedPing();
-
     }
 
-    if (gameStarted && opChosenOnes) {
+    if (gameStarted && cardSent) {
+      gameEndedPing();
     }
 
     if (duelEnded && opChosenOnes){
@@ -1269,7 +1272,8 @@ function _base64ToArrayBuffer(base64) {
     choiceConfirmed,
     owner,
     readyState,
-    opChosenOnes
+    opChosenOnes,
+    cardSent
   ]);
 
   useEffect(() => {

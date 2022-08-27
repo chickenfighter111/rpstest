@@ -1214,7 +1214,7 @@ function _base64ToArrayBuffer(base64) {
           setIsWinner(true)
         }
         setCardSent(false)
-        //subscription.unsubscribe();
+        subscription.unsubscribe();
       });
     };
 

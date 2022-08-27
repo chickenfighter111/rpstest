@@ -222,14 +222,29 @@ const Rooms = (props) => {
     const params = { roomId: id };
     const roomData = await Moralis.Cloud.run("getRoomData", params); //runs a function on the cloud
     const username = Moralis.User.current().getUsername();
-    setRoomName(roomData.get("room_name"));
-    setRoomPda(roomData.get("room_address"))
-    setAmount(roomData.get("bet_amount"));
-    if(roomData.get("ready")) setReadtState(true)
-    if (roomData.get("challenger") !== "null") {
-      if (username === roomData.get("owner"))
-        setOpponent(roomData.get("challenger").substring(0,15));
-      else setOpponent(roomData.get("owner").substring(0,15));
+    if(roomData){
+      setRoomName(roomData.get("room_name"));
+      setRoomPda(roomData.get("room_address"))
+      setAmount(roomData.get("bet_amount"));
+      if(roomData.get("ready")) setReadtState(true)
+      if (roomData.get("challenger") !== "null") {
+        if (username === roomData.get("owner"))
+          setOpponent(roomData.get("challenger").substring(0,15));
+        else setOpponent(roomData.get("owner").substring(0,15));
+      }
+    }
+  };
+
+  const setRoomData = (aRoom) => {
+    const username = Moralis.User.current().getUsername();
+    setRoomName(aRoom.get("room_name"));
+    setRoomPda(aRoom.get("room_address"))
+    setAmount(aRoom.get("bet_amount"));
+    if(aRoom.get("ready")) setReadtState(true)
+    if (aRoom.get("challenger") !== "null") {
+      if (username === aRoom.get("owner"))
+        setOpponent(aRoom.get("challenger").substring(0,15));
+      else setOpponent(aRoom.get("owner").substring(0,15));
     }
   };
 
@@ -812,7 +827,6 @@ const Rooms = (props) => {
 
   const resetRoom = () => {
     if(readyState){
-   
       setReadtState(false)
     }
 
@@ -1104,18 +1118,20 @@ function _base64ToArrayBuffer(base64) {
 
   useEffect(() => {
     const enterRoomPing = async () => {
-        let query = new Moralis.Query("Room");
-        query.get(roomId);
-        query.equalTo("challenger", "null");
-        let subscription = await query.subscribe();
-        subscription.on("leave", (object) => {
-          getRoomData(roomId);
+        if(roomId){
+          let query = new Moralis.Query("Room");
+          query.equalTo("objectId", roomId);
+          query.equalTo("challenger", "null");
+          let subscription = await query.subscribe();
+          subscription.on("leave", (aRoom) => {
+            setRoomData(aRoom);
+          });
+          subscription.on("enter", (aRoom) => {
+            setRoomData(aRoom);
+            setOpponent(null);
+            setReadtState(false)
         });
-        subscription.on("enter", (object) => {
-          getRoomData(roomId);
-          setOpponent(null);
-          setReadtState(false)
-        });
+        }
     };
 
     /*const leaveRoomPing = async () => {
@@ -1131,13 +1147,13 @@ function _base64ToArrayBuffer(base64) {
     }; */
 
     const readyPing = async () => {
-      if (!gameStarted && !duelEnded){
+      if (!gameStarted && !duelEnded && roomId){
         let query = new Moralis.Query("Room");
-        query.get(roomId);
+        query.equalTo("objectId", roomId);
         query.equalTo("ready", true);
         let subscription = await query.subscribe();
-        subscription.on("enter", async () => {
-          if (isOwner()){
+        subscription.on("enter", () => {
+          if (owner){
             setReadtState(true)
             //subscription.unsubscribe()
           }
@@ -1174,15 +1190,15 @@ function _base64ToArrayBuffer(base64) {
 
 
     const gameStartPing = async () => {
-      let query = new Moralis.Query("Room");
-      query.get(roomId);
-      query.equalTo("playing", true);
-      let subscription = await query.subscribe();
-      subscription.on("enter", async () => {
-        setCanGen(true)
-        //transferToEscrow()
-        subscription.unsubscribe();
-      });
+        let query = new Moralis.Query("Room");
+        query.equalTo("objectId", roomId);
+        query.equalTo("playing", true);
+        let subscription = await query.subscribe();
+        subscription.on("enter", async () => {
+          setCanGen(true)
+          //transferToEscrow()
+          subscription.unsubscribe();
+        });
     };
 
     const gamePlayingPing = async () => {
@@ -1236,7 +1252,7 @@ function _base64ToArrayBuffer(base64) {
       enterRoomPing();
     }
 
-    if (roomId && opponent) readyPing()
+    if (roomId && opponent && owner) readyPing()
 
     if (roomId && readyState){
       gameStartPing(); //to check if servers got both choices of players

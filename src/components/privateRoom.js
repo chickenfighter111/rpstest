@@ -1197,7 +1197,7 @@ function _base64ToArrayBuffer(base64) {
         subscription.on("enter", async () => {
           setCanGen(true)
           //transferToEscrow()
-          subscription.unsubscribe();
+         // subscription.unsubscribe();
         });
     };
 
@@ -1209,7 +1209,7 @@ function _base64ToArrayBuffer(base64) {
       subscription.on("enter", () => {
        // console.log("game starts")
         start()
-        subscription.unsubscribe();
+        //subscription.unsubscribe();
       });
     };
 
@@ -1230,7 +1230,7 @@ function _base64ToArrayBuffer(base64) {
           setIsWinner(true)
         }
         setCardSent(false)
-        subscription.unsubscribe();
+        //subscription.unsubscribe();
       });
     };
 
@@ -1362,7 +1362,7 @@ function _base64ToArrayBuffer(base64) {
       subscription.on("enter", async (object) => {
         revealOpponentData(object.get("reveals"))
         setReveal(true)
-        subscription.unsubscribe()
+        //subscription.unsubscribe()
       });
     };
 

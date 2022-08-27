@@ -1205,7 +1205,7 @@ function _base64ToArrayBuffer(base64) {
       let subscription = await query.subscribe();
       subscription.on("enter", (object) => {
         
-       // console.log("duel ended!")
+        console.log("duel ended!")
         updateOpponentData(object.get("players"))
         setEndedDuel(true); //COUNTDOWN
         setWinner(object.get("winner"));
@@ -1252,7 +1252,7 @@ function _base64ToArrayBuffer(base64) {
       sendSelectedHand()
     }
 
-    if (gameStarted && cardSent) {
+    if (gameStarted) {
       gameEndedPing();
     }
 

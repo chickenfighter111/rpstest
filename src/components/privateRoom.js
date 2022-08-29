@@ -33,7 +33,7 @@ import AOS from "aos";
 
 import "aos/dist/aos.css";
 
-import {AiFillEye, AiFillSound, AiOutlineSound} from 'react-icons/ai'
+import {AiFillEye } from 'react-icons/ai'
 import  {FaVolumeUp} from 'react-icons/fa'
 import  {BiVolumeMute} from 'react-icons/bi'
 import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
@@ -54,7 +54,6 @@ import countdownSound from './media/7s.wav';
 import hg from './media/hourglass.gif'
 import Buffer from 'buffer'
 import styled from "styled-components"
-import { User } from "@web3uikit/icons";
 import { LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import base58 from 'bs58'
 
@@ -960,6 +959,47 @@ const getBalance = async () => {
     }  
   }
 
+  const payoutDraw = async () =>{
+    function _base64ToArrayBuffer(base64) {
+      var binary_string = window.atob(base64);
+      var len = binary_string.length;
+      var bytes = new Uint8Array(len);
+      for (var i = 0; i < len; i++) {
+          bytes[i] = binary_string.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+    try{
+      const roomEscrow = new PublicKey(roomPDA);
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      const playerWallet = new anchor.web3.PublicKey(playerPDA)
+
+      const roomData = await Moralis.Cloud.run("getRoomData", {roomId: roomId}); //runs a function on the cloud
+      const arraybuf = await _base64ToArrayBuffer(roomData.get("rkey"))
+      const u8int= new Uint8Array(arraybuf)
+      const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
+
+
+        const tx = await program.methods.payw(
+          new BN(amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
+          *LAMPORTS_PER_SOL))
+        .accounts({
+          roomAcc: roomEscrow,
+          winner: playerWallet,
+          feeAcc: fee_wallet,
+          payer: escrowWallet.publicKey
+        }).transaction()
+        tx.feePayer = escrowWallet.publicKey;
+        tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+        const ctx = await sendAndConfirmTransaction(connection, tx, [escrowWallet]);
+        //console.log("payout ", ctx)
+        getBalance()
+      }catch(err){
+      //console.log(err)
+    }  
+  }
+
   const isOwner = async() =>{
     const user = Moralis.User.current().getUsername()
     const params = { player: user, roomId: roomId}
@@ -1145,13 +1185,14 @@ const getBalance = async () => {
 
     if (winner && smShow){
       const current_player = Moralis.User.current()
-      if (winner === current_player.id) {
+      if (winner === current_player.id && isWinner) {
         payoutWinner()
         addWinnerAnnouncement(user, opponent)
         if(soundState)winSound()
         update_playerStats(current_player)
       }
       else if (winner === "draw") {
+        payoutDraw()
         addDrawAnnouncement()
         if(soundState)tieSound()
       }

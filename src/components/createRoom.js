@@ -7,6 +7,7 @@ import {AnchorProvider,Program,utils,web3} from "@project-serum/anchor";
 
 import { useParams, useNavigate } from "react-router-dom";
 import base58 from 'bs58'
+import Buffer from 'buffer'
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 const idl = require("../rps_project.json");

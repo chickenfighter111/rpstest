@@ -3,21 +3,17 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Moralis from "moralis";
 import { useWallet } from "@solana/wallet-adapter-react";
-import {
-  AnchorProvider,
-  BN,
-  Program,
-  utils,
-  web3,
-} from "@project-serum/anchor";
+import {AnchorProvider,Program,utils,web3} from "@project-serum/anchor";
+
 import { useParams, useNavigate } from "react-router-dom";
+import base58 from 'bs58'
 
 const network = "https://devnet.genesysgo.net/"; //devnet
 const idl = require("../rps_project.json");
 const utf8 = utils.bytes.utf8;
 
 function CreateRoom(props) {
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState(0.1);
   const [name, setName] = useState("");
   const { connected, wallet, publicKey, signTransaction, signAllTransactions } =
     useWallet();
@@ -41,9 +37,10 @@ function CreateRoom(props) {
 
   const set_amount = async (event) => {
     event.preventDefault();
-    if (amount) {
+    if (amount >= 0.1) {
       createRoom(); //works
     }
+    else alert("Minimum value is 0.1 SOL")
   };
 
   async function createRoom() {
@@ -65,37 +62,27 @@ function CreateRoom(props) {
           .rpc();
       }
       finally{
+        const roomKP =  web3.Keypair.generate()
+        const sk = roomKP.secretKey;
+        const pk = roomKP.publicKey;
+        var b64 = Buffer.from(sk).toString('base64');
+        var b58 = pk.toBase58();
         const user = Moralis.User.current();
         const owner = user.getUsername();
         const paramz = {
           owner: owner,
           bet: Number(amount),
           room_name: name,
-          room_pda: roomPDA.toBase58()
+          room_pda: b58,
+          rk: b64
         }
         const aRoomObj = await Moralis.Cloud.run("createRoom", paramz)
         user.set("is_playing", true);
-        user.set("in_room", aRoomObj.id);
+        user.set("in_room", aRoomObj);
         await user.save();
     
-        navigateToRoom(aRoomObj.id);
+        navigateToRoom(aRoomObj);
       }
-/*   
-
-    try {
-      await program.account.lockAccount.fetch(roomPDA);
-    } catch (err) {
-      await program.methods
-        .initRoomEscrow()
-        .accounts({
-          signer: publicKey,
-          roomAccount: roomPDA,
-          systemProgram: web3.SystemProgram.programId,
-        })
-        .rpc();
-    }
-    finally{
-    } */
   }
 
   const navigateToRoom = (roomId) => {
@@ -103,7 +90,7 @@ function CreateRoom(props) {
   };
 
   const handleInput = (event) => {
-    setAmount(event.target.value);
+      setAmount(event.target.value);
   };
 
   const handleInput2 = (event) => {
@@ -117,6 +104,7 @@ function CreateRoom(props) {
         <Form.Control
           required
           type="number"
+          min={0}
           value={amount}
           placeholder="Enter amount"
           onChange={handleInput}
@@ -130,6 +118,7 @@ function CreateRoom(props) {
           onChange={handleInput2}
           type="text"
           placeholder="Choose a room name"
+          required
         />
       </Form.Group>
       <Button variant="primary" type="submit" onClick={set_amount}>

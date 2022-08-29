@@ -191,16 +191,6 @@ const MyNavbar = (props) => {
     }
   }, [isAuthenticated, web3auth]);
 
-  const getAccounts = async () => {
-    if (!provider) {
-      alert("provider not initialized yet");
-      return;
-    }
-    //const rpc = new RPC(provider);
-    //const address = await rpc.getAccounts();
-   // return address[0];
-  };
-
   const login = async () => {
     if (!web3auth) {
       alert("web3auth not initialized yet");

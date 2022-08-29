@@ -67,13 +67,7 @@ const App = (props) => {
       setUser(currentUser.getUsername());
     }
   };
-
-
-  const getHelloFromCloud = async () => {
-    const params = { text: "from belgium!" };
-    const hello = await Moralis.Cloud.run("helloword", params); //runs a function on the cloud
-  };
-
+  
   const MainContainer = () => {
     const [modalShow, setModalShow] = useState(false);
     const [rooms, setRooms] = useState([]);
@@ -265,7 +259,7 @@ const App = (props) => {
     }, [isAuthenticated]);
 
     return (
-      <RTable responsive borderless>
+      <RTable responsive borderless >
       <thead>
         <tr>
           <th><h5>Rank</h5></th>
@@ -307,10 +301,10 @@ const App = (props) => {
         <Row>
           <MainContainer/>
           <Col className="leaderboard">
-            <h2>Season ranking</h2>
+            <h2 className="aTitle">Season ranking</h2>
             <Container >
               <Row>
-                <div className="leaderboardContainer">
+                <div className="leaderboardContainer leaderBoardTable">
                   <LeaderBoardContainer/>
                 </div>
               </Row>

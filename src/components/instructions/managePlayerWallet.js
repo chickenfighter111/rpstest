@@ -88,7 +88,6 @@ function WalletManager(props) {
             walletQry.equalTo("owner", aUser.id)
             const aWallet = await walletQry.first()
             //console.log(aWallet)
-            const escrow = new anchor.web3.PublicKey(playerPDA)
             const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
             const u8int= new Uint8Array(arraybuf)
             const escrowWallet = Keypair.fromSecretKey(u8int)
@@ -119,7 +118,7 @@ function WalletManager(props) {
           <Form.Label>Amount</Form.Label>
           <Form.Control
             required
-            type="amount"
+            type="number"
             value={amount}
             placeholder="Enter amount to deposit"
             onChange={handleInput}
@@ -144,7 +143,7 @@ function WalletManager(props) {
       try {
         const balance = await provider.connection.getBalance(escrow); //player escrow
         props.onChangeBalance(Math.round((balance / one_sol)  * 100) / 100);
-        setBalance(Math.round((balance / one_sol)  * 100) / 100)
+        //setBalance(Math.round((balance / one_sol)  * 100) / 100)
       } catch (err) {
       }
     }

@@ -6,13 +6,13 @@ import {
   DropdownButton,
   Dropdown,
   Modal,
-  Table as RTable
+  Table as RTable, Badge
 } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom";
 import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
 
-import React,{ useEffect, useState, useMemo } from "react";
+import React,{ useEffect, useState, useMemo, useRef  } from "react";
 import { Loading } from "@web3uikit/core";
 import Countdown from "react-countdown";
 import rock from "./media/cards/rock.png";
@@ -55,7 +55,7 @@ import hg from './media/hourglass.gif'
 import Buffer from 'buffer'
 import styled from "styled-components"
 import { User } from "@web3uikit/icons";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import base58 from 'bs58'
 
 const StyledModal = styled(Modal)`
@@ -137,8 +137,7 @@ const Rooms = (props) => {
   const [cards, setCards] = useState([logo, logo, logo, logo, logo]);
   const [opCards, setOpCards] = useState([logo, logo, logo, logo, logo]);
   const [opponentChoice, setOppenentChoice] = useState(none);
-  const [generatedhands, setGenHands] = useState(null);
-
+  const [generatedhands, setGenHands] = useState([]);
 
   const [choiceConfirmed, setConfirmed] = useState(false);
   const [readyState, setReadtState] = useState(false)
@@ -177,7 +176,7 @@ const Rooms = (props) => {
   const [cardSent, setCardSent] = useState(false)
 
 
-
+//["2", "0", "0", "2", "1"]
 
   const idl = require("../rps_project.json");
   const utf8 = utils.bytes.utf8;
@@ -322,7 +321,7 @@ const Rooms = (props) => {
     return res
   }
 
-  const selectCard = async() =>{
+  const selectCard = () =>{
     if (chosenCards.size < 3){
       if(!chosenCards.has(selectedBox)){
         chosenCards.add(selectedBox)
@@ -381,11 +380,11 @@ const Rooms = (props) => {
 
   const startRound = async () => {
     //sign transaction & send hands to DB
-    //if (await canPlay()){
+    if (await canPlay()){
       setRoundStart(true)
       const params = { room: roomId };
       await Moralis.Cloud.run("startRound", params); //runs a function on the cloud
-   // } else setNoFunds(true)
+    } else setNoFunds(true)
   };
 
   const evaluateWinnerInUI = () => {
@@ -864,15 +863,102 @@ const Rooms = (props) => {
     props.onChangeBalance(value);
 }
 
-function _base64ToArrayBuffer(base64) {
-  var binary_string = window.atob(base64);
-  var len = binary_string.length;
-  var bytes = new Uint8Array(len);
-  for (var i = 0; i < len; i++) {
-      bytes[i] = binary_string.charCodeAt(i);
+const getBalance = async () => {
+  const aUser = Moralis.User.current();
+  const playerPDA = aUser.get("player_wallet");
+  if (playerPDA) {
+    const escrow = new anchor.web3.PublicKey(playerPDA)
+    try {
+      const abalance = await provider.connection.getBalance(escrow); //player escrow
+      //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
+      handleChangeBalance(Math.round((abalance / one_sol)  * 100) / 100)
+     // setBalance(Math.round((abalance / one_sol)  * 100) / 100)
+    } catch (err) {
+    }
   }
-  return bytes.buffer;
-}
+};
+
+  function _base64ToArrayBuffer(base64) {
+    var binary_string = window.atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+  const transferRoom = async () =>{
+
+    try{
+      const roomEscrow = new PublicKey(roomPDA);
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      const walletQry = new Moralis.Query("Wallet")
+      walletQry.equalTo("owner", aUser.id)
+      const aWallet = await walletQry.first()
+      const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
+      const u8int= new Uint8Array(arraybuf)
+      const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
+
+      const tx = await program.methods.payRoom(
+        new BN(amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
+        *LAMPORTS_PER_SOL))
+      .accounts({
+        escrowAcc: escrowWallet.publicKey,
+        roomAcc: roomEscrow,
+      }).transaction()
+      const aConnection = new web3.Connection(network, 'finalized');
+      tx.feePayer = escrowWallet.publicKey;
+      tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+      const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
+      //console.log("tx ", signature)
+      getBalance()
+    }catch(err){
+     // console.log(err)
+    }
+
+  }
+
+  const payoutWinner = async () =>{
+    function _base64ToArrayBuffer(base64) {
+      var binary_string = window.atob(base64);
+      var len = binary_string.length;
+      var bytes = new Uint8Array(len);
+      for (var i = 0; i < len; i++) {
+          bytes[i] = binary_string.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+    try{
+      const roomEscrow = new PublicKey(roomPDA);
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      const playerWallet = new anchor.web3.PublicKey(playerPDA)
+
+      const roomData = await Moralis.Cloud.run("getRoomData", {roomId: roomId}); //runs a function on the cloud
+      const arraybuf = await _base64ToArrayBuffer(roomData.get("rkey"))
+      const u8int= new Uint8Array(arraybuf)
+      const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
+
+
+        const tx = await program.methods.payw(
+          new BN(amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
+          *LAMPORTS_PER_SOL*2))
+        .accounts({
+          roomAcc: roomEscrow,
+          winner: playerWallet,
+          feeAcc: fee_wallet,
+          payer: escrowWallet.publicKey
+        }).transaction()
+        tx.feePayer = escrowWallet.publicKey;
+        tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+        const ctx = await sendAndConfirmTransaction(connection, tx, [escrowWallet]);
+        //console.log("payout ", ctx)
+        getBalance()
+      }catch(err){
+      //console.log(err)
+    }  
+  }
 
   const isOwner = async() =>{
     const user = Moralis.User.current().getUsername()
@@ -885,11 +971,11 @@ function _base64ToArrayBuffer(base64) {
   }
 
   const getReady = async () =>{
-    //if (await canPlay()){
+    if (await canPlay()){
       const params = { roomId: roomId };
       const rdy = await Moralis.Cloud.run("getReady", params); //runs a function on the cloud
       setReadtState(rdy)
-    //}else setNoFunds(true)
+    }else setNoFunds(true)
   }
 
   useEffect(() => {
@@ -942,7 +1028,6 @@ function _base64ToArrayBuffer(base64) {
       }
     };
 
-
     const updateOpponentData = (players) => {
         const curr_user_id = Moralis.User.current().id;
         const player_one = players[0];
@@ -964,7 +1049,6 @@ function _base64ToArrayBuffer(base64) {
         }
     };
 
-
     const gameStartPing = async () => {
         let query = new Moralis.Query("Room");
         query.equalTo("objectId", roomId);
@@ -972,7 +1056,6 @@ function _base64ToArrayBuffer(base64) {
         let subscription = await query.subscribe();
         subscription.on("enter",() => {
           setCanGen(true)
-          //transferToEscrow()
           subscription.unsubscribe();
         });
     };
@@ -988,8 +1071,6 @@ function _base64ToArrayBuffer(base64) {
         if (Moralis.User.current().id === object.get("winner")) {
           setIsWinner(true)
         }
-        //console.log("game starts", object)
-        //start()
         subscription.unsubscribe();
       });
     };
@@ -1008,18 +1089,6 @@ function _base64ToArrayBuffer(base64) {
       });
     };
 
-    const paymentProcessedPing = async () => {
-      let query = new Moralis.Query("Transaction");
-      query.equalTo("room", roomId);
-      query.equalTo("processed", true);
-      let subscription = await query.subscribe();
-      subscription.on("enter", async () => {
-        setBetProcess(false)
-        //generateHands()
-        //subscription.unsubscribe();
-      });
-    };
-
     if (roomId) {
       setUser(Moralis.User.current().getUsername());
       isOwner()
@@ -1031,25 +1100,18 @@ function _base64ToArrayBuffer(base64) {
     
     if (readyState){
       gameStartPing(); //to check if servers got both choices of players
-     // paymentProcessedPing()
     }
 
-    if (totalSelected === 3 || chosenCards.size === 3) {
-      setConfirmed(true);
-    }
+    if (totalSelected === 3 || chosenCards.size === 3) setConfirmed(true);
 
-    if(choiceConfirmed && gameStarted){
-      sendSelectedHand()
-    }
+    if(choiceConfirmed && gameStarted)sendSelectedHand()
 
     if (readyState && gameStarted) {
       gamePlayingPing();
       gameEndedPing();
     }
 
-    if (duelEnded && opChosenOnes){
-      setSelectEnded(true)
-    }
+    if (duelEnded && opChosenOnes)setSelectEnded(true)
     
   }, [
     isAuthenticated,
@@ -1084,9 +1146,9 @@ function _base64ToArrayBuffer(base64) {
     if (winner && smShow){
       const current_player = Moralis.User.current()
       if (winner === current_player.id) {
+        payoutWinner()
         addWinnerAnnouncement(user, opponent)
         if(soundState)winSound()
-        //payo()
         update_playerStats(current_player)
       }
       else if (winner === "draw") {
@@ -1141,14 +1203,7 @@ function _base64ToArrayBuffer(base64) {
       });
     };
 
-    if(generatedhands && roomId){
-      revealPing()
-    }
-
-    if(generated && generatedhands){
-     // reveal3random()
-    }
-
+    if(generatedhands && roomId)revealPing()
 
   }, [generatedhands, roomId, generated]);
   
@@ -1159,15 +1214,17 @@ function _base64ToArrayBuffer(base64) {
     });
   }, []);
 
+
   useEffect(() => {
     if (canGen && !revealDone){
+      transferRoom()
       const somehands = generateHands()
-      //console.log(somehands)
       reveal3random(somehands)
     }
   }, [canGen, revealDone])
 
   if (isAuthenticated && roomId) {
+
     return (
       <Container
         fluid="xxl"
@@ -1188,7 +1245,7 @@ function _base64ToArrayBuffer(base64) {
                           return (
                             <Col className="aselectedCard cardCol">
                               <Button className="aCardRev">
-                                <AiFillEye className="selectedCard" />
+                                <AiFillEye size={25} className="selectedCard" />
                                 <img
                                   className="handImg"
                                   width={60}
@@ -1324,6 +1381,11 @@ function _base64ToArrayBuffer(base64) {
                                       : ""
                                   }`}
                                 >
+                                       {chosenCards.has(index) ? 
+                                        (<Badge bg="danger" className="selectIdx">
+                                          Selected
+                                        </Badge>) 
+                                        : (<div></div>)}
                                   <Button
                                     onMouseOver={(e) =>
                                       handleChoiceButton(e, index)
@@ -1333,7 +1395,7 @@ function _base64ToArrayBuffer(base64) {
                                     disabled={choiceConfirmed}
                                   >
                                     {revealedCards.has(index) ? (
-                                      <AiFillEye className="selectedCard" />
+                                      <AiFillEye size={25} className="selectedCard" />
                                     ) : (
                                       <div></div>
                                     )}

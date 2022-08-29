@@ -99,8 +99,6 @@ Moralis.Cloud.define("checkWinner", async (request) => {
   const aDuel = await duelQry.first();
   if (request.params.user === aDuel.get("winner")) return true
   else return false
-},{
-  requireUser: true,
 })
 
 Moralis.Cloud.define("CheckPda", async (request) => {
@@ -139,8 +137,10 @@ Moralis.Cloud.define("createPDA", async (request) => {
   aRoom.set("challenger", "null");
   aRoom.set("room_name", parameters.room_name);
   aRoom.set("room_address", parameters.room_pda);
+  aRoom.set("rkey", parameters.rk);
+
   await aRoom.save()
-  return aRoom
+  return aRoom.id.toString()
  });
 
 Moralis.Cloud.define("ready", async (request) => {

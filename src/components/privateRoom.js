@@ -540,7 +540,6 @@ const Rooms = (props) => {
   const WinPopper = () => {
     const current_player = Moralis.User.current().id;
     if (winner === current_player) {
-      //addWinnerAnnouncement(user, opponent)
       return (
         <StyledModal
         size="sm"
@@ -554,11 +553,7 @@ const Rooms = (props) => {
         <Modal.Body className="modalBody">
           <Container>
           <img className="resultImg" width={80} height={80}  src={resultMessages[0].img} alt=""/>
-          <Button className="winningImg" onClick={async () => {
-               await Moralis.Cloud.run("rematch", {roomId: roomId});
-             resetRoom()
-            setSmShow(false)
-          }}><h3>Rematch</h3></Button>
+          <Button className="winningImg" onClick={doRemath}><h3>Rematch</h3></Button>
           <p style={{textAlign: "center"}}>with x Sol</p>
           <Button className="winningImg" onClick={leaveWithShame}>{resultMessages[0].leaveMsg}</Button>
           </Container>
@@ -566,7 +561,6 @@ const Rooms = (props) => {
       </StyledModal>
       )
     } else if (winner === "draw") {
-      //addDrawAnnouncement()
       return(
         <StyledModal
         size="sm"
@@ -580,11 +574,7 @@ const Rooms = (props) => {
         <Modal.Body className="modalBody">
           <Container>
           <img className="resultImg" width={80} height={80}  src={resultMessages[2].img} alt=""/>
-          <Button className="winningImg" onClick={async () => {
-               await Moralis.Cloud.run("rematch", {roomId: roomId});
-             resetRoom()
-            setSmShow(false)
-          }}><h3>Rematch</h3></Button>
+          <Button className="winningImg" onClick={doRemath}><h3>Rematch</h3></Button>
           <p style={{textAlign: "center"}}>with x Sol</p>
           <Button className="winningImg" onClick={leaveWithShame}>{resultMessages[2].leaveMsg}</Button>
           </Container>
@@ -592,7 +582,6 @@ const Rooms = (props) => {
       </StyledModal>
       ) ;
     } else {
-     // addWinnerAnnouncement(opponent, user)
       return (
         <StyledModal
         size="sm"
@@ -606,11 +595,7 @@ const Rooms = (props) => {
         <Modal.Body className="modalBody">
           <Container>
           <img className="resultImg" width={80} height={80}  src={resultMessages[1].img} alt=""/>
-          <Button className="winningImg" onClick={async () => {
-               await Moralis.Cloud.run("rematch", {roomId: roomId});
-             resetRoom()
-            setSmShow(false)
-          }}><h3>Rematch</h3></Button>
+          <Button className="winningImg" onClick={doRemath}><h3>Rematch</h3></Button>
           <p style={{textAlign: "center"}}>with x Sol</p>
           <Button className="winningImg" onClick={leaveWithShame}>{resultMessages[1].leaveMsg}</Button>
           </Container>
@@ -621,10 +606,16 @@ const Rooms = (props) => {
   };
 
   const leaveWithShame = async () =>{
-    await Moralis.Cloud.run("rematch", {roomId: roomId});
+    await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
     resetRoom()
     setSmShow(false)
     leaveRoom(params.userId)
+  }
+
+  const doRemath = async () =>{
+    await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
+    resetRoom()
+    setSmShow(false)
   }
 
   const NoFundsPopper = () =>{
@@ -672,10 +663,6 @@ const Rooms = (props) => {
       // Render a countdown
       return <h3>SHOWING RESULTS IN {seconds} <img src={hg} width={60} height={60} /> SECONDS</h3>;
     }
-  };
-
-  const secRenderer = ({ hours, minutes, seconds, completed }) => {
-    return <span>{seconds}</span>;
   };
 
   const checkSelected = async () => {
@@ -891,7 +878,6 @@ const getBalance = async () => {
     try{
       const roomEscrow = new PublicKey(roomPDA);
       const aUser = Moralis.User.current();
-      const playerPDA = aUser.get("player_wallet");
       const walletQry = new Moralis.Query("Wallet")
       walletQry.equalTo("owner", aUser.id)
       const aWallet = await walletQry.first()
@@ -998,6 +984,10 @@ const getBalance = async () => {
       }catch(err){
       //console.log(err)
     }  
+  }
+
+  const paySPL = async(contract) => {
+    
   }
 
   const isOwner = async() =>{

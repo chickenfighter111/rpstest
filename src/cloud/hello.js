@@ -550,7 +550,17 @@ Moralis.Cloud.define("rematch", async (request) => {
     aDuel.set("revealed", false)
     aDuel.set("ready", false)
     aDuel.set("ended", false)
-    aDuel.set("winner", null)
+    //aDuel.set("winner", null)
+    if(request.params.userId === aDuel.get("winner")) aDuel.set("winner", null)
+    //last rematch call resets winner
+    else if(
+      !(aRoom.get("ready")) && 
+      !(aRoom.get("playing")) && 
+      "draw" === aDuel.get("winner")
+      ){
+        aDuel.set("winner", null)
+      }
+      
     await aDuel.save()
     //aDuel.destroy()
   }
@@ -560,13 +570,6 @@ Moralis.Cloud.define("rematch", async (request) => {
     aRoom.set("ready", false);
     await aRoom.save();
   }
-
-/*  const txQry = new Parse.Query("Transaction");
-  txQry.equalTo("room", request.params.roomId);
-  const aTx = await txQry.first();
-  if (aTx){
-    aTx.destroy()
-  }*/
 
 });
 

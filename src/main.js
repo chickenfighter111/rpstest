@@ -2,9 +2,11 @@ import App from "./App";
 import Navbar from "./components/web3signin";
 import DiscordChat from "./components/discordChat";
 import React, { useEffect, useState } from "react";
-import { Container, Row, Col } from "react-bootstrap";
+import { Container, Row, Col, Button } from "react-bootstrap";
 import { useMoralis } from "react-moralis";
 import { useWallet } from "@solana/wallet-adapter-react";
+
+
 
 const Main = () => {
   const [balance, setBalance] = useState(null);
@@ -22,7 +24,7 @@ const Main = () => {
         <Row>
           <Col xs={3}>
             {isAuthenticated && connected ? (<div className="chatContainer">
-              <DiscordChat />
+            <DiscordChat />
             </div>) : (<div></div>)}
           </Col>
           <Col >

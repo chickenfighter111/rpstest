@@ -45,45 +45,36 @@ function CreateRoom(props) {
   };
 
   async function createRoom() {
+    function _arrayBufferToBase64( buffer ) {
+      var binary = '';
+      var bytes = new Uint8Array( buffer );
+      var len = bytes.byteLength;
+      for (var i = 0; i < len; i++) {
+          binary += String.fromCharCode( bytes[ i ] );
+      }
+      return window.btoa( binary );
+  }
     //game room
-    const [roomPDA, _] = await web3.PublicKey.findProgramAddress([
-      utf8.encode("rps_room_escrow_wallet"), publicKey.toBuffer()
-    ], program.programId);
+    const roomKP =  web3.Keypair.generate()
+    const pk = roomKP.publicKey;
+    var b64 = roomKP.secretKey.buffer
+    const b64encoded = _arrayBufferToBase64(b64)
+    var b58 = pk.toBase58();
+    const user = Moralis.User.current();
+    const owner = user.getUsername();
+    const paramz = {
+      owner: owner,
+      bet: Number(amount),
+      room_name: name,
+      room_pda: b58,
+      rk: b64encoded
+    }
+    const aRoomObj = await Moralis.Cloud.run("createRoom", paramz)
+    user.set("is_playing", true);
+    user.set("in_room", aRoomObj);
+    await user.save();
 
-      try {
-        await program.account.lockAccount.fetch(roomPDA);
-      } catch (err) {
-        await program.methods
-          .initRoomEscrow()
-          .accounts({
-            signer: publicKey,
-            roomAccount: roomPDA,
-            systemProgram: web3.SystemProgram.programId,
-          })
-          .rpc();
-      }
-      finally{
-        const roomKP =  web3.Keypair.generate()
-        const sk = roomKP.secretKey;
-        const pk = roomKP.publicKey;
-        var b64 = Buffer.from(sk).toString('base64');
-        var b58 = pk.toBase58();
-        const user = Moralis.User.current();
-        const owner = user.getUsername();
-        const paramz = {
-          owner: owner,
-          bet: Number(amount),
-          room_name: name,
-          room_pda: b58,
-          rk: b64
-        }
-        const aRoomObj = await Moralis.Cloud.run("createRoom", paramz)
-        user.set("is_playing", true);
-        user.set("in_room", aRoomObj);
-        await user.save();
-    
-        navigateToRoom(aRoomObj);
-      }
+    navigateToRoom(aRoomObj);
   }
 
   const navigateToRoom = (roomId) => {

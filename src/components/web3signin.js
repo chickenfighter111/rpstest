@@ -22,11 +22,13 @@ import styled from 'styled-components'
 import Buffer from 'buffer'
 
 import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
-
+import { getAssociatedTokenAddress } from "@solana/spl-token"; 
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {AiTwotoneSetting} from 'react-icons/ai'
 import logo from "./media/logg2.png"
 import sol from "./media/solc.png"
-
+import dustLogo from './media/DUST.jpg'
+import forgeLogo from './media/FORGE.png'
 
 const StartBtn = styled(Dropdown.Toggle)`
   width: 250px;
@@ -44,6 +46,9 @@ const clientId =  process.env.REACT_APP_WEB3_CLIENT_ID | "BGUYFB-xTJdSGPtMI92VdT
 
 const MyNavbar = (props) => {
   const [balance, setBalance] = useState(props.bal);
+  const [fbalance, setFBalance] = useState(0);
+  const [dbalance, setDBalance] = useState(0);
+
 
   const { logout, isAuthenticated, authenticate } = useMoralis();
   const { connected, publicKey, wallet, disconnect } = useWallet();
@@ -89,6 +94,48 @@ const MyNavbar = (props) => {
       }
     };
 
+    const getSPLBalance = async () => {
+      const connection = new web3.Connection(network, "processed");
+      const aprovider = new AnchorProvider(connection, wallet, {preflightCommitment: "processed",});
+      const program = new Program(idl, idl.metadata.address, aprovider);
+      const mint = new anchor.web3.PublicKey("92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy")
+
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+      let ATA = await getAssociatedTokenAddress(
+        mint,
+        escrow
+      );
+      const bal = (await program.provider.connection.getParsedAccountInfo(ATA)).value.data.parsed.info.tokenAmount.amount;
+      setFBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+    }
+
+    const getTokenBalance = async () => {
+      const connection = new web3.Connection(network, "processed");
+      const aprovider = new AnchorProvider(connection, wallet, {preflightCommitment: "processed",});
+      const program = new Program(idl, idl.metadata.address, aprovider);
+      const forge = new anchor.web3.PublicKey("FoRGERiW7odcCBGU1bztZi16osPBHjxharvDathL5eds")
+      const dust = new anchor.web3.PublicKey("DUSTawucrTsGU8hcqRdHDCbuYhCPADMLM2VcCb8VnFnQ")
+
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+      let ATA = await getAssociatedTokenAddress(
+        forge,
+        escrow
+      );
+      let ATA2 = await getAssociatedTokenAddress(
+        dust,
+        escrow
+      );
+      const bal = (await program.provider.connection.getParsedAccountInfo(ATA)).value.data.parsed.info.tokenAmount.amount;
+      const bal2 = (await program.provider.connection.getParsedAccountInfo(ATA2)).value.data.parsed.info.tokenAmount.amount;
+      setFBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+      setDBalance(Math.round((bal2/LAMPORTS_PER_SOL)).toPrecision(4))
+
+    }
+
     const fetchPlayerWallet = async() =>{
       const playerWallet = Moralis.User.current().get("player_wallet");
       if (playerWallet) setHasWallet(true)
@@ -98,6 +145,8 @@ const MyNavbar = (props) => {
 
     if (connected && isAuthenticated) {
       getBalance();
+      getSPLBalance()
+      getTokenBalance()
       fetchPlayerWallet()
     }
 
@@ -288,6 +337,10 @@ const MyNavbar = (props) => {
                     <PlayerWalletManager
                       balance={balance}
                       onChangeBalance={setBalance}
+                      dbalance={dbalance}
+                      donChangeBalance={setDBalance}
+                      fbalance={fbalance}
+                      fonChangeBalance={setFBalance}
                     />
                   </Dropdown.Item>
                   {!hasWallet ? (
@@ -297,6 +350,8 @@ const MyNavbar = (props) => {
                   ) : (
                     <div></div>
                   )}
+                  <Dropdown.Item ><img className="logoImg" src={forgeLogo} width={30} height={25} alt="$FORGE" />{" "} {fbalance} </Dropdown.Item>
+                  <Dropdown.Item ><img className="logoImg" src={dustLogo} width={30} height={25} alt="$DUST" />{" "} {dbalance} </Dropdown.Item>
                   <Dropdown.Item onClick={web3logout}>Log Out</Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>

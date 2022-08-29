@@ -10,6 +10,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 
 const Main = () => {
   const [balance, setBalance] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
   const { isAuthenticated } = useMoralis();
   const { connected } = useWallet();
 
@@ -19,7 +20,7 @@ const Main = () => {
 
   return (
     <div>
-      <Navbar onChangeBalance={handleBalanceChange} bal={balance} />
+      <Navbar darkmode={darkMode} onChangeBalance={handleBalanceChange} bal={balance} />
       <Container className="roomContainer">
         <Row>
           <Col xs={3}>
@@ -28,7 +29,7 @@ const Main = () => {
             </div>) : (<div></div>)}
           </Col>
           <Col >
-            <App onChangeBalance={handleBalanceChange} bal={balance} />
+            <App darkmode={darkMode} onChangeBalance={handleBalanceChange} bal={balance} />
           </Col>
         </Row>
       </Container>

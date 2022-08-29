@@ -67,8 +67,12 @@ function PlayerWallet() {
   };
 
   const createWallet = async (event) => {
+    event.preventDefault();
     if (username) {
-      await create_player_wallet().then(() => alert("Player wallet created!"))
+      await create_player_wallet().then(() => {
+        alert("Player wallet created!")
+        window.location.reload()
+      })
 
     }
   };

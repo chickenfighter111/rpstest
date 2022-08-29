@@ -13,15 +13,46 @@ import { useMoralis } from "react-moralis";
 import { Button, Modal, Form, Container, Dropdown } from "react-bootstrap";
 import ModifyUsername from './forms/signup';
 import { LAMPORTS_PER_SOL, sendAndConfirmTransaction, Keypair } from "@solana/web3.js";
+import {
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  getOrCreateAssociatedTokenAccount,
+  createAssociatedTokenAccountInstruction
+} from "@solana/spl-token";
 
+import dustLogo from '../media/DUST.jpg'
+import forgeLogo from '../media/FORGE.png'
+import sol from '../media/sol.png'
+import styled from 'styled-components'
+
+const StyledInput = styled(Form.Control)`
+  margin-top: 10px;
+  width: 100px;
+`
+
+const StyledSelect = styled(Form.Select)`
+  margin-top: 10px;
+  width: 100px;
+`
+
+const FormButton = styled(Button)`
+  border-radius: 20px;
+  margin-right: 10px;
+  margin-bottom: 30px;
+`
 
 const network = "https://devnet.genesysgo.net/"; //devnet
+const dustContract = "DUSTawucrTsGU8hcqRdHDCbuYhCPADMLM2VcCb8VnFnQ"
+const forgeContract = "FoRGERiW7odcCBGU1bztZi16osPBHjxharvDathL5eds"
+
 const idl = require("../../rps_project.json");
 const utf8 = utils.bytes.utf8;
 const one_sol = 1_000_000_000;
 
 function WalletManager(props) {
-  const [balance, setBalance] = useState(props.bal);
+  const [balance, setBalance] = useState(props.balance);
+  const [dbalance, setDBalance] = useState(props.dbalance);
+  const [fbalance, setFBalance] = useState(props.fbalance);
 
   const [modalShow, setModalShow] = useState(false);
   const { isAuthenticated } = useMoralis();
@@ -106,7 +137,7 @@ function WalletManager(props) {
            // console.log(err)
           }
         }
-      };
+    };
 
     const handleInput = (event) => {
       setAmount(event.target.value);
@@ -115,22 +146,174 @@ function WalletManager(props) {
     return (
       <Form>
         <Form.Group className="mb-3" controlId="formBasicEmail">
-          <Form.Label>Amount</Form.Label>
-          <Form.Control
+          <Form.Label> Deposit/Withdraw <img src={sol} width={25} height={25} alt="$SOL"/></Form.Label>
+          <StyledInput
             required
             type="number"
             value={amount}
+            min={0}
             placeholder="Enter amount to deposit"
             onChange={handleInput}
           />
           <Form.Text className="text-muted">Your deposit</Form.Text>
         </Form.Group>
-        <Button variant="primary" type="submit" onClick={deposit}>
+        <FormButton variant="primary" type="submit" onClick={deposit}>
           Deposit
-        </Button>
-        <Button variant="primary" type="submit" onClick={withdraw}>
+        </FormButton>
+        <FormButton variant="primary" type="submit" onClick={withdraw}>
           Withdraw
-        </Button>
+        </FormButton>
+      </Form>
+    );
+  }
+
+  function SplForm() {
+    const [amount, setAmount] = useState(0);
+    const [contract, setContract] = useState("92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy");
+
+    const depositSPL = async (event) => {
+      event.preventDefault();
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      if (playerPDA) {
+        const escrow = new anchor.web3.PublicKey(playerPDA)
+        const mint = new anchor.web3.PublicKey(contract)
+
+        try {
+
+          let associatedTokenAccount = await getAssociatedTokenAddress(
+            mint,
+            anchorWallet.publicKey
+          );
+          let toATA;
+
+          try{
+            toATA = (await getOrCreateAssociatedTokenAccount(
+              connection,
+              anchorWallet.publicKey,
+              mint, //mint pk
+              escrow //to pk
+            )).address;
+          }
+          catch(err){
+            alert("First SPL deposit, we need configure your account...")
+            toATA = await getAssociatedTokenAddress(
+              mint, //mint pk
+              escrow //to pk
+            );
+            try{const mint_tx = new anchor.web3.Transaction().add(
+              createAssociatedTokenAccountInstruction(
+                anchorWallet.publicKey, toATA, escrow, mint
+              )
+            );
+            await provider.sendAndConfirm(mint_tx, [])
+          }catch(err){}
+          }
+          const tx = await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+            tokenProgram: TOKEN_PROGRAM_ID,
+            tokenMint: mint,
+            from: associatedTokenAccount,
+            fromAuthority: anchorWallet.publicKey,
+            to: toATA,
+          }).rpc(); 
+          const balance = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
+          //console.log("escrow balance ", balance/LAMPORTS_PER_SOL)
+           // console.log(tx)
+            const bal = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
+            props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+        } catch (err) {
+        // console.log(err)
+        }
+      }
+    };
+
+    const withDrawSPL = async (event) => {
+      async function _base64ToArrayBuffer(base64) {
+        var binary_string = window.atob(base64);
+        var len = binary_string.length;
+        var bytes = new Uint8Array(len);
+        for (var i = 0; i < len; i++) {
+            bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes.buffer;
+     }
+      event.preventDefault();
+      const aUser = Moralis.User.current();
+      const playerPDA = aUser.get("player_wallet");
+      if (playerPDA) {
+        const escrow = new anchor.web3.PublicKey(playerPDA)
+        const mint = new anchor.web3.PublicKey(contract)
+
+        try {
+          let escrowATA = await getAssociatedTokenAddress(
+            mint, //mint pk
+            escrow //to pk
+          );
+          let ATA = await getAssociatedTokenAddress(
+            mint,
+            anchorWallet.publicKey
+          );
+          const walletQry = new Moralis.Query("Wallet")
+          walletQry.equalTo("owner", aUser.id)
+          const aWallet = await walletQry.first()
+          if(aWallet){
+            const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
+            const u8int= new Uint8Array(arraybuf)
+            const escrowWallet = Keypair.fromSecretKey(u8int)
+  
+            const tx = await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+              tokenProgram: TOKEN_PROGRAM_ID,
+              tokenMint: mint,
+              from: escrowATA,
+              fromAuthority: escrowWallet.publicKey,
+              to: ATA,
+            }).signers([escrowWallet]).rpc(); 
+              //console.log(tx)
+              const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
+              props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+          }
+        } catch (err) {
+        //  console.log(err)
+        }
+      }
+    };
+
+    const handleInput = (event) => {
+      setAmount(event.target.value);
+    };
+
+    const handleSelect = (event) => {
+      setContract(event.target.value);
+      //console.log(event.target.value)
+    };
+
+    return (
+      <Form>
+        <Form.Group className="mb-3" controlId="formBasicEmail">
+          <Form.Label>
+            Deposit/Withdraw <img className="logoImg" src={dustLogo} width={25} height={25} alt="$DUST"/> / {" "}
+            <img className="logoImg" src={forgeLogo} width={25} height={25} alt="$FORGE"/>
+
+          </Form.Label>
+          <StyledInput
+            required
+            type="number"
+            value={amount}
+            min={0}
+            placeholder="Enter amount to deposit"
+            onChange={handleInput}
+          />
+        <StyledSelect size="lg" aria-label="Default select example" onChange={handleSelect}>
+          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy">$DUST</option>
+          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy">$FORGE</option>
+        </StyledSelect>
+        </Form.Group>
+        <FormButton variant="primary" type="submit" onClick={depositSPL}>
+          Deposit
+        </FormButton>
+        <FormButton variant="primary" type="submit" onClick={withDrawSPL}>
+          Withdraw
+        </FormButton>
       </Form>
     );
   }
@@ -166,12 +349,13 @@ function WalletManager(props) {
       >
         <Modal.Header>
           <Modal.Title id="contained-modal-title-vcenter">
-            Deposit into your wallet
+            Wallet Manager
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <ModifyUsername />
           <DepositForm />
+          <SplForm/>
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={props.onHide}>Close</Button>

@@ -2,7 +2,12 @@ import React, {  useState} from 'react';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Moralis  from 'moralis'
+import styled from 'styled-components'
 
+const FormButton = styled(Button)`
+  border-radius: 20px;
+  margin-bottom: 30px;
+`
 
 function Signup() {
     const [username, setUsername] = useState("");
@@ -36,9 +41,9 @@ function Signup() {
               Your in-game username
           </Form.Text>
         </Form.Group>
-        <Button variant="primary" type="submit" onClick={setusername}>
-          Submit
-        </Button>
+        <FormButton variant="primary" type="submit" onClick={setusername}>
+          Update
+        </FormButton>
       </Form>
     );
 }

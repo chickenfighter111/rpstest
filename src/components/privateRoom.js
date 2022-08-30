@@ -1554,7 +1554,7 @@ const Rooms = (props) => {
             <Row>
               <Col>
                 <a target="_blank" href="https://discord.gg/VufJp2EY">
-                  <FaDiscord size={60} fill={props.darkmode ? "#FFD966" : "#5b34eb"}/>
+                  <FaDiscord className="disca" size={60} fill={props.darkmode ? "#FFD966" : "#5b34eb"}/>
                 </a>
               </Col>
               <Col>

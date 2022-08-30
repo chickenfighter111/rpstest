@@ -312,7 +312,7 @@ const App = (props) => {
               </Row>
               <Row>
                 <Col>
-                  <a target="_blank" href='https://discord.gg/VufJp2EY' ><FaDiscord size={60} fill={props.darkmode ? "#FFD966" : "#5b34eb"}/></a>
+                  <a target="_blank" href='https://discord.gg/VufJp2EY' ><FaDiscord className="disca" size={60} fill={props.darkmode ? "#FFD966" : "#5b34eb"}/></a>
                 </Col>
                 <Col>
                   <a target="blank" href="https://magiceden.io/marketplace/asakalabsnft"><img width={50} height={50} src={me}></img></a>

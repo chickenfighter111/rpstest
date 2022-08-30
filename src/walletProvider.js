@@ -16,7 +16,9 @@ const Dashboard = () => {
   const network = WalletAdapterNetwork.Devnet;
   // You can also provide a custom RPC endpoint.
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-  const customRPC = 'https://devnet.genesysgo.net/';
+ // const customRPC = 'https://devnet.genesysgo.net/';
+  const customRPC = "https://ssc-dao.genesysgo.net/" //mainnet
+
 
   const wallets = useMemo(() => [new PhantomWalletAdapter()], [network]);
 

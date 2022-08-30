@@ -4,7 +4,7 @@ Moralis.Cloud.define("helloword", async (request) => {
 
 Moralis.Cloud.define("getRooms", async (request) => {
   const qry = new Moralis.Query("Room");
-  const rooms = qry.find();
+  const rooms = qry.find({ useMasterKey: true });
   return rooms;
 });
 
@@ -16,35 +16,35 @@ Moralis.Cloud.define("getLeaderBoard", async (request) => {
     { project: { username: 1, wins: 1 } }
   ]
   //const users = qry.find();
-  return await qry.aggregate(pipeline);
+  return await qry.aggregate(pipeline, { useMasterKey: true });
 });
 
 Moralis.Cloud.define("getRoomData", async (request) => {
   const qry = new Moralis.Query("Room");
   qry.equalTo("objectId", request.params.roomId);
-  const room = qry.first();
+  const room = qry.first({ useMasterKey: true });
   return room;
 });
 
 Moralis.Cloud.define("resetRoomState", async (request) => {
   const qry = new Parse.Query("Room");
   qry.equalTo("objectId", request.params.roomId);
-  const results = await qry.first();
+  const results = await qry.first({ useMasterKey: true });
   results.set("playing", false);
   results.set("playing", false);
-  await results.save();
+  await results.save(null, { useMasterKey: true });
 });
 
 Moralis.Cloud.define("joinRoom", async (request) => {
   const qry = new Parse.Query("Room");
   qry.equalTo("objectId", request.params.roomId);
-  const results = await qry.first();
+  const results = await qry.first({ useMasterKey: true });
   const aChallenger = results.get("challenger");
   if (aChallenger === "null") {
 
     //room open?
     results.set("challenger", request.params.challenger);
-    await results.save();
+    await results.save(null, { useMasterKey: true });
 
     //return false; //was not busy
   } else return true; //busy
@@ -55,7 +55,7 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
     //logger.info(results)
   const qry = new Parse.Query("Room");
   qry.equalTo("objectId", request.params.roomId);
-  const results = await qry.first(); //room
+  const results = await qry.first({ useMasterKey: true }); //room
   const whoIsLeaving = request.params.player;
   const playing = results.get("playing"); //room status
   const ready = results.get("ready"); //room status
@@ -66,21 +66,21 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
     if (results.get("challenger") === "null") {
       const qry = new Parse.Query("Duel");
       qry.equalTo("room", request.params.roomId);
-      const aDuel = await qry.first();
-      if(aDuel)aDuel.destroy()
+      const aDuel = await qry.first({ useMasterKey: true });
+      if(aDuel) aDuel.destroy({ useMasterKey: true })
 
-      results.destroy();
+      results.destroy({ useMasterKey: true });
       return true;
     } else if (whoIsLeaving === results.get("owner")) { //owner is leaving
       results.set("owner", aPlayer);
       results.set("ready", false);
       results.set("challenger", "null");
-      await results.save();
+      await results.save(null, { useMasterKey: true });
       return true; //you can leave now
     } else { //challenger is leaving
       results.set("challenger", "null");
       results.set("ready", false)
-      await results.save();
+      await results.save(null, { useMasterKey: true });
       return true; //you can leave now
     }
   } else return false; //you can not leave
@@ -89,14 +89,14 @@ Moralis.Cloud.define("leaveRoom", async (request) => {
 Moralis.Cloud.define("findPDA", async (request) => {
   const pdaQry = new Parse.Query("Pda");
   pdaQry.equalTo("room", request.params.room);
-  const aPda = await pdaQry.first();
+  const aPda = await pdaQry.first({ useMasterKey: true });
   return aPda
 })
 
 Moralis.Cloud.define("checkWinner", async (request) => {
   const duelQry = new Parse.Query("Duel");
   duelQry.equalTo("room", request.params.room);
-  const aDuel = await duelQry.first();
+  const aDuel = await duelQry.first({ useMasterKey: true });
   if (request.params.user === aDuel.get("winner")) return true
   else return false
 })
@@ -104,7 +104,7 @@ Moralis.Cloud.define("checkWinner", async (request) => {
 Moralis.Cloud.define("CheckPda", async (request) => {
  const qry = new Parse.Query("Pda");
  qry.equalTo("room", request.params.room);
- const aPda = await qry.first();
+ const aPda = await qry.first({ useMasterKey: true });
  if (aPda){
   const pda1 = aPda.pdas[0]
   const pda2 = aPda.pdas[1]
@@ -128,7 +128,6 @@ Moralis.Cloud.define("createPDA", async (request) => {
  Moralis.Cloud.define("createRoom", async (request) => {
   const parameters = request.params;
 
-
   const Room = Moralis.Object.extend("Room");
   const aRoom = new Room();
   aRoom.set("owner", parameters.owner);
@@ -139,7 +138,7 @@ Moralis.Cloud.define("createPDA", async (request) => {
   aRoom.set("room_address", parameters.room_pda);
   aRoom.set("rkey", parameters.rk);
 
-  await aRoom.save()
+  await aRoom.save(null, { useMasterKey: true })
   return aRoom.id.toString()
  });
 
@@ -150,18 +149,18 @@ Moralis.Cloud.define("ready", async (request) => {
   const qry = new Parse.Query("Duel");
   
   qry.equalTo("room", roomId);
-  const results = await qry.first();
+  const results = await qry.first({ useMasterKey: true });
   if (results) {
     const playerList = results.get("players");
     if (playerList.length !== 2) {
       results.add("players", aPlayerData);
-      await results.save();
+      await results.save(null, { useMasterKey: true });
 
       const aRoomQuery = new Parse.Query("Room");
       aRoomQuery.equalTo("objectId", roomId)
-      const aRoom = await aRoomQuery.first();
+      const aRoom = await aRoomQuery.first({ useMasterKey: true });
       aRoom.set("playing", true) //only when last player is added can the game be started
-      await aRoom.save()
+      await aRoom.save(null, { useMasterKey: true })
     } 
     else return false;
   } 
@@ -171,7 +170,7 @@ Moralis.Cloud.define("ready", async (request) => {
     aDuel.set("room", roomId);
     aDuel.set("ended", false);
     aDuel.add("players", aPlayerData);
-    await aDuel.save();
+    await aDuel.save(null, { useMasterKey: true });
   }
 });
 
@@ -185,7 +184,7 @@ Moralis.Cloud.define("ready2", async (request) => {
   const qry = new Parse.Query("Duel");
   
   qry.equalTo("room", roomId);
-  const aDuel = await qry.first();
+  const aDuel = await qry.first({ useMasterKey: true });
   if (aDuel) {
     const playerList = aDuel.get("players");
     if (playerList.length === 1) {
@@ -279,12 +278,12 @@ Moralis.Cloud.define("ready2", async (request) => {
         /////////
         aDuel.add("players", aPlayerData);
         aDuel.set("ready", true)
-        await aDuel.save();
+        await aDuel.save(null, { useMasterKey: true });
       }
     } 
     else if (playerList.length === 0) {
       aDuel.add("players", aPlayerData);
-      await aDuel.save();
+      await aDuel.save(null, { useMasterKey: true });
     }
   }
   }
@@ -295,7 +294,7 @@ Moralis.Cloud.define("ready3", async (request) => {
   const qry = new Parse.Query("Duel");
   
   qry.equalTo("room", roomId);
-  const results = await qry.first();
+  const results = await qry.first({ useMasterKey: true });
   if (results) {
     const playerList = results.get("players");
     if (playerList.length !== 2) {
@@ -310,16 +309,16 @@ Moralis.Cloud.define("ready3", async (request) => {
       const newPlayerData = {player: player, choice: choices};
       results.add("players", newPlayerData);
 
-      await results.save();
+      await results.save(null, { useMasterKey: true });
 
       const aRoomQuery = new Parse.Query("Room");
       aRoomQuery.equalTo("objectId", roomId)
-      const aRoom = await aRoomQuery.first();
+      const aRoom = await aRoomQuery.first({ useMasterKey: true });
 
       aRoom.set("playing", true) //only when last player is added can the game be started
       //choose 3 cards randomly
 
-      await aRoom.save()
+      await aRoom.save(null, { useMasterKey: true })
       return choices;
     } 
     else return false;
@@ -339,7 +338,7 @@ Moralis.Cloud.define("ready3", async (request) => {
     }
     const newPlayerData = {player: player, choice: choices};
     aDuel.add("players", newPlayerData);
-    await aDuel.save();
+    await aDuel.save(null, { useMasterKey: true });
     return choices;
   }
   
@@ -357,7 +356,7 @@ Moralis.Cloud.define("start", async (request) => {
 
   const qry = new Parse.Query("Duel");
   qry.equalTo("room", roomId);
-  const aDuel = await qry.first();
+  const aDuel = await qry.first({ useMasterKey: true });
   if (aDuel) {
     if (!aDuel.get("ended")) {
       const players = aDuel.get("players");
@@ -427,7 +426,7 @@ Moralis.Cloud.define("start", async (request) => {
             break;
         }
         aDuel.set("ended", true);
-        aDuel.save();
+        aDuel.save(null, { useMasterKey: true });
         return true;
       }
     } 
@@ -443,7 +442,7 @@ Moralis.Cloud.define("start2", async (request) => {
 
   const qry = new Parse.Query("Duel");
   qry.equalTo("room", roomId);
-  const aDuel = await qry.first();
+  const aDuel = await qry.first({ useMasterKey: true });
   if (aDuel) {
     if (!aDuel.get("ended")) {
       const players = aDuel.get("players");
@@ -528,7 +527,7 @@ Moralis.Cloud.define("start2", async (request) => {
         else if (p1_score === p2_score)  aDuel.set("winner", "draw");
         else aDuel.set("winner", "draw");
         aDuel.set("ended", true);
-        aDuel.save();
+        aDuel.save(null, { useMasterKey: true });
       }
     }
   }
@@ -537,13 +536,13 @@ Moralis.Cloud.define("start2", async (request) => {
 Moralis.Cloud.define("rematch", async (request) => {
   const rqry = new Parse.Query("Room");
   rqry.equalTo("objectId", request.params.roomId);
-  const aRoom = await rqry.first();
+  const aRoom = await rqry.first({ useMasterKey: true });
   const rdy = aRoom.get("ready");
   const playing = aRoom.get("playing")
 
   const qry = new Parse.Query("Duel");
   qry.equalTo("room", request.params.roomId);
-  const aDuel = await qry.first();
+  const aDuel = await qry.first({ useMasterKey: true });
   if(aDuel){
     aDuel.set("reveals", [])
     aDuel.set("players", [])
@@ -561,14 +560,14 @@ Moralis.Cloud.define("rematch", async (request) => {
         aDuel.set("winner", null)
       }
       
-    await aDuel.save()
+    await aDuel.save(null, { useMasterKey: true })
     //aDuel.destroy()
   }
 
   if(rdy && playing){
     aRoom.set("playing", false);
     aRoom.set("ready", false);
-    await aRoom.save();
+    await aRoom.save(null, { useMasterKey: true });
   }
 
 });
@@ -577,7 +576,7 @@ Moralis.Cloud.define("isOwner", async (request) => {
   const roomId = request.params.roomId;
   const aRoomQuery = new Parse.Query("Room");
   aRoomQuery.equalTo("objectId", roomId)
-  const aRoom = await aRoomQuery.first();
+  const aRoom = await aRoomQuery.first({ useMasterKey: true });
   if (aRoom.get("owner") === request.params.player){
     return true
   }
@@ -588,16 +587,16 @@ Moralis.Cloud.define("getReady", async (request) => {
   const roomId = request.params.roomId;
   const aRoomQuery = new Parse.Query("Room");
   aRoomQuery.equalTo("objectId", roomId)
-  const aRoom = await aRoomQuery.first();
+  const aRoom = await aRoomQuery.first({ useMasterKey: true });
   const ready = aRoom.get("ready")
   if (ready){
     aRoom.set("ready", false)
-    await aRoom.save()
+    await aRoom.save(null, { useMasterKey: true })
     return false
   }
   else{
     aRoom.set("ready", true)
-    await aRoom.save()
+    await aRoom.save(null, { useMasterKey: true })
     return true
   }
 })
@@ -606,9 +605,9 @@ Moralis.Cloud.define("startRound", async (request) => {
   const roomId = request.params.room;
   const aRoomQuery = new Parse.Query("Room");
   aRoomQuery.equalTo("objectId", roomId)
-  const aRoom = await aRoomQuery.first();
+  const aRoom = await aRoomQuery.first({ useMasterKey: true });
   aRoom.set("playing", true) //only when last player is added can the game be started
-  await aRoom.save()
+  await aRoom.save(null, { useMasterKey: true })
 })
 
 Moralis.Cloud.define("revealCard", async (request) => {
@@ -617,7 +616,7 @@ Moralis.Cloud.define("revealCard", async (request) => {
   // const player_cards = aPlayerData.choiceIndexes; //is an array of card indexes
   const qry = new Parse.Query("Duel");
   qry.equalTo("room", roomId);
-  const aDuel = await qry.first();
+  const aDuel = await qry.first({ useMasterKey: true });
   if (aDuel) {
     const revealList = aDuel.get("reveals");
     if (revealList) {
@@ -627,14 +626,14 @@ Moralis.Cloud.define("revealCard", async (request) => {
         if(aPlayer !== toAddPlayer){
           aDuel.add("reveals", aPlayerData);
           aDuel.set("revealed", true);
-          await aDuel.save();
+          await aDuel.save(null, { useMasterKey: true });
         }
       }else if(revealList.length === 0){
         aDuel.add("reveals", aPlayerData);
-        await aDuel.save();
+        await aDuel.save(null, { useMasterKey: true });
         if(aDuel.get("reveals").length === 2){
           aDuel.set("revealed", true);
-          await aDuel.save();
+          await aDuel.save(null, { useMasterKey: true });
         }
       }
     }
@@ -647,7 +646,7 @@ Moralis.Cloud.define("revealCard", async (request) => {
     aDuel.set("ready", false);
     aDuel.add("reveals", aPlayerData);
     aDuel.set("revealed", false);
-    await aDuel.save();
+    await aDuel.save(null, { useMasterKey: true });
   }
 });
 
@@ -655,7 +654,7 @@ Moralis.Cloud.define("getRoomBet", async (request) => {
   const roomId = request.params.room;
   const aRoomQuery = new Parse.Query("Room");
   aRoomQuery.equalTo("objectId", roomId)
-  const aRoom = await aRoomQuery.first();
+  const aRoom = await aRoomQuery.first({ useMasterKey: true });
   const bet = aRoom.get("bet_amount");
   return bet
 })
@@ -666,12 +665,12 @@ Moralis.Cloud.define("confirmTransaction", async (request) => {
   const roomId = request.params.room;
   const qry = new Parse.Query("Transaction");
   qry.equalTo("room", roomId);
-  aTx = await qry.first();
+  aTx = await qry.first({ useMasterKey: true });
   if (aTx){
     playerData = request.params.playerData;
     aTx.set("processed", true)
     aTx.add("players", playerData);
-    aTx.save()
+    aTx.save(null, { useMasterKey: true })
   }
   else{
     playerData = request.params.playerData;
@@ -680,26 +679,19 @@ Moralis.Cloud.define("confirmTransaction", async (request) => {
     aTx.set("room", roomId);
     aTx.set("processed", false)
     aTx.add("players", playerData);
-    aTx.save()
+    aTx.save(null, { useMasterKey: true })
   }
 })
 
 
 Moralis.Cloud.define("createWallet", async (request) => {
- // const logger = Moralis.Cloud.getLogger();
   const parameters = request.params;
- // const userQuery = new Moralis.Query(Moralis.User);
- // userQuery.equalTo("player_wallet", parameters.owner)
-//  const aUser = userQuery.first()
- // logger.info()
-  //return parameters.user
-
- const Wallet = Moralis.Object.extend("Wallet");
+  const userQuery = new Moralis.Query(Moralis.User);
+  userQuery.equalTo("objectId", parameters.owner)
+  const Wallet = Moralis.Object.extend("Wallet");
   const aWallet = new Wallet();
   aWallet.set("address", parameters.address)
-  aWallet.set("key", parameters.key)
+  aWallet.set("key", parameters.kp)
   aWallet.set("owner", parameters.owner)
-  aWallet.setACL(new Moralis.ACL(parameters.user));
-  await aWallet.save()
-  return aWallet 
+  return await aWallet.save(null, { useMasterKey: true })
  });

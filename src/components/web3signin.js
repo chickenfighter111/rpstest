@@ -11,6 +11,8 @@ import { useMoralis } from "react-moralis";
 import Moralis from "moralis";
 import { useWallet } from "@solana/wallet-adapter-react";
 import {Navbar,Button,Dropdown,Badge,Container,Row,Col, Modal} from "react-bootstrap";
+import { Checkbox } from "@web3uikit/core";
+
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
 import CreatePlayerWallet from "./createPlayerWallet";
@@ -25,10 +27,15 @@ import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
 import { getAssociatedTokenAddress } from "@solana/spl-token"; 
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {AiTwotoneSetting} from 'react-icons/ai'
+import {MdDarkMode,} from 'react-icons/md'
+import {BsSun} from 'react-icons/bs'
+
+
 import logo from "./media/logg2.png"
 import sol from "./media/solc.png"
 import dustLogo from './media/DUST.jpg'
 import forgeLogo from './media/FORGE.png'
+import {network, idl} from '../rpc_config'
 
 const StartBtn = styled(Dropdown.Toggle)`
   width: 250px;
@@ -36,16 +43,12 @@ const StartBtn = styled(Dropdown.Toggle)`
   font-size: 25px;
 `
 
-
-const network = "https://devnet.genesysgo.net/"; //devnet
-const idl = require("../rps_project.json");
 const one_sol = 1_000_000_000;
 
 //const clientId = 'BBP_6GOu3EJGGws9yd8wY_xFT0jZIWmiLMpqrEMx36jlM61K9XRnNLnnvEtGpF-RhXJDGMJjL-I-wTi13RcBBOo'
 const clientId =  process.env.REACT_APP_WEB3_CLIENT_ID | "BGUYFB-xTJdSGPtMI92VdT-tFwmijpKvTGnDd-398H37Dy4alqnvb9QPR5PunNT5vBShifRYYz8cAFHSjhKltnI"; // get from https://dashboard.web3auth.io.
 
 const MyNavbar = (props) => {
-  const [balance, setBalance] = useState(props.bal);
   const [fbalance, setFBalance] = useState(0);
   const [dbalance, setDBalance] = useState(0);
 
@@ -72,6 +75,17 @@ const MyNavbar = (props) => {
     }
   };
 
+  const handleModeChange = () => {
+    if(props.darkmode) {
+      //setDarkMode(false)
+      props.darkModeChanger(false)
+    }
+    else {
+      //setDarkMode(true)
+      props.darkModeChanger(true)
+    }
+  }
+
   
   useEffect(() => {
     const getBalance = async () => {
@@ -87,7 +101,7 @@ const MyNavbar = (props) => {
         try {
           let abalance = await aprovider.connection.getBalance(escrow); //player escrow
           props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
-          setBalance(Math.round((abalance / one_sol)  * 100) / 100);
+          //setBalance(Math.round((abalance / one_sol)  * 100) / 100);
 
         } catch (err) {
         }
@@ -146,7 +160,7 @@ const MyNavbar = (props) => {
     if (connected && isAuthenticated) {
       getBalance();
       getSPLBalance()
-      getTokenBalance()
+      //getTokenBalance()
       fetchPlayerWallet()
     }
 
@@ -325,9 +339,18 @@ const MyNavbar = (props) => {
         {connected && isAuthenticated ? (
           <Row>
             <Col>
+              <Checkbox
+                label={<div>
+                  {!props.darkmode ? (<BsSun fill={false} size={30}/>) : (<MdDarkMode fill={false} size={30}/>)}
+                </div>}
+                layout="switch"
+                onChange={handleModeChange}
+              />
+            </Col>
+            <Col>
               <Dropdown>
                 <StartBtn>
-                  Wallet: {balance}
+                  Wallet: {props.bal}
                   <img src={sol} width={30} height={25} alt="SOL" />{" "}
                   <AiTwotoneSetting style={{position: "relative", left: "20px"}} size={25} />
                 </StartBtn>
@@ -335,8 +358,8 @@ const MyNavbar = (props) => {
                 <Dropdown.Menu>
                   <Dropdown.Item className="walletmanager">
                     <PlayerWalletManager
-                      balance={balance}
-                      onChangeBalance={setBalance}
+                      balance={props.bal}
+                      onChangeBalance={props.onChangeBalance}
                       dbalance={dbalance}
                       donChangeBalance={setDBalance}
                       fbalance={fbalance}

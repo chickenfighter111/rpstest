@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+/*import React, { useState, useEffect } from "react";
 import { ChatFeed, Message } from "react-chat-ui";
 import { Container, Form, Button, Row, Col } from "react-bootstrap";
 import Moralis from "moralis";
@@ -141,3 +141,4 @@ function Chat(props) {
 }
 
 export default Chat;
+ */

@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import Moralis from "moralis";
 import { useMoralis } from "react-moralis";
-import { Button, Modal, Form, Container, Dropdown } from "react-bootstrap";
+import { Button, Modal, Form, Dropdown } from "react-bootstrap";
 import ModifyUsername from './forms/signup';
 import { LAMPORTS_PER_SOL, sendAndConfirmTransaction, Keypair } from "@solana/web3.js";
 import {
@@ -19,6 +19,7 @@ import {
   getOrCreateAssociatedTokenAccount,
   createAssociatedTokenAccountInstruction
 } from "@solana/spl-token";
+import {network, idl} from '../../rpc_config'
 
 import dustLogo from '../media/DUST.jpg'
 import forgeLogo from '../media/FORGE.png'
@@ -41,16 +42,13 @@ const FormButton = styled(Button)`
   margin-bottom: 30px;
 `
 
-const network = "https://devnet.genesysgo.net/"; //devnet
 const dustContract = "DUSTawucrTsGU8hcqRdHDCbuYhCPADMLM2VcCb8VnFnQ"
 const forgeContract = "FoRGERiW7odcCBGU1bztZi16osPBHjxharvDathL5eds"
 
-const idl = require("../../rps_project.json");
 const utf8 = utils.bytes.utf8;
 const one_sol = 1_000_000_000;
 
 function WalletManager(props) {
-  const [balance, setBalance] = useState(props.balance);
   const [dbalance, setDBalance] = useState(props.dbalance);
   const [fbalance, setFBalance] = useState(props.fbalance);
 
@@ -61,7 +59,6 @@ function WalletManager(props) {
     if (!wallet || !publicKey || !signTransaction || !signAllTransactions) {
       return;
     }
-
     return {
       publicKey: publicKey,
       signAllTransactions: signAllTransactions,
@@ -76,7 +73,7 @@ function WalletManager(props) {
   const program = new Program(idl, idl.metadata.address, provider);
 
   function DepositForm() {
-    const [amount, setAmount] = useState(0);
+    const [amount, setAmount] = useState(0.1);
 
     const deposit = async (event) => {
       event.preventDefault();
@@ -90,12 +87,11 @@ function WalletManager(props) {
               from: publicKey,
               escrowAcc: escrow
             }).rpc()  
-           // console.log(tx)
+          //  console.log(tx)
           await getBalance();//refresh
         } catch (err) {
-         // console.log(err)
+       //   console.log(err)
         }
-        
       }
     };
 
@@ -131,10 +127,11 @@ function WalletManager(props) {
             wTx.feePayer = escrowWallet.publicKey;
             wTx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
             //const signedTx = wTx.sign([escrowWallet])
-            await sendAndConfirmTransaction(connection, wTx, [escrowWallet]);
+            const sig = await sendAndConfirmTransaction(connection, wTx, [escrowWallet]);
+          //  console.log(sig)
             await getBalance(); //refresh
           } catch (err) {
-           // console.log(err)
+       //     console.log(err)
           }
         }
     };
@@ -151,7 +148,7 @@ function WalletManager(props) {
             required
             type="number"
             value={amount}
-            min={0}
+            min={0.1}
             placeholder="Enter amount to deposit"
             onChange={handleInput}
           />
@@ -236,7 +233,7 @@ function WalletManager(props) {
             bytes[i] = binary_string.charCodeAt(i);
         }
         return bytes.buffer;
-     }
+      }
       event.preventDefault();
       const aUser = Moralis.User.current();
       const playerPDA = aUser.get("player_wallet");

@@ -10,10 +10,6 @@ import * as anchor from "@project-serum/anchor";
 import Buffer from 'buffer'
 
 
-const network = "https://devnet.genesysgo.net/"; //devnet
-const idl = require("../rps_project.json");
-const utf8 = utils.bytes.utf8;
-
 function PlayerWallet() {
   const { isAuthenticated } = useMoralis();
   const [username, setUsername] = useState("");
@@ -30,41 +26,6 @@ function PlayerWallet() {
       signTransaction: signTransaction,
     };
   }, [wallet]);
-
-  const createPlayerWallet = async (username) => {
-    const connection = new web3.Connection(network, "processed");
-    const provider = new AnchorProvider(connection, anchorWallet, {
-      preflightCommitment: "processed",
-    });
-    const program = new Program(idl, idl.metadata.address, provider);
-    const [escrowPda, escrowBump] = await anchor.web3.PublicKey.findProgramAddress(
-      [utf8.encode('a_player_escrow_wallet'), publicKey.toBuffer()],
-      program.programId
-    );
-    try {
-      await program.account.player.fetch(escrowPda);
-      
-    } catch (err) {
-      try{
-        await program.methods.initEscrow(escrowBump)
-      .accounts({
-        owner: publicKey,
-        anAccount: escrowPda,
-        systemProgram: anchor.web3.SystemProgram.programId
-      }).rpc()
-      }
-      catch(err){
-        alert("problem in init " + err)
-      }
-      const aUser = Moralis.User.current();
-      aUser.set("player_wallet", escrowPda.toBase58());
-      try {
-        await aUser.save().then(() => alert("Player wallet created!"));
-      } catch (err) {
-        alert("Signup error: " + err.message);
-      }
-    }
-  };
 
   const createWallet = async (event) => {
     event.preventDefault();
@@ -142,19 +103,15 @@ function PlayerWallet() {
   }
 
   const create_player_wallet = async () =>{
-    const aKp_string = await generateWallet()
-    const currentUser =  Moralis.User.current()
+    const aKp_string = await generateWallet();
+    const currentUser =  Moralis.User.current();
+    const params = { address: aKp_string[0], kp: aKp_string[1], owner: currentUser.id};
+    const aWallet = await Moralis.Cloud.run("createWallet", params);
     currentUser.set("username", username);
     currentUser.set("player_wallet", aKp_string[0]);
     await currentUser.save()
-    
-    const Wallet = Moralis.Object.extend("Wallet");
-    const aWallet = new Wallet();
-    aWallet.set("address", aKp_string[0])
-    aWallet.set("key", aKp_string[1])
-    aWallet.set("owner", Moralis.User.current().id)
-    aWallet.setACL(new Moralis.ACL(Moralis.User.current()));
-    await aWallet.save() 
+    aWallet.setACL(new Moralis.ACL(currentUser));
+    await aWallet.save()
   }
 
   const handleInput = (event) => {

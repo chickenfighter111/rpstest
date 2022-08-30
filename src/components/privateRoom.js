@@ -55,7 +55,14 @@ import hg from './media/hourglass.gif'
 import Buffer from 'buffer'
 import styled from "styled-components"
 import { LAMPORTS_PER_SOL, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
+  import {
+    TOKEN_PROGRAM_ID,
+    getAssociatedTokenAddress,
+    getOrCreateAssociatedTokenAccount,
+    createAssociatedTokenAccountInstruction
+  } from "@solana/spl-token";
 import base58 from 'bs58'
+import {network, idl} from '../rpc_config'
 
 const StyledModal = styled(Modal)`
  div{
@@ -71,9 +78,6 @@ const StartBtn = styled(Button)`
   height: 45px;
   font-size: 35px;
 `
-
-const network = "https://devnet.genesysgo.net/"; //devnet
-
 const imgs = [rock, paper, scissor]
 const Hands = {
   rock: "0",
@@ -108,7 +112,7 @@ const resultMessages = [
 
 
 const fee_wallet = new anchor.web3.PublicKey(
-  "4mkNvUq24DN9g8EWuJWkc176t9PiRnRU4d3U8WuZ1TC1"
+  "5HBjN8gPUzrdYpQuTspZakCZXuZHDMsvHNwH3qVTbnHN"
 );
 const one_sol = 1_000_000_000;
 
@@ -177,7 +181,6 @@ const Rooms = (props) => {
 
 //["2", "0", "0", "2", "1"]
 
-  const idl = require("../rps_project.json");
   const utf8 = utils.bytes.utf8;
 
   const { wallet, publicKey, signTransaction, signAllTransactions, connected } =
@@ -685,7 +688,7 @@ const Rooms = (props) => {
     setBox(id);
   };
 
- function generateHands(){
+  function generateHands(){
     var choices = []
     for (let i = 0; i < 5; i++){
       var r = Math.floor(Math.random() * 3);
@@ -698,7 +701,7 @@ const Rooms = (props) => {
    // setGen(false)
   }
 
- async function reveal3random(someHands) {
+  async function reveal3random(someHands) {
     //if (!generated) {
       let arr = [];
       while (arr.length !== 3) {
@@ -847,22 +850,22 @@ const Rooms = (props) => {
 
   function handleChangeBalance(value) {
     props.onChangeBalance(value);
-}
-
-const getBalance = async () => {
-  const aUser = Moralis.User.current();
-  const playerPDA = aUser.get("player_wallet");
-  if (playerPDA) {
-    const escrow = new anchor.web3.PublicKey(playerPDA)
-    try {
-      const abalance = await provider.connection.getBalance(escrow); //player escrow
-      //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
-      handleChangeBalance(Math.round((abalance / one_sol)  * 100) / 100)
-     // setBalance(Math.round((abalance / one_sol)  * 100) / 100)
-    } catch (err) {
-    }
   }
-};
+
+  const getBalance = async () => {
+    const aUser = Moralis.User.current();
+    const playerPDA = aUser.get("player_wallet");
+    if (playerPDA) {
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+      try {
+        const abalance = await provider.connection.getBalance(escrow); //player escrow
+        //props.onChangeBalance(Math.round((abalance / one_sol)  * 100) / 100);
+        handleChangeBalance(Math.round((abalance / one_sol)  * 100) / 100)
+      // setBalance(Math.round((abalance / one_sol)  * 100) / 100)
+      } catch (err) {
+      }
+    }
+  };
 
   function _base64ToArrayBuffer(base64) {
     var binary_string = window.atob(base64);
@@ -985,11 +988,6 @@ const getBalance = async () => {
       //console.log(err)
     }  
   }
-
-  const paySPL = async(contract) => {
-    
-  }
-
   const isOwner = async() =>{
     const user = Moralis.User.current().getUsername()
     const params = { player: user, roomId: roomId}
@@ -1128,20 +1126,18 @@ const getBalance = async () => {
     if (roomId && opponent && owner) readyPing()
 
     
-    if (readyState){
-      gameStartPing(); //to check if servers got both choices of players
-    }
+    if (readyState) gameStartPing(); //to check if servers got both choices of players
 
     if (totalSelected === 3 || chosenCards.size === 3) setConfirmed(true);
 
-    if(choiceConfirmed && gameStarted)sendSelectedHand()
+    if(choiceConfirmed && gameStarted) sendSelectedHand()
 
     if (readyState && gameStarted) {
       gamePlayingPing();
       gameEndedPing();
     }
 
-    if (duelEnded && opChosenOnes)setSelectEnded(true)
+    if (duelEnded && opChosenOnes) setSelectEnded(true)
     
   }, [
     isAuthenticated,

@@ -988,6 +988,9 @@ const Rooms = (props) => {
       //console.log(err)
     }  
   }
+
+
+
   const isOwner = async() =>{
     const user = Moralis.User.current().getUsername()
     const params = { player: user, roomId: roomId}

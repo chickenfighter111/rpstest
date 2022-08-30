@@ -2,6 +2,19 @@
   text-align: center;
   color: #444343;
   font-family: "VK" !important;
+  height: 100vh !important;
+  min-height : 100vh !important;
+}
+
+.Dark-App {
+  text-align: center;
+  color: #FFD966;
+  font-family: "VK" !important;
+  background-color: #444343;
+  height: 100vh !important;
+  min-height : 100vh !important;
+
+  
 }
 
 .App-header {
@@ -15,6 +28,39 @@
   font-size: calc(10px + 2vmin);
   color: #EDEDED  ;
   font-family: "VK" !important;
+}
+
+.mainContainer{
+  margin: auto;
+  max-width: 98vw !important;
+  text-align: center;
+}
+
+.roomContainer{
+  margin: auto;
+  max-width: 98vw !important;
+}
+
+.announcementsContainer{
+  max-height: 700px !important;
+  height: 75vh;
+  min-height: 75vh !important;
+  overflow-y: scroll;
+}
+
+.leaderboardContainer{
+  margin-top: -20px !important;
+  max-height: 700px !important;
+  height: 65vh;
+  min-height: 65vh !important;
+  overflow-y: scroll;
+  font-size: 20px;
+}
+
+.welcomeContainer{
+  position: relative;
+  right: 200px;
+  margin: auto;
 }
 
 .App-link {
@@ -295,10 +341,16 @@ button:hover{
   border: 4px solid black !important;
 }
 
-.roomContainer{
-  margin: auto;
-  max-width: 98vw !important;
+.myTable-dark{
+  background-color: #615349 !important;
+  border-radius: 20px !important;
+  border: 4px solid black !important;
 }
+
+.darkTable, .darkTitle{
+  color: #FFD966 !important;
+}
+
 
 .walletmanager{
   padding-left: 0px !important;
@@ -308,25 +360,13 @@ button:hover{
   margin-top: 10px !important;
 }
 
-.announcementsContainer{
-  max-height: 700px !important;
-  height: 75vh;
-  min-height: 75vh !important;
-  overflow-y: scroll;
-}
+
 
 .annns{
   margin-top: 40px !important;
 }
 
-.leaderboardContainer{
-  margin-top: -20px !important;
-  max-height: 700px !important;
-  height: 65vh;
-  min-height: 65vh !important;
-  overflow-y: scroll;
-  font-size: 20px;
-}
+
 
 .modalBody{
   height: 280px;
@@ -391,11 +431,6 @@ button:hover{
   margin-bottom: 40px;
 }
 
-.welcomeContainer{
-  position: relative;
-  right: 200px;
-  margin: auto;
-}
 
 .leaderBoardTable{
   border-radius: 25px;
@@ -404,7 +439,19 @@ button:hover{
   margin-top: 10px;
   border: 1px solid black !important;
   box-shadow: inset 0 0 5px grey;
+}
 
+.leaderBoardTable-dark{
+  border-radius: 25px;
+  background-color: #444343;
+  margin-bottom: 20px;
+  margin-top: 10px;
+  border: 1px solid black !important;
+  box-shadow: inset 0 0 5px grey;
+}
+
+.leaderBoardTable-dark *{
+  color: #FFD966 !important;
 }
 
 .aTitle{

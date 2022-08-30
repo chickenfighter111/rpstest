@@ -22,7 +22,6 @@ import none from "./media/cards/unkown.PNG";
 import logo from "./media/cards/card2.png";
 import me from "./media/ME.png";
 import twt from "./media/twitter.png";
-import dsc from "./media/discord.png";
 
 import r1 from "./media/results/r1.png";
 import r2 from "./media/results/r2.png";
@@ -34,7 +33,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 
 import {AiFillEye } from 'react-icons/ai'
-import  {FaVolumeUp} from 'react-icons/fa'
+import  {FaVolumeUp, FaDiscord} from 'react-icons/fa'
 import  {BiVolumeMute} from 'react-icons/bi'
 import { useWallet, useAnchorWallet } from "@solana/wallet-adapter-react";
 import {
@@ -158,7 +157,6 @@ const Rooms = (props) => {
   const [chosenOnes, setChoseOnes] = useState([]);
   const [opChosenOnes, setOpChoseOnes] = useState([]);
 
-  const [soundState, setSoundState] = useState(true)
   const [winSound] = useSound(winnerSound);
   const [loseSound] = useSound(loser);
   const [tieSound] = useSound(tie);
@@ -989,7 +987,85 @@ const Rooms = (props) => {
     }  
   }
 
+  const paySPL = async(contract) => {
+    const aUser = Moralis.User.current();
+    const playerPDA = aUser.get("player_wallet");
+    if (playerPDA) {
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+      const mint = new anchor.web3.PublicKey(contract)
 
+      try {
+        let escrowATA = await getAssociatedTokenAddress(
+          mint, //mint pk
+          escrow //to pk
+        );
+        let roomATA = await getAssociatedTokenAddress(
+          mint,
+          anchorWallet.publicKey
+        );
+        const walletQry = new Moralis.Query("Wallet")
+        walletQry.equalTo("owner", aUser.id)
+        const aWallet = await walletQry.first()
+        if(aWallet){
+          const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
+          const u8int= new Uint8Array(arraybuf)
+          const escrowWallet = web3.Keypair.fromSecretKey(u8int)
+
+          const tx = await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+            tokenProgram: TOKEN_PROGRAM_ID,
+            tokenMint: mint,
+            from: escrowATA,
+            fromAuthority: escrowWallet.publicKey,
+            to: roomATA,
+          }).signers([escrowWallet]).rpc(); 
+            //console.log(tx)
+            const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
+            props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+        }
+      } catch (err) {
+       // console.log(err)
+      }}
+  }
+
+  const payoutSPL = async(contract) => {
+    const aUser = Moralis.User.current();
+    const playerPDA = aUser.get("player_wallet");
+    if (playerPDA) {
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+      const mint = new anchor.web3.PublicKey(contract)
+
+      try {
+        let roomATA = await getAssociatedTokenAddress(
+          mint,
+          anchorWallet.publicKey
+        );
+        let winnerATA = await getAssociatedTokenAddress(
+          mint, //mint pk
+          escrow //to pk
+        );
+        const roomQry = new Moralis.Query("Room")
+        roomQry.equalTo("owner", aUser.id)
+        const aRoom = await roomQry.first()
+        if(aRoom){
+          const arraybuf = await _base64ToArrayBuffer(aRoom.get("rkey"))
+          const u8int= new Uint8Array(arraybuf)
+          const roomWallet = web3.Keypair.fromSecretKey(u8int)
+
+          const tx = await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+            tokenProgram: TOKEN_PROGRAM_ID,
+            tokenMint: mint,
+            from: roomATA,
+            fromAuthority: roomWallet.publicKey,
+            to: winnerATA,
+          }).signers([roomWallet]).rpc(); 
+          //  console.log(tx)
+            const bal = (await program.provider.connection.getParsedAccountInfo(winnerATA)).value.data.parsed.info.tokenAmount.amount;
+            props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+        }
+      } catch (err) {
+     //   console.log(err)
+      }}
+  }
 
   const isOwner = async() =>{
     const user = Moralis.User.current().getUsername()
@@ -1177,17 +1253,17 @@ const Rooms = (props) => {
       if (winner === current_player.id && isWinner) {
         payoutWinner()
         addWinnerAnnouncement(user, opponent)
-        if(soundState)winSound()
+        if(props.soundState)winSound()
         update_playerStats(current_player)
       }
       else if (winner === "draw") {
         payoutDraw()
         addDrawAnnouncement()
-        if(soundState)tieSound()
+        if(props.soundState)tieSound()
       }
       else{
         addWinnerAnnouncement(opponent, user)
-        if(soundState)loseSound()
+        if(props.soundState)loseSound()
       }
     }
 
@@ -1379,15 +1455,6 @@ const Rooms = (props) => {
                     </Row>
                     <div>
                       <br />
-                      {soundState ? (
-                        <Button disabled={readyState} onClick={() => setSoundState(false)}>
-                          <FaVolumeUp size={30} />
-                        </Button>
-                      ) : (
-                        <Button disabled={readyState} onClick={() => setSoundState(true)}>
-                          <BiVolumeMute size={30} />
-                        </Button>
-                      )}
                     </div>
                   </Container>
                 </Col>
@@ -1487,11 +1554,11 @@ const Rooms = (props) => {
             <Row>
               <Col>
                 <a target="_blank" href="https://discord.gg/VufJp2EY">
-                  <img width={50} height={50} src={dsc} alt="discord"></img>
+                  <FaDiscord size={60} fill={props.darkmode ? "#FFD966" : "#5b34eb"}/>
                 </a>
               </Col>
               <Col>
-                <a>
+                <a target="blank" href="https://magiceden.io/marketplace/asakalabsnft">
                   <img width={50} height={50} src={me}></img>
                 </a>
               </Col>

@@ -7,21 +7,28 @@ import { useMoralis } from "react-moralis";
 import { useWallet } from "@solana/wallet-adapter-react";
 import styled from 'styled-components'
 
-const DarkApp = styled(App)`
+const DarkApp = styled(Container)`
+  background-color: #051a48
+  color: #ffffff
+`
+
+const DarkNav= styled(Navbar)`
   background-color: #051a48
   color: #ffffff
 `
 
 const Main = () => {
   const [balance, setBalance] = useState(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const [soundState, setSoundState] = useState(true)
+
   const { isAuthenticated } = useMoralis();
   const { connected } = useWallet();
 
   return (
-    <div>
-      <Navbar darkmode={darkMode} darkModeChanger={setDarkMode} onChangeBalance={setBalance} bal={balance} />
-      <Container className="roomContainer">
+    <div className={darkMode ? "Dark-App" : "App"}>
+      <Navbar darkmode={darkMode} darkModeChanger={setDarkMode} onChangeBalance={setBalance} bal={balance} soundState={soundState} setSound={setSoundState}/>
+      <DarkApp className="mainContainer">
         <Row>
           <Col xs={3}>
             {isAuthenticated && connected ? (<div className="chatContainer">
@@ -29,11 +36,10 @@ const Main = () => {
             </div>) : (<div></div>)}
           </Col>
           <Col >
-            {darkMode ? ( <DarkApp darkmode={darkMode} onChangeBalance={setBalance} bal={balance} />) 
-            : (<App darkmode={darkMode} onChangeBalance={setBalance} bal={balance} />)}
+           <App darkmode={darkMode} onChangeBalance={setBalance} bal={balance} soundState={soundState}/>
           </Col>
         </Row>
-      </Container>
+      </DarkApp>
     </div>
   );
 };

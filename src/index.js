@@ -18,7 +18,7 @@ root.render(
       appId="q68VhoY1OrgY8surAySXfmqvxaCEDuxcUdDO7zia"
       serverUrl="https://ro9hwec6hamv.usemoralis.com:2053/server"
     >
-      <div className="App">
+      <div>
         <Router>
           <WalletProviderApp />
         </Router>

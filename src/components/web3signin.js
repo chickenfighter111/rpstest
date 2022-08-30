@@ -27,11 +27,14 @@ import {OpenloginAdapter} from '@web3auth/openlogin-adapter'
 import { getAssociatedTokenAddress } from "@solana/spl-token"; 
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import {AiTwotoneSetting} from 'react-icons/ai'
+import  {FaVolumeUp} from 'react-icons/fa'
+import  {BiVolumeMute} from 'react-icons/bi'
 import {MdDarkMode,} from 'react-icons/md'
 import {BsSun} from 'react-icons/bs'
 
 
 import logo from "./media/logg2.png"
+import darklogo from "./media/darklog.png"
 import sol from "./media/solc.png"
 import dustLogo from './media/DUST.jpg'
 import forgeLogo from './media/FORGE.png'
@@ -84,6 +87,12 @@ const MyNavbar = (props) => {
       //setDarkMode(true)
       props.darkModeChanger(true)
     }
+  }
+
+  const handleSoundState = () => {
+    if(props.soundState) props.setSound(false)
+    else props.setSound(true)
+
   }
 
   
@@ -326,9 +335,9 @@ const MyNavbar = (props) => {
       <Container className="roomContainer">
         <Navbar.Brand className="burando" href="/">
           <span>
-            <h1>
+            <h1 className={props.darkmode ? "darkTitle" : null}>
               {" "}
-              <img src={logo} width={60} height={50} /> Asaka Games{" "}
+              <img src={props.darkmode ? darklogo : logo} width={60} height={50} /> Asaka Games{" "}
             </h1>
           </span>
 
@@ -341,12 +350,23 @@ const MyNavbar = (props) => {
             <Col>
               <Checkbox
                 label={<div>
-                  {!props.darkmode ? (<BsSun fill={false} size={30}/>) : (<MdDarkMode fill={false} size={30}/>)}
+                  {!props.darkmode ? (<BsSun fill='#FFFFFF' size={30}/>) : (<MdDarkMode fill="#FFD966" size={30}/>)}
                 </div>}
                 layout="switch"
                 onChange={handleModeChange}
               />
             </Col>
+            <Col>
+            {props.soundState ? (
+                        <Button onClick={handleSoundState}>
+                          <FaVolumeUp size={30} />
+                        </Button>
+                      ) : (
+                        <Button onClick={handleSoundState}>
+                          <BiVolumeMute size={30} />
+                        </Button>
+                      )}
+                      </Col>
             <Col>
               <Dropdown>
                 <StartBtn>
@@ -354,7 +374,7 @@ const MyNavbar = (props) => {
                   <img src={sol} width={30} height={25} alt="SOL" />{" "}
                   <AiTwotoneSetting style={{position: "relative", left: "20px"}} size={25} />
                 </StartBtn>
-
+                
                 <Dropdown.Menu>
                   <Dropdown.Item className="walletmanager">
                     <PlayerWalletManager

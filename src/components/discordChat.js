@@ -10,6 +10,14 @@ const StartBtn = styled(Button)`
   margin-bottom: 10px;
 `
 
+const DarkBtn = styled(Button)`
+  width: 150px;
+  height: 45px;
+  font-size: 25px;
+  margin-bottom: 10px;
+  background-color: 
+`
+
 
 const DiscordChat = () => {
   const [hide, setHide] = useState(false);

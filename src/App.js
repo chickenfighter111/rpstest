@@ -16,11 +16,12 @@ import {  Routes, Route, useParams, useNavigate, Link } from "react-router-dom";
 import RoomAmount from "./components/createRoom";
 import PrivateRoom from "./components/privateRoom"
 import { FiRefreshCcw } from "react-icons/fi";
+import  {FaDiscord} from 'react-icons/fa'
+
 import sol from "./components/media/solc.png"
 
 import me from "./components/media/ME.png";
 import twt from "./components/media/twitter.png";
-import dsc from "./components/media/discord.png";
 import styled from "styled-components"
 
 const StyledBtn = styled(Button)`
@@ -182,8 +183,8 @@ const App = (props) => {
           <Col>
             <h5></h5>
           </Col>
-          <Container className="myTable">
-            <RTable responsive borderless >
+          <Container className={props.darkmode ? "myTable-dark" : "myTable"}>
+            <RTable responsive borderless className={props.darkmode ? "darkTable" : null}>
               <thead>
                 <tr>
                   <th><Button onClick={fetchRooms}>
@@ -259,7 +260,7 @@ const App = (props) => {
     }, [isAuthenticated]);
 
     return (
-      <RTable responsive borderless >
+      <RTable responsive borderless>
       <thead>
         <tr>
           <th><h5>Rank</h5></th>
@@ -304,16 +305,17 @@ const App = (props) => {
             <h2 className="aTitle">Season ranking</h2>
             <Container >
               <Row>
-                <div className="leaderboardContainer leaderBoardTable">
+                <div className={`leaderboardContainer ${props.darkmode ? "leaderBoardTable-dark" : "leaderBoardTable"}`}
+                >
                   <LeaderBoardContainer/>
                 </div>
               </Row>
               <Row>
                 <Col>
-                  <a target="_blank" href='https://discord.gg/VufJp2EY' ><img width={50} height={50} src={dsc} alt="twitter"></img></a>
+                  <a target="_blank" href='https://discord.gg/VufJp2EY' ><FaDiscord size={60} fill={props.darkmode ? "#FFD966" : "#5b34eb"}/></a>
                 </Col>
                 <Col>
-                  <a><img width={50} height={50} src={me}></img></a>
+                  <a target="blank" href="https://magiceden.io/marketplace/asakalabsnft"><img width={50} height={50} src={me}></img></a>
                 </Col>
                 <Col>
                   <a target="_blank"  href='https://twitter.com/AsakaLabs' ><img width={50} height={50} src={twt} alt="discord"></img></a>
@@ -333,7 +335,7 @@ const App = (props) => {
           <Routes>
           <Route path="/" index element={<Home />}/>
           <Route path="/rooms/:userId" 
-            element={<PrivateRoom onChangeBalance={props.onChangeBalance} bal={props.bal}/>} />
+            element={<PrivateRoom darkmode={props.darkmode} onChangeBalance={props.onChangeBalance} bal={props.bal} soundState={props.soundState}/>} />
         </Routes>
         </div>
     );

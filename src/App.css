@@ -10,11 +10,10 @@
   text-align: center;
   color: #FFD966;
   font-family: "VK" !important;
-  background-color: #444343;
-  height: 100vh !important;
-  min-height : 100vh !important;
-
-  
+  background-color: #444343 !important;
+  min-height: 100vh !important;
+  height: 100% !important;
+  overflow-y: scroll;
 }
 
 .App-header {

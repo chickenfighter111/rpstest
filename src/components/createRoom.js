@@ -23,6 +23,9 @@ const StyledSelect = styled(Form.Select)`
   width: 120px;
 `
 
+const dustContract = "DUSTawucrTsGU8hcqRdHDCbuYhCPADMLM2VcCb8VnFnQ"
+const forgeContract = "FoRGERiW7odcCBGU1bztZi16osPBHjxharvDathL5eds"
+
 const utf8 = utils.bytes.utf8;
 
 function CreateRoom(props) {
@@ -86,7 +89,8 @@ function CreateRoom(props) {
         room_name: name,
         room_pda: b58,
         rk: b64encoded,
-        roomAta: null
+        roomAta: null,
+        token: null
       };
       const aRoomObj = await Moralis.Cloud.run("createRoom", paramz);
       user.set("is_playing", true);
@@ -122,7 +126,8 @@ function CreateRoom(props) {
           room_name: name,
           room_pda: b58,
           rk: b64encoded,
-          roomAta: roomATA.toBase58()
+          roomAta: roomATA.toBase58(),
+          token: contract
         };
         const aRoomObj = await Moralis.Cloud.run("createRoom", paramz);
         user.set("is_playing", true);
@@ -152,7 +157,7 @@ function CreateRoom(props) {
   const handleSelect = (event) => {
     setContract(event.target.value);
   };
-
+//<option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy">$PDUST</option>
   return (
     <Form>
       <Form.Group className="mb-3" controlId="formBasicEmail">
@@ -167,8 +172,8 @@ function CreateRoom(props) {
         />
         <StyledSelect size="lg" aria-label="Default select example"  onChange={handleSelect}>
           <option value="SOL">$SOL</option>
-          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy">$DUST</option>
-          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy">$FORGE</option>
+          <option value={dustContract}>$DUST</option>
+          <option value={forgeContract}>$FORGE</option>
         </StyledSelect>
         <Form.Text className="text-muted">Bet</Form.Text>
       </Form.Group>

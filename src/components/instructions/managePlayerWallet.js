@@ -53,8 +53,6 @@ const one_sol = 1_000_000_000;
 
 function WalletManager(props) {
   const [hasWallet, setHasWallet] = useState(false)
-  const [dbalance, setDBalance] = useState(props.dbalance);
-  const [fbalance, setFBalance] = useState(props.fbalance);
 
   const [modalShow, setModalShow] = useState(false);
   const { isAuthenticated } = useMoralis();
@@ -217,13 +215,13 @@ function WalletManager(props) {
             fromAuthority: anchorWallet.publicKey,
             to: toATA,
           }).rpc(); 
-          const balance = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
+          //const balance = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
           //console.log("escrow balance ", balance/LAMPORTS_PER_SOL)
-            //console.log(tx)
+          //  console.log(tx)
             const bal = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
             props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
         } catch (err) {
-        // console.log(err)
+     //    console.log(err)
         }
       }
     };
@@ -333,6 +331,25 @@ function WalletManager(props) {
     }
   };
 
+  const getSPLBalance = async () => {
+    const aUser = Moralis.User.current();
+    const playerPDA = aUser.get("player_wallet");
+    if (playerPDA) {
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+      try {
+        const mint = new anchor.web3.PublicKey("92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy")
+        let escrowATA = await getAssociatedTokenAddress(
+          mint, //mint pk
+          escrow //to pk
+        );
+        const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
+       // console.log(bal/LAMPORTS_PER_SOL)
+        props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
+      } catch (err) {
+      }
+    }
+  };
+
   const fetchPlayerWallet = async() =>{
     const playerWallet = Moralis.User.current().get("player_wallet");
     if (playerWallet) setHasWallet(true)
@@ -343,6 +360,7 @@ function WalletManager(props) {
     if (connected && isAuthenticated) {
       //props.setBal(balance)
       getBalance();
+      getSPLBalance()
       fetchPlayerWallet()
     }
   }, [connected, isAuthenticated]);

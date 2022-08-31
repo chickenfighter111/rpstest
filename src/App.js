@@ -331,13 +331,26 @@ const App = (props) => {
   if (isAuthenticated && connected) {
 
     return (
-        <div>
-          <Routes>
-          <Route path="/" index element={<Home />}/>
-          <Route path="/rooms/:userId" 
-            element={<PrivateRoom darkmode={props.darkmode} onChangeBalance={props.onChangeBalance} bal={props.bal} soundState={props.soundState}/>} />
+      <div>
+        <Routes>
+          <Route path="/" index element={<Home />} />
+          <Route
+            path="/rooms/:userId"
+            element={
+              <PrivateRoom
+                darkmode={props.darkmode}
+                onChangeBalance={props.onChangeBalance}
+                bal={props.bal}
+                dbalance={props.dbalance}
+                donChangeBalance={props.donChangeBalance}
+                fbalance={props.fbalance}
+                fonChangeBalance={props.fonChangeBalance}
+                soundState={props.soundState}
+              />
+            }
+          />
         </Routes>
-        </div>
+      </div>
     );
   } else if (isAuthenticating) {
     return (

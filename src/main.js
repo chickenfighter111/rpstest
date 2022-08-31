@@ -19,6 +19,9 @@ const DarkNav= styled(Navbar)`
 
 const Main = () => {
   const [balance, setBalance] = useState(null);
+  const [dbalance, setDBalance] = useState(null);
+  const [fbalance, setFBalance] = useState(null);
+
   const [darkMode, setDarkMode] = useState(true);
   const [soundState, setSoundState] = useState(true)
 
@@ -27,16 +30,40 @@ const Main = () => {
 
   return (
     <div className={darkMode ? "Dark-App" : "App"}>
-      <Navbar darkmode={darkMode} darkModeChanger={setDarkMode} onChangeBalance={setBalance} bal={balance} soundState={soundState} setSound={setSoundState}/>
+      <Navbar
+        darkmode={darkMode}
+        darkModeChanger={setDarkMode}
+        onChangeBalance={setBalance}
+        bal={balance}
+        dbalance={dbalance}
+        donChangeBalance={setDBalance}
+        fbalance={fbalance}
+        fonChangeBalance={setFBalance}
+        soundState={soundState}
+        setSound={setSoundState}
+      />
       <DarkApp className="mainContainer">
         <Row>
           <Col xs={3}>
-            {isAuthenticated && connected ? (<div className="chatContainer">
-            <DiscordChat />
-            </div>) : (<div></div>)}
+            {isAuthenticated && connected ? (
+              <div className="chatContainer">
+                <DiscordChat />
+              </div>
+            ) : (
+              <div></div>
+            )}
           </Col>
-          <Col >
-           <App darkmode={darkMode} onChangeBalance={setBalance} bal={balance} soundState={soundState}/>
+          <Col>
+            <App
+              darkmode={darkMode}
+              onChangeBalance={setBalance}
+              bal={balance}
+              dbalance={dbalance}
+              donChangeBalance={setDBalance}
+              fbalance={fbalance}
+              fonChangeBalance={setFBalance}
+              soundState={soundState}
+            />
           </Col>
         </Row>
       </DarkApp>

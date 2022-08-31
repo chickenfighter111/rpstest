@@ -52,9 +52,6 @@ const one_sol = 1_000_000_000;
 const clientId =  process.env.REACT_APP_WEB3_CLIENT_ID | "BGUYFB-xTJdSGPtMI92VdT-tFwmijpKvTGnDd-398H37Dy4alqnvb9QPR5PunNT5vBShifRYYz8cAFHSjhKltnI"; // get from https://dashboard.web3auth.io.
 
 const MyNavbar = (props) => {
-  const [fbalance, setFBalance] = useState(0);
-  const [dbalance, setDBalance] = useState(0);
-
 
   const { logout, isAuthenticated, authenticate } = useMoralis();
   const { connected, publicKey, wallet, disconnect } = useWallet();
@@ -130,7 +127,7 @@ const MyNavbar = (props) => {
         escrow
       );
       const bal = (await program.provider.connection.getParsedAccountInfo(ATA)).value.data.parsed.info.tokenAmount.amount;
-      setFBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+      props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
     }
 
     const getTokenBalance = async () => {
@@ -153,14 +150,14 @@ const MyNavbar = (props) => {
       );
       const bal = (await program.provider.connection.getParsedAccountInfo(ATA)).value.data.parsed.info.tokenAmount.amount;
       const bal2 = (await program.provider.connection.getParsedAccountInfo(ATA2)).value.data.parsed.info.tokenAmount.amount;
-      setFBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
-      setDBalance(Math.round((bal2/LAMPORTS_PER_SOL)).toPrecision(4))
+      props.setFBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+      props.setDBalance(Math.round((bal2/LAMPORTS_PER_SOL)).toPrecision(4))
 
     }
 
     if (connected && isAuthenticated) {
       getBalance();
-      //getSPLBalance()
+      getSPLBalance()
       //getTokenBalance()
     }
 
@@ -371,14 +368,14 @@ const MyNavbar = (props) => {
                     <PlayerWalletManager
                       balance={props.bal}
                       onChangeBalance={props.onChangeBalance}
-                      dbalance={dbalance}
-                      donChangeBalance={setDBalance}
-                      fbalance={fbalance}
-                      fonChangeBalance={setFBalance}
+                      dbalance={props.dbalance}
+                      donChangeBalance={props.donChangeBalance}
+                      fbalance={props.fbalance}
+                      fonChangeBalance={props.fonChangeBalance}
                     />
                   </Dropdown.Item>
-                  <Dropdown.Item ><img className="logoImg" src={forgeLogo} width={30} height={25} alt="$FORGE" />{" "} {fbalance} </Dropdown.Item>
-                  <Dropdown.Item ><img className="logoImg" src={dustLogo} width={30} height={25} alt="$DUST" />{" "} {dbalance} </Dropdown.Item>
+                  <Dropdown.Item ><img className="logoImg" src={forgeLogo} width={30} height={25} alt="$FORGE" />{" "} {props.fbalance} </Dropdown.Item>
+                  <Dropdown.Item ><img className="logoImg" src={dustLogo} width={30} height={25} alt="$DUST" />{" "} {props.dbalance} </Dropdown.Item>
                   <Dropdown.Item onClick={web3logout}>Log Out</Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>

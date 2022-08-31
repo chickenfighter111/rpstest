@@ -109,7 +109,6 @@ const resultMessages = [
   }
 ];
 
-
 const fee_wallet = new anchor.web3.PublicKey(
   "5HBjN8gPUzrdYpQuTspZakCZXuZHDMsvHNwH3qVTbnHN"
 );
@@ -129,6 +128,7 @@ const Rooms = (props) => {
   const [roomId, setRoomId] = useState(null);
   const [roomPDA, setRoomPda] = useState(null);
   const [roomATA, setRoomATA] = useState(null);
+  const [contract, setContract] = useState(null)
 
   const [opponent, setOpponent] = useState(null);
   const [gameStarted, setStarted] = useState(false);
@@ -149,6 +149,7 @@ const Rooms = (props) => {
   const [duelEnded, setEndedDuel] = useState(false);
   const [canPay, setCanPay] = useState(false);
   const [canClose, setCanClose] = useState(false);
+  const [canStart, setCanStart] = useState(false);
 
   const [winner, setWinner] = useState(null);
   const [isWinner, setIsWinner] = useState(false)
@@ -179,6 +180,7 @@ const Rooms = (props) => {
   const [roundStarted, setRoundStart] = useState(false)
   const [revealDone, setRevealDone] = useState(false)
   const [cardSent, setCardSent] = useState(false)
+
 
 
 //["2", "0", "0", "2", "1"]
@@ -230,6 +232,8 @@ const Rooms = (props) => {
       setRoomPda(roomData.get("room_address"))
       setRoomATA(roomData.get("roomATA"));
       setAmount(roomData.get("bet_amount"));
+      setContract(roomData.get("contract"));
+
       if(roomData.get("ready")) setReadtState(true)
       if (roomData.get("challenger") !== "null") {
         if (username === roomData.get("owner"))
@@ -245,6 +249,8 @@ const Rooms = (props) => {
     setRoomPda(aRoom.get("room_address"))
     setRoomATA(aRoom.get("roomATA"));
     setAmount(aRoom.get("bet_amount"));
+    setContract(aRoom.get("contract"));
+
     if(aRoom.get("ready")) setReadtState(true)
     if (aRoom.get("challenger") !== "null") {
       if (username === aRoom.get("owner"))
@@ -257,6 +263,7 @@ const Rooms = (props) => {
     const aUser = Moralis.User.current();
     const playerPDA = aUser.get("player_wallet");
     const escrow = new anchor.web3.PublicKey(playerPDA)
+    const escrowATA = new anchor.web3.PublicKey(playerPDA)
     const abalance = await provider.connection.getBalance(escrow); //player escrow
     const roundedBalance = Math.round((abalance / one_sol)  * 100) / 100
     if (roundedBalance > amount) return true
@@ -613,21 +620,20 @@ const Rooms = (props) => {
   };
 
   const leaveWithShame = async () =>{
-    await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
-    resetRoom()
-    setSmShow(false)
-    leaveRoom(params.userId)
+    if(canClose){
+      await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
+      resetRoom()
+      setSmShow(false)
+      leaveRoom(params.userId)
+    }
   }
 
   const doRemath = async () =>{
-    if(isWinner && canClose){
+    if(canClose){
       await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
       resetRoom()
-    }else{
-      await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
-      resetRoom()
+      setSmShow(false)
     }
-    setSmShow(false)
   }
 
   const NoFundsPopper = () =>{
@@ -732,7 +738,8 @@ const Rooms = (props) => {
       const aPlayerData = {player: playerId, cards: toRevealCards}
       const parameters = {room: roomId, playerData: aPlayerData}
       await Moralis.Cloud.run("revealCard", parameters); //runs a function on the cloud
-      setRevealDone(true)
+      setCanStart(false)
+
      // setGenerated(true)
       
       //return toRevealCards //is an array of tuples(card, cardIdx)
@@ -899,8 +906,8 @@ const Rooms = (props) => {
       const escrowWallet = anchor.web3.Keypair.fromSecretKey(u8int)
 
       const tx = await program.methods.payRoom(
-        new BN(amount //await Moralis.Cloud.run("getRoomBet", {room: roomId})
-        *LAMPORTS_PER_SOL))
+        new BN(//await Moralis.Cloud.run("getRoomBet", {room: roomId})
+          (amount *LAMPORTS_PER_SOL) - (LAMPORTS_PER_SOL*0.00001)))
       .accounts({
         escrowAcc: escrowWallet.publicKey,
         roomAcc: roomEscrow,
@@ -911,6 +918,7 @@ const Rooms = (props) => {
       const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
       //console.log("tx ", signature)
       getBalance()
+      setCanStart(true)
     }catch(err){
      // console.log(err)
     }
@@ -1006,9 +1014,7 @@ const Rooms = (props) => {
     const playerPDA = aUser.get("player_wallet");
     if (playerPDA) {
       const escrow = new anchor.web3.PublicKey(playerPDA)
-
-      const mint = new anchor.web3.PublicKey("92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy")
-
+      const mint = new anchor.web3.PublicKey(contract)
 
       try {
         let escrowATA = await getAssociatedTokenAddress(
@@ -1024,16 +1030,90 @@ const Rooms = (props) => {
             const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
             const u8int= new Uint8Array(arraybuf)
             const escrowWallet = web3.Keypair.fromSecretKey(u8int)
-            const tx = await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+            const roomescrow = new anchor.web3.PublicKey(roomPDA)
+
+            const aConnection = new web3.Connection(network, 'finalized');
+            const ptx = await program.methods.payRoom(new BN(0.001*LAMPORTS_PER_SOL))
+            .accounts({
+              escrowAcc: escrowWallet.publicKey,
+              roomAcc: roomescrow,
+            }).transaction()
+
+            const tx = (await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
               tokenProgram: TOKEN_PROGRAM_ID,
               tokenMint: mint,
               from: escrowATA,
               fromAuthority: escrowWallet.publicKey,
               to: roomAtaPk,
-            }).signers([escrowWallet]).rpc(); 
-              //console.log(tx)
-              const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
-              //props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+            }).transaction()).add(ptx) //.signers([escrowWallet]).rpc(); 
+
+            tx.feePayer = escrowWallet.publicKey;
+            tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+            const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
+
+           // console.log(signature)
+            const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
+            props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
+            setCanStart(true)
+          }
+        }
+      } catch (err) {
+       // console.log(err)
+      }}
+  }
+
+  const payDF = async() => {
+    const aUser = Moralis.User.current();
+    const playerPDA = aUser.get("player_wallet");
+    if (playerPDA) {
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+
+      const mint = new anchor.web3.PublicKey(contract)
+
+     // console.log(mint.toBase58())
+
+      try {
+        let escrowATA = await getAssociatedTokenAddress(
+          mint, //mint pk
+          escrow //to pk
+        );
+        if(roomATA){
+          const roomAtaPk = new anchor.web3.PublicKey(roomATA)
+          const walletQry = new Moralis.Query("Wallet")
+          walletQry.equalTo("owner", aUser.id)
+          const aWallet = await walletQry.first()
+          if(aWallet){
+            const arraybuf = await _base64ToArrayBuffer(aWallet.get("key"))
+            const u8int= new Uint8Array(arraybuf)
+            const escrowWallet = web3.Keypair.fromSecretKey(u8int)
+            const roomescrow = new anchor.web3.PublicKey(roomPDA)
+
+            const aConnection = new web3.Connection(network, 'finalized');
+
+            const ptx = await program.methods.payRoom(new BN(0.001*LAMPORTS_PER_SOL))
+            .accounts({
+              escrowAcc: escrowWallet.publicKey,
+              roomAcc: roomescrow,
+            }).transaction()
+          //  ptx.feePayer = escrowWallet.publicKey;
+           // ptx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+
+            const tx = (await program.methods.transferDust(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+              tokenProgram: TOKEN_PROGRAM_ID,
+              tokenMint: mint,
+              from: escrowATA,
+              fromAuthority: escrowWallet.publicKey,
+              to: roomAtaPk,
+            }).transaction()).add(ptx) //.signers([escrowWallet]).rpc(); 
+
+            tx.feePayer = escrowWallet.publicKey;
+            tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+            const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
+
+           // console.log(signature)
+            const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
+            props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
+            setCanStart(true)
           }
         }
       } catch (err) {
@@ -1046,8 +1126,7 @@ const Rooms = (props) => {
     const playerPDA = aUser.get("player_wallet");
     if (playerPDA) {
       const escrow = new anchor.web3.PublicKey(playerPDA)
-      const mint = new anchor.web3.PublicKey("92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy")
-
+      const mint = new anchor.web3.PublicKey(contract)
       if(roomATA){
         const roomAtaPk = new anchor.web3.PublicKey(roomATA)
         try {
@@ -1055,27 +1134,81 @@ const Rooms = (props) => {
             mint, //mint pk
             escrow //to pk
           );
-          const roomQry = new Moralis.Query("Room")
-          roomQry.equalTo("owner", aUser.id)
-          const aRoom = await roomQry.first()
+          let feeATA = await getAssociatedTokenAddress(
+            mint, //mint pk
+            fee_wallet //to pk
+          );
+          const aRoom = await Moralis.Cloud.run("getRoomData", { roomId: roomId });
           if(aRoom){
+            const aConnection = new web3.Connection(network, 'finalized');
             const arraybuf = await _base64ToArrayBuffer(aRoom.get("rkey"))
             const u8int= new Uint8Array(arraybuf)
             const roomWallet = web3.Keypair.fromSecretKey(u8int)
-  
-            const tx = await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+            const tx = await program.methods.paywSpl(new BN(2*amount*LAMPORTS_PER_SOL)).accounts({
               tokenProgram: TOKEN_PROGRAM_ID,
               tokenMint: mint,
               from: roomAtaPk,
               fromAuthority: roomWallet.publicKey,
               to: winnerATA,
-            }).signers([roomWallet]).rpc(); 
-             // console.log(tx)
-              const bal = (await program.provider.connection.getParsedAccountInfo(winnerATA)).value.data.parsed.info.tokenAmount.amount;
-              props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
+              feeAcc: feeATA
+            }).transaction() //.signers([escrowWallet]).rpc(); 
+
+            tx.feePayer = roomWallet.publicKey;
+            tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+            const signature = await web3.sendAndConfirmTransaction(connection, tx, [roomWallet], 'processed');
+           // console.log(signature)
+            const bal = (await program.provider.connection.getParsedAccountInfo(winnerATA)).value.data.parsed.info.tokenAmount.amount;
+            props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
+            setCanClose(true)
           }
         } catch (err) {
-      //    console.log(err)
+         // console.log(err)
+        }
+      }
+    }
+  }
+
+  const payoutDrawSPL = async() => {
+    const aUser = Moralis.User.current();
+    const playerPDA = aUser.get("player_wallet");
+    if (playerPDA) {
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+      const mint = new anchor.web3.PublicKey(contract)
+      if(roomATA){
+        const roomAtaPk = new anchor.web3.PublicKey(roomATA)
+        try {
+          let winnerATA = await getAssociatedTokenAddress(
+            mint, //mint pk
+            escrow //to pk
+          );
+          let feeATA = await getAssociatedTokenAddress(
+            mint, //mint pk
+            fee_wallet //to pk
+          );
+          const aRoom = await Moralis.Cloud.run("getRoomData", { roomId: roomId });
+          if(aRoom){
+            const aConnection = new web3.Connection(network, 'finalized');
+            const arraybuf = await _base64ToArrayBuffer(aRoom.get("rkey"))
+            const u8int= new Uint8Array(arraybuf)
+            const roomWallet = web3.Keypair.fromSecretKey(u8int)
+            const tx = await program.methods.paywSpl(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+              tokenProgram: TOKEN_PROGRAM_ID,
+              tokenMint: mint,
+              from: roomAtaPk,
+              fromAuthority: roomWallet.publicKey,
+              to: winnerATA,
+              feeAcc: feeATA
+            }).transaction()
+            tx.feePayer = roomWallet.publicKey;
+            tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+            const signature = await web3.sendAndConfirmTransaction(connection, tx, [roomWallet], 'processed');
+          //  console.log(signature)
+            const bal = (await program.provider.connection.getParsedAccountInfo(winnerATA)).value.data.parsed.info.tokenAmount.amount;
+            props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
+            setCanClose(true)
+          }
+        } catch (err) {
+         // console.log(err)
         }
       }
     }
@@ -1253,17 +1386,20 @@ const Rooms = (props) => {
     if (winner && smShow){
       const current_player = Moralis.User.current()
       if (winner === current_player.id && isWinner) {
-        payoutWinner()
+        if(contract) payoutSPL()
+        else payoutWinner()
         addWinnerAnnouncement(user, opponent)
         if(props.soundState)winSound()
         update_playerStats(current_player)
       }
       else if (winner === "draw") {
-        payoutDraw()
+        if(contract) payoutDrawSPL() 
+        else payoutDraw()
         addDrawAnnouncement()
         if(props.soundState)tieSound()
       }
       else{
+        setCanClose(true)
         addWinnerAnnouncement(opponent, user)
         if(props.soundState)loseSound()
       }
@@ -1325,11 +1461,18 @@ const Rooms = (props) => {
 
   useEffect(() => {
     if (canGen && !revealDone){
-      transferRoom()
+      if(contract)  payDF() // paySPL() 
+      else transferRoom()
+      //const somehands = generateHands()
+      //reveal3random(somehands)
+      setRevealDone(true)
+    }
+
+    if (canStart){
       const somehands = generateHands()
       reveal3random(somehands)
     }
-  }, [canGen, revealDone])
+  }, [canGen, revealDone, canStart])
 
   if (isAuthenticated && roomId) {
 
@@ -1385,7 +1528,6 @@ const Rooms = (props) => {
                         <StartBtn disabled={!readyState||roundStarted} onClick={startRound}>
                           Start
                         </StartBtn>
-
                       </Row>
                     ) : (
                       <div>
@@ -1421,14 +1563,14 @@ const Rooms = (props) => {
                                 <div>
                                   <h1 className="room_name">Room {roomName}</h1>
                                   <h4> Waiting for challenger to be ready </h4>
-                                  <h3>Challenger: {opponent}</h3>
+                                  <h3> VS. {opponent}</h3>
                                   <h4>{amount} SOL PER MATCH</h4>
                                 </div>
                               ) : (
                                 <div>
                                   <h1 className="room_name">Room {roomName}</h1>
                                   <h4> Click on ready </h4>
-                                  <h3>Opponent: {opponent}</h3>
+                                  <h3> VS. {opponent}</h3>
                                   <h4>{amount} SOL PER MATCH</h4>
                                 </div>
                               )}

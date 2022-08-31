@@ -131,7 +131,7 @@ function CreateRoom(props) {
     
         navigateToRoom(aRoomObj);
       } catch (err) {
-        console.log(err);
+       // console.log(err);
       }
     }
 

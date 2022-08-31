@@ -148,6 +148,8 @@ const Rooms = (props) => {
   const [readyState, setReadtState] = useState(false)
   const [duelEnded, setEndedDuel] = useState(false);
   const [canPay, setCanPay] = useState(false);
+  const [canClose, setCanClose] = useState(false);
+
   const [winner, setWinner] = useState(null);
   const [isWinner, setIsWinner] = useState(false)
 
@@ -618,8 +620,13 @@ const Rooms = (props) => {
   }
 
   const doRemath = async () =>{
-    await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
-    resetRoom()
+    if(isWinner && canClose){
+      await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
+      resetRoom()
+    }else{
+      await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
+      resetRoom()
+    }
     setSmShow(false)
   }
 
@@ -842,6 +849,7 @@ const Rooms = (props) => {
       setRoundStart(false)
       setRevealDone(false)
       setCardSent(false)
+      setCanClose(false)
 
       setReset(true)
       //if (readyState){
@@ -943,6 +951,7 @@ const Rooms = (props) => {
         tx.feePayer = escrowWallet.publicKey;
         tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
         const ctx = await sendAndConfirmTransaction(connection, tx, [escrowWallet]);
+        setCanClose(true)
         //console.log("payout ", ctx)
         getBalance()
       }catch(err){
@@ -984,6 +993,7 @@ const Rooms = (props) => {
         tx.feePayer = escrowWallet.publicKey;
         tx.recentBlockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
         const ctx = await sendAndConfirmTransaction(connection, tx, [escrowWallet]);
+        setCanClose(true)
         //console.log("payout ", ctx)
         getBalance()
       }catch(err){
@@ -999,7 +1009,6 @@ const Rooms = (props) => {
 
       const mint = new anchor.web3.PublicKey("92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy")
 
-    //  console.log(mint.toBase58())
 
       try {
         let escrowATA = await getAssociatedTokenAddress(
@@ -1022,13 +1031,13 @@ const Rooms = (props) => {
               fromAuthority: escrowWallet.publicKey,
               to: roomAtaPk,
             }).signers([escrowWallet]).rpc(); 
-          //    console.log(tx)
+              //console.log(tx)
               const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
               //props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
           }
         }
       } catch (err) {
-      //  console.log(err)
+       // console.log(err)
       }}
   }
 
@@ -1061,12 +1070,12 @@ const Rooms = (props) => {
               fromAuthority: roomWallet.publicKey,
               to: winnerATA,
             }).signers([roomWallet]).rpc(); 
-              //console.log(tx)
+             // console.log(tx)
               const bal = (await program.provider.connection.getParsedAccountInfo(winnerATA)).value.data.parsed.info.tokenAmount.amount;
               props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
           }
         } catch (err) {
-        //  console.log(err)
+      //    console.log(err)
         }
       }
     }
@@ -1376,7 +1385,7 @@ const Rooms = (props) => {
                         <StartBtn disabled={!readyState||roundStarted} onClick={startRound}>
                           Start
                         </StartBtn>
-        
+
                       </Row>
                     ) : (
                       <div>

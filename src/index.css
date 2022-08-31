@@ -1,4 +1,4 @@
-body {
+body * {
   margin: 0;
   font-family: VK, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -19,6 +19,6 @@ code {
   font-weight: bold;
 }
 
-span, div, button{
+span, div, button, p, span{
   font-family: "VK" !important;
 }

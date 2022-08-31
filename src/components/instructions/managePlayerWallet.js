@@ -36,7 +36,7 @@ const StyledInput = styled(Form.Control)`
 
 const StyledSelect = styled(Form.Select)`
   margin-top: 10px;
-  width: 100px;
+  width: 120px;
 `
 
 const FormButton = styled(Button)`
@@ -305,8 +305,8 @@ function WalletManager(props) {
             onChange={handleInput}
           />
         <StyledSelect size="lg" aria-label="Default select example" onChange={handleSelect}>
-          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy">$DUST</option>
-          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy">$FORGE</option>
+          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy"><p>$DUST</p></option>
+          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy"><p>$FORGE</p></option>
         </StyledSelect>
         </Form.Group>
         <FormButton variant="primary" type="submit" onClick={depositSPL}>

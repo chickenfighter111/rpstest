@@ -19,6 +19,9 @@ import {
   getOrCreateAssociatedTokenAccount,
   createAssociatedTokenAccountInstruction
 } from "@solana/spl-token";
+
+import CreatePlayerWallet from "./createPlayerWallet";
+
 import {network, idl} from '../../rpc_config'
 
 import dustLogo from '../media/DUST.jpg'
@@ -49,6 +52,7 @@ const utf8 = utils.bytes.utf8;
 const one_sol = 1_000_000_000;
 
 function WalletManager(props) {
+  const [hasWallet, setHasWallet] = useState(false)
   const [dbalance, setDBalance] = useState(props.dbalance);
   const [fbalance, setFBalance] = useState(props.fbalance);
 
@@ -87,10 +91,10 @@ function WalletManager(props) {
               from: publicKey,
               escrowAcc: escrow
             }).rpc()  
-          //  console.log(tx)
+           // console.log(tx)
           await getBalance();//refresh
         } catch (err) {
-       //   console.log(err)
+       //  console.log(err)
         }
       }
     };
@@ -215,7 +219,7 @@ function WalletManager(props) {
           }).rpc(); 
           const balance = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
           //console.log("escrow balance ", balance/LAMPORTS_PER_SOL)
-           // console.log(tx)
+            //console.log(tx)
             const bal = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
             props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
         } catch (err) {
@@ -329,10 +333,17 @@ function WalletManager(props) {
     }
   };
 
+  const fetchPlayerWallet = async() =>{
+    const playerWallet = Moralis.User.current().get("player_wallet");
+    if (playerWallet) setHasWallet(true)
+    else setHasWallet(false)
+  }
+
   useEffect(() => {
     if (connected && isAuthenticated) {
       //props.setBal(balance)
       getBalance();
+      fetchPlayerWallet()
     }
   }, [connected, isAuthenticated]);
 
@@ -350,9 +361,12 @@ function WalletManager(props) {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <ModifyUsername />
-          <DepositForm />
-          <SplForm/>
+          {hasWallet ? 
+          (<div>
+            <DepositForm />
+            <SplForm/>
+          </div>) : 
+          (<CreatePlayerWallet />)}
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={props.onHide}>Close</Button>

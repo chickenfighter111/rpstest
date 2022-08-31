@@ -202,7 +202,7 @@ const App = (props) => {
               </thead>
               <tbody> 
                   {
-                    rooms.flatMap((room) => {
+                    rooms.flatMap((room, idx) => {
                                   const playing = room.get("playing");
                                   const chall = room.get("challenger");
                                   const roomId = room.id;
@@ -219,7 +219,7 @@ const App = (props) => {
                                   </Button>;
                                   };
                                   return (
-                                    <tr>
+                                    <tr key={idx}>
                                     <td>{null}</td>
                                     <td colSpan={5}>{room.get("room_name").substring(0,15)}</td>
                                     <td className="testSpan"> 
@@ -272,7 +272,7 @@ const App = (props) => {
         {users ? (
           users.map((aUser, index) => {
             return(
-              <tr>
+              <tr key={index}>
                 <td>{index + 1}</td>
                 <td colSpan={2}>{aUser.username.substring(0,15)}</td>
                 <td>{aUser.wins}</td>

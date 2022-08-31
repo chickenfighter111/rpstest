@@ -130,7 +130,7 @@ function PlayerWallet() {
     <Form>
       <Form.Group className="mb-3" 
           placeholder="Enter username">
-        <Form.Label>Username</Form.Label>
+        <Form.Label>Create your player wallet</Form.Label>
         <Form.Control
           required
           type="text"

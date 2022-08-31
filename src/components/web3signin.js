@@ -15,7 +15,7 @@ import { Checkbox } from "@web3uikit/core";
 
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
-import CreatePlayerWallet from "./createPlayerWallet";
+import CreatePlayerWallet from "./instructions/createPlayerWallet";
 import PlayerWalletManager from "./instructions/managePlayerWallet";
 
 import * as anchor from "@project-serum/anchor";
@@ -63,7 +63,6 @@ const MyNavbar = (props) => {
   const [registered, setRegister] = useState(false);
   const [web3auth, setWeb3auth] = useState(null);
   const [provider, setProvider] = useState(null);
-  const [hasWallet, setHasWallet] = useState(false)
   const [adapter, setAdapter] = useState(null);
 
 
@@ -159,18 +158,10 @@ const MyNavbar = (props) => {
 
     }
 
-    const fetchPlayerWallet = async() =>{
-      const playerWallet = Moralis.User.current().get("player_wallet");
-      if (playerWallet) setHasWallet(true)
-      else setHasWallet(false)
-
-    }
-
     if (connected && isAuthenticated) {
       getBalance();
-      getSPLBalance()
+      //getSPLBalance()
       //getTokenBalance()
-      fetchPlayerWallet()
     }
 
   }, [connected, isAuthenticated]);
@@ -386,13 +377,6 @@ const MyNavbar = (props) => {
                       fonChangeBalance={setFBalance}
                     />
                   </Dropdown.Item>
-                  {!hasWallet ? (
-                    <Dropdown.Item onClick={() => setplayerModal(true)}>
-                      Player Wallet
-                    </Dropdown.Item>
-                  ) : (
-                    <div></div>
-                  )}
                   <Dropdown.Item ><img className="logoImg" src={forgeLogo} width={30} height={25} alt="$FORGE" />{" "} {fbalance} </Dropdown.Item>
                   <Dropdown.Item ><img className="logoImg" src={dustLogo} width={30} height={25} alt="$DUST" />{" "} {dbalance} </Dropdown.Item>
                   <Dropdown.Item onClick={web3logout}>Log Out</Dropdown.Item>

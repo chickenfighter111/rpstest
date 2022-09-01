@@ -1270,6 +1270,20 @@ const Rooms = (props) => {
       }
     };
 
+    const unreadyPing = async () => {
+      if(!gameStarted && !duelEnded && !roomReset){
+        let query = new Moralis.Query("Room");
+        query.equalTo("objectId", roomId);
+        query.equalTo("ready", true);
+        let subscription = await query.subscribe();
+        subscription.on("leave", async () => {
+          if (owner){
+            setReadtState(false)
+            subscription.unsubscribe()
+      }})
+      }
+    };
+
     const updateOpponentData = (players) => {
         const curr_user_id = Moralis.User.current().id;
         const player_one = players[0];
@@ -1340,7 +1354,11 @@ const Rooms = (props) => {
     if (roomId && opponent && owner) readyPing()
 
     
-    if (readyState) gameStartPing(); //to check if servers got both choices of players
+    if (readyState) {
+      gameStartPing(); //to check if servers got both choices of players
+    }
+
+    if(readyState && !roomReset) unreadyPing()
 
     if (totalSelected === 3 || chosenCards.size === 3) setConfirmed(true);
 
@@ -1534,6 +1552,12 @@ const Rooms = (props) => {
                         <Row>
                           <StartBtn disabled={readyState} onClick={getReady}>
                             Ready
+                          </StartBtn>
+                        </Row>
+                        <br/>
+                        <Row>
+                        <StartBtn disabled={!readyState} onClick={getReady}>
+                            UnReady
                           </StartBtn>
                         </Row>
                       </div>

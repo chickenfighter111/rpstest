@@ -1270,6 +1270,7 @@ const Rooms = (props) => {
       }
     };
 
+/*
     const unreadyPing = async () => {
       if(!gameStarted && !roomReset){
         let query = new Moralis.Query("Room");
@@ -1282,7 +1283,7 @@ const Rooms = (props) => {
             subscription.unsubscribe()
       }})
       }
-    };
+    }; */
 
     const updateOpponentData = (players) => {
         const curr_user_id = Moralis.User.current().id;

@@ -168,7 +168,7 @@ function WalletManager(props) {
 
   function SplForm() {
     const [amount, setAmount] = useState(0);
-    const [contract, setContract] = useState("92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy");
+    const [contract, setContract] = useState(null);
 
     const depositSPL = async (event) => {
       event.preventDefault();

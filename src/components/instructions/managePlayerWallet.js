@@ -337,14 +337,22 @@ function WalletManager(props) {
     if (playerPDA) {
       const escrow = new anchor.web3.PublicKey(playerPDA)
       try {
-        const mint = new anchor.web3.PublicKey("92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy")
+        const mint = new anchor.web3.PublicKey(forgeContract)
+        const mint2 = new anchor.web3.PublicKey(dustContract)
+
         let escrowATA = await getAssociatedTokenAddress(
           mint, //mint pk
           escrow //to pk
         );
+        let escrowATA2 = await getAssociatedTokenAddress(
+          mint2, //mint pk
+          escrow //to pk
+        );
         const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
-       // console.log(bal/LAMPORTS_PER_SOL)
+        const bal2 = (await program.provider.connection.getParsedAccountInfo(escrowATA2)).value.data.parsed.info.tokenAmount.amount;
         props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
+        props.donChangeBalance(bal2/LAMPORTS_PER_SOL)
+
       } catch (err) {
       }
     }

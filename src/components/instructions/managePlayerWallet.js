@@ -303,8 +303,8 @@ function WalletManager(props) {
             onChange={handleInput}
           />
         <StyledSelect size="lg" aria-label="Default select example" onChange={handleSelect}>
-          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy"><p>$DUST</p></option>
-          <option value="92HcuoTGqPyNjgLKuX5nQnaZzunbY9jSbxb6h7nZKWQy"><p>$FORGE</p></option>
+          <option value={dustContract}><p>$DUST</p></option>
+          <option value={forgeContract}><p>$FORGE</p></option>
         </StyledSelect>
         </Form.Group>
         <FormButton variant="primary" type="submit" onClick={depositSPL}>

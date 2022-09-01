@@ -1554,12 +1554,6 @@ const Rooms = (props) => {
                             Ready
                           </StartBtn>
                         </Row>
-                        <br/>
-                        <Row>
-                        <StartBtn disabled={!readyState || gameStarted} onClick={getReady}>
-                            UnReady
-                          </StartBtn>
-                        </Row>
                       </div>
                     )}
                   </Container>

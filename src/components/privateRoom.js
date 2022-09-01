@@ -1271,13 +1271,13 @@ const Rooms = (props) => {
     };
 
     const unreadyPing = async () => {
-      if(!gameStarted && !duelEnded && !roomReset){
+      if(!gameStarted && !roomReset){
         let query = new Moralis.Query("Room");
         query.equalTo("objectId", roomId);
         query.equalTo("ready", true);
         let subscription = await query.subscribe();
         subscription.on("leave", async () => {
-          if (owner){
+          if (owner && canClose){
             setReadtState(false)
             subscription.unsubscribe()
       }})
@@ -1358,7 +1358,7 @@ const Rooms = (props) => {
       gameStartPing(); //to check if servers got both choices of players
     }
 
-    if(readyState && !roomReset) unreadyPing()
+   // if(readyState && !gameStarted) unreadyPing()
 
     if (totalSelected === 3 || chosenCards.size === 3) setConfirmed(true);
 
@@ -1556,7 +1556,7 @@ const Rooms = (props) => {
                         </Row>
                         <br/>
                         <Row>
-                        <StartBtn disabled={!readyState} onClick={getReady}>
+                        <StartBtn disabled={!readyState || gameStarted} onClick={getReady}>
                             UnReady
                           </StartBtn>
                         </Row>

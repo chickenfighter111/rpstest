@@ -216,6 +216,7 @@ const Rooms = (props) => {
     const params = { roomId: id, player: user };
     const canLeave = await Moralis.Cloud.run("leaveRoom", params);
     if (canLeave) {
+      //await Moralis.Cloud.run("rematch", {roomId: roomId, userId: Moralis.User.current().id});
       Moralis.User.current().set("is_playing", false);
       Moralis.User.current().set("in_room", null);
       await Moralis.User.current().save();
@@ -263,11 +264,26 @@ const Rooms = (props) => {
     const aUser = Moralis.User.current();
     const playerPDA = aUser.get("player_wallet");
     const escrow = new anchor.web3.PublicKey(playerPDA)
-    const escrowATA = new anchor.web3.PublicKey(playerPDA)
     const abalance = await provider.connection.getBalance(escrow); //player escrow
     const roundedBalance = Math.round((abalance / one_sol)  * 100) / 100
-    if (roundedBalance > amount) return true
-    else return false
+   // console.log(contract)
+    if(contract){
+      const mint = new anchor.web3.PublicKey(contract)
+      let escrowATA = await getAssociatedTokenAddress(
+        mint, //mint pk
+        escrow //to pk
+      );
+      const bal = ((await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount)/one_sol;
+    //  console.log(bal)
+    //  console.log(roundedBalance)
+      if (bal >= amount && roundedBalance > 0.001) return true
+      else return false
+
+    }
+    else{
+      if (roundedBalance > amount) return true
+      else return false
+    }
   }
 
   const setOpponentsChoice = async (index) => {
@@ -916,11 +932,11 @@ const Rooms = (props) => {
       tx.feePayer = escrowWallet.publicKey;
       tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
       const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
-      //console.log("tx ", signature)
+     // console.log("tx ", signature)
       getBalance()
       setCanStart(true)
     }catch(err){
-     // console.log(err)
+   //   console.log(err)
     }
 
   }
@@ -1049,7 +1065,7 @@ const Rooms = (props) => {
 
             tx.feePayer = escrowWallet.publicKey;
             tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
-            const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
+            const signature = await web3.sendAndConfirmTransaction(aConnection, tx, [escrowWallet], 'processed');
 
            // console.log(signature)
             const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
@@ -1107,17 +1123,17 @@ const Rooms = (props) => {
             }).transaction()).add(ptx) //.signers([escrowWallet]).rpc(); 
 
             tx.feePayer = escrowWallet.publicKey;
-            tx.recentBlockhash = await aConnection.getLatestBlockhash('finalized').blockhash;
+            tx.recentBlockhash = await connection.getLatestBlockhash('finalized').blockhash;
             const signature = await web3.sendAndConfirmTransaction(connection, tx, [escrowWallet], 'processed');
 
-           // console.log(signature)
+          //  console.log(signature)
             const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
             props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
             setCanStart(true)
           }
         }
       } catch (err) {
-       // console.log(err)
+      //  console.log(err)
       }}
   }
 

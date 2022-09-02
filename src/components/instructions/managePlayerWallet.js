@@ -208,7 +208,7 @@ function WalletManager(props) {
             await provider.sendAndConfirm(mint_tx, [])
           }catch(err){}
           }
-          const tx = await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+          const tx = await program.methods.transferForge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
             tokenProgram: TOKEN_PROGRAM_ID,
             tokenMint: mint,
             from: associatedTokenAccount,
@@ -217,11 +217,11 @@ function WalletManager(props) {
           }).rpc(); 
           //const balance = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
           //console.log("escrow balance ", balance/LAMPORTS_PER_SOL)
-          //  console.log(tx)
+         //   console.log(tx)
             const bal = (await program.provider.connection.getParsedAccountInfo(toATA)).value.data.parsed.info.tokenAmount.amount;
             props.fonChangeBalance(Math.round((bal/LAMPORTS_PER_SOL)).toPrecision(4))
         } catch (err) {
-     //    console.log(err)
+      //   console.log(err)
         }
       }
     };
@@ -260,7 +260,7 @@ function WalletManager(props) {
             const u8int= new Uint8Array(arraybuf)
             const escrowWallet = Keypair.fromSecretKey(u8int)
   
-            const tx = await program.methods.transferPforge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
+            const tx = await program.methods.transferForge(new BN(amount*LAMPORTS_PER_SOL)).accounts({
               tokenProgram: TOKEN_PROGRAM_ID,
               tokenMint: mint,
               from: escrowATA,
@@ -283,7 +283,7 @@ function WalletManager(props) {
 
     const handleSelect = (event) => {
       setContract(event.target.value);
-      //console.log(event.target.value)
+     // console.log(event.target.value)
     };
 
     return (
@@ -344,13 +344,32 @@ function WalletManager(props) {
           mint, //mint pk
           escrow //to pk
         );
+        const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
+      //  const bal2 = (await program.provider.connection.getParsedAccountInfo(escrowATA2)).value.data.parsed.info.tokenAmount.amount;
+        props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
+        //props.donChangeBalance(bal2/LAMPORTS_PER_SOL)
+
+      } catch (err) {
+      }
+    }
+  };
+
+  const getDustBalance = async () => {
+    const aUser = Moralis.User.current();
+    const playerPDA = aUser.get("player_wallet");
+    if (playerPDA) {
+      const escrow = new anchor.web3.PublicKey(playerPDA)
+      try {
+        const mint2 = new anchor.web3.PublicKey(dustContract)
+
+
         let escrowATA2 = await getAssociatedTokenAddress(
           mint2, //mint pk
           escrow //to pk
         );
-        const bal = (await program.provider.connection.getParsedAccountInfo(escrowATA)).value.data.parsed.info.tokenAmount.amount;
+       
         const bal2 = (await program.provider.connection.getParsedAccountInfo(escrowATA2)).value.data.parsed.info.tokenAmount.amount;
-        props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
+        //props.fonChangeBalance(bal/LAMPORTS_PER_SOL)
         props.donChangeBalance(bal2/LAMPORTS_PER_SOL)
 
       } catch (err) {
@@ -369,6 +388,7 @@ function WalletManager(props) {
       //props.setBal(balance)
       getBalance();
       getSPLBalance()
+      getDustBalance()
       fetchPlayerWallet()
     }
   }, [connected, isAuthenticated]);
